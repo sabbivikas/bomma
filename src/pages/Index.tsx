@@ -5,15 +5,20 @@ import DoodleFeed from '@/components/DoodleFeed';
 import { Button } from '@/components/ui/button';
 import { Pen, Laugh } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import FunkyText from '@/components/FunkyText';
+import Cloud from '@/components/Cloud';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      <Cloud />
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <div className="mb-8 relative animate-pop-in">
-          <h1 className="text-4xl font-bold mb-3 sketchy-text inline-block">Discover Wonderful Creations</h1>
+          <h1 className="text-4xl font-bold mb-3 sketchy-text inline-block font-funky">
+            <FunkyText text="Discover Wonderful Creations" />
+          </h1>
           <Laugh className="inline-block ml-2 mb-3 animate-float" />
           <div className="sketchy-divider my-4"></div>
           <p className="text-muted-foreground mb-6">
@@ -22,7 +27,7 @@ const Index = () => {
           <Link to="/create">
             <Button className="gap-2 rounded-xl border-2 border-black sketchy-button">
               <Pen className="h-4 w-4" />
-              Create Your Doodle
+              <FunkyText text="Create Your Doodle" />
             </Button>
           </Link>
         </div>

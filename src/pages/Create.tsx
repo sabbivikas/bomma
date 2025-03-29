@@ -7,6 +7,8 @@ import { createDoodle, getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { getTodaysPrompt } from '@/data/prompts';
 import { Lightbulb } from 'lucide-react';
+import FunkyText from '@/components/FunkyText';
+import Cloud from '@/components/Cloud';
 
 const Create = () => {
   const navigate = useNavigate();
@@ -37,12 +39,15 @@ const Create = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      <Cloud />
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <div className="mb-8 animate-pop-in">
-          <h1 className="text-4xl font-bold mb-3 sketchy-text inline-block">Create Your Doodle</h1>
+          <h1 className="text-4xl font-bold mb-3 sketchy-text inline-block font-funky">
+            <FunkyText text="Create Your Doodle" />
+          </h1>
           <div className="sketchy-divider my-4"></div>
           <div className="flex items-center gap-2">
             <Lightbulb className="text-black animate-pulse-light" />

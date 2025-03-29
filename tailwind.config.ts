@@ -21,6 +21,10 @@ export default {
 		extend: {
 			fontFamily: {
 				'cartoon': ['"Comic Neue"', 'cursive'],
+				'funky': ['"Indie Flower"', 'cursive'],
+			},
+			backgroundImage: {
+				'doodle-bg': "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 10c5-5 15-5 20 0s5 15 0 20-15 5-20 0-5-15 0-20zm50 40c5-5 15-5 20 0s5 15 0 20-15 5-20 0-5-15 0-20zm-30 30c5-5 15-5 20 0s5 15 0 20-15 5-20 0-5-15 0-20z' fill='none' stroke='%23000000' stroke-width='1' stroke-opacity='0.05' stroke-dasharray='3,3'/%3E%3C/svg%3E\")",
 			},
 			colors: {
 				border: '#000000',

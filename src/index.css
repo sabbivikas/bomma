@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -45,11 +46,12 @@
   }
 
   body {
-    @apply bg-background text-foreground font-cartoon;
+    @apply bg-background text-foreground font-cartoon bg-doodle-bg bg-repeat;
+    background-size: 400px;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-cartoon font-bold;
+    @apply font-funky font-bold;
   }
 }
 
@@ -91,7 +93,7 @@
 }
 
 .doodle-card {
-  @apply transition-all duration-300 hover:shadow-lg border-2 border-black rounded-xl hover:animate-sketch;
+  @apply transition-all duration-300 hover:shadow-lg border-2 border-black rounded-xl hover:animate-sketch bg-white;
 }
 
 .sketchy-box {
@@ -107,6 +109,33 @@
   content: "";
   @apply absolute inset-0 bg-white -z-10 border-b-2 border-black;
   transform: rotate(-1deg) translateY(1px);
+}
+
+.funky-text {
+  @apply relative inline-block;
+}
+
+.funky-text span {
+  @apply inline-block;
+  animation: letter-dance 2s infinite ease-in-out;
+}
+
+.funky-text span:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+.funky-text span:nth-child(even) {
+  animation-delay: 0.2s;
+}
+
+.funky-text span:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+
+@keyframes letter-dance {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-2px) rotate(3deg); }
+  75% { transform: translateY(2px) rotate(-3deg); }
 }
 
 .sketchy-button {
@@ -147,3 +176,48 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-black rounded-full border-2 border-white;
 }
+
+/* Floating clouds */
+.cloud {
+  @apply absolute opacity-70 pointer-events-none z-0;
+  animation: float-cloud 20s linear infinite;
+}
+
+.cloud-1 {
+  top: 10%;
+  left: -10%;
+  width: 120px;
+}
+
+.cloud-2 {
+  top: 40%;
+  right: -5%;
+  width: 80px;
+  animation-duration: 25s;
+  animation-delay: -5s;
+}
+
+@keyframes float-cloud {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(100vw + 200px));
+  }
+}
+
+/* Create a FunkyText component styling */
+.wavy-text {
+  @apply relative inline-flex;
+}
+
+.wavy-text span {
+  @apply inline-block transition-transform;
+  animation: wavy-animation 2s infinite ease-in-out;
+}
+
+@keyframes wavy-animation {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+

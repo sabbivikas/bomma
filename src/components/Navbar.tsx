@@ -3,6 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Pen, Home, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import FunkyText from "@/components/FunkyText";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -14,7 +15,9 @@ const Navbar: React.FC = () => {
           <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center sketchy-box">
             <Pen className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-lg sketchy-text">Make Something Wonderful</span>
+          <span className="font-bold text-lg sketchy-text font-funky">
+            <FunkyText text="Make Something Wonderful" />
+          </span>
         </Link>
         
         <nav className="flex items-center space-x-2">
@@ -25,7 +28,7 @@ const Navbar: React.FC = () => {
               className="sketchy-button gap-2 rounded-xl border-2 border-black"
             >
               <Home className="w-4 h-4" />
-              Feed
+              <FunkyText text="Feed" />
             </Button>
           </Link>
           <Link to="/create">
@@ -35,7 +38,7 @@ const Navbar: React.FC = () => {
               className="sketchy-button gap-2 rounded-xl border-2 border-black"
             >
               <Pen className="w-4 h-4" />
-              Create
+              <FunkyText text="Create" />
             </Button>
           </Link>
         </nav>
