@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Pen, Eraser, Trash2, Download, ArrowRight } from 'lucide-react';
+import { Pen, Eraser, Trash2, Download, ArrowRight, Sparkles } from 'lucide-react';
 
 type Tool = 'pen' | 'eraser';
 
@@ -15,7 +15,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<Tool>('pen');
-  const [color, setColor] = useState('#8B5CF6');
+  const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState([5]);
   const [canvasSize, setCanvasSize] = useState({ width: 500, height: 500 });
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -172,30 +172,32 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   };
   
   const predefinedColors = [
-    '#8B5CF6', // Purple (primary)
-    '#F97316', // Orange (secondary)
-    '#0EA5E9', // Blue (accent)
-    '#10B981', // Green
-    '#EF4444', // Red
     '#000000', // Black
+    '#555555', // Dark Gray
+    '#888888', // Medium Gray
+    '#BBBBBB', // Light Gray
+    '#FFFFFF', // White
   ];
   
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full animate-pop-in">
       {prompt && (
-        <div className="bg-muted p-4 rounded-lg animate-pulse-light">
-          <p className="font-medium">Today's Prompt:</p>
-          <p className="text-lg font-bold">{prompt}</p>
+        <div className="bg-muted p-4 rounded-lg border-2 border-black sketchy-box">
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="h-5 w-5 animate-pulse-light" />
+            <p className="font-medium">Today's Prompt:</p>
+          </div>
+          <p className="text-xl font-bold sketchy-text">{prompt}</p>
         </div>
       )}
       
       <div className="w-full flex flex-col items-center">
-        <div className="canvas-container w-full border-2 border-canvas-border rounded-lg overflow-hidden">
+        <div className="canvas-container w-full">
           <canvas
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            className="bg-canvas-background cursor-crosshair touch-none"
+            className="bg-white cursor-crosshair touch-none"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
@@ -211,7 +213,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             <Button
               variant="outline"
               size="icon"
-              className={`${tool === 'pen' ? 'active' : ''}`}
+              className={`${tool === 'pen' ? 'active' : ''} border-2 border-black sketchy-button`}
               onClick={() => setTool('pen')}
             >
               <Pen className="h-5 w-5" />
@@ -219,7 +221,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             <Button
               variant="outline"
               size="icon"
-              className={`${tool === 'eraser' ? 'active' : ''}`}
+              className={`${tool === 'eraser' ? 'active' : ''} border-2 border-black sketchy-button`}
               onClick={() => setTool('eraser')}
             >
               <Eraser className="h-5 w-5" />
@@ -227,6 +229,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             <Button
               variant="outline"
               size="icon"
+              className="border-2 border-black sketchy-button"
               onClick={clearCanvas}
             >
               <Trash2 className="h-5 w-5" />
@@ -234,6 +237,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             <Button
               variant="outline"
               size="icon"
+              className="border-2 border-black sketchy-button"
               onClick={downloadCanvas}
             >
               <Download className="h-5 w-5" />
@@ -280,7 +284,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </div>
           
           <div className="flex justify-end mt-4">
-            <Button onClick={handleSave} className="gap-2">
+            <Button onClick={handleSave} className="border-2 border-black sketchy-button gap-2 bg-black text-white">
               Save & Share <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

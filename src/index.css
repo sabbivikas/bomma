@@ -1,69 +1,41 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 260 20% 98%;
-    --foreground: 260 10% 10%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
 
     --card: 0 0% 100%;
-    --card-foreground: 260 10% 10%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 260 10% 10%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 262 83% 65%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 24 95% 53%;
-    --secondary-foreground: 210 40% 98%;
-
-    --accent: 199 94% 48%;
-    --accent-foreground: 0 0% 100%;
-
-    --muted: 260 10% 90%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 260 20% 85%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 65%;
-
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 260 20% 10%;
-    --foreground: 260 10% 90%;
-
-    --card: 260 20% 15%;
-    --card-foreground: 260 10% 90%;
-
-    --popover: 260 20% 15%;
-    --popover-foreground: 260 10% 90%;
-
-    --primary: 262 83% 65%;
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 24 95% 53%;
+    --secondary: 0 0% 53%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 199 94% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 80%;
+    --accent-foreground: 0 0% 0%;
 
-    --muted: 260 20% 25%;
-    --muted-foreground: 260 10% 70%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 33%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 0% 0%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 260 20% 30%;
-    --input: 260 20% 30%;
-    --ring: 262 83% 65%;
+    --border: 0 0% 0%;
+    --input: 0 0% 94%;
+    --ring: 0 0% 0%;
+
+    --radius: 0.75rem;
   }
 }
 
@@ -73,12 +45,17 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-cartoon;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cartoon font-bold;
   }
 }
 
 .canvas-container {
   touch-action: none;
+  @apply border-[3px] border-black border-dashed rounded-xl overflow-hidden;
 }
 
 .drawing-tools {
@@ -86,11 +63,11 @@
 }
 
 .drawing-tools button {
-  @apply flex items-center justify-center p-2 rounded-lg transition-all hover:bg-primary/10 active:scale-95;
+  @apply flex items-center justify-center p-2 rounded-lg transition-all hover:bg-black/5 active:scale-95;
 }
 
 .drawing-tools button.active {
-  @apply bg-primary/20 ring-2 ring-primary;
+  @apply bg-black/10 ring-2 ring-black;
 }
 
 .color-circle {
@@ -98,7 +75,7 @@
 }
 
 .color-circle.active {
-  @apply border-primary scale-110;
+  @apply border-black scale-110;
 }
 
 .color-picker {
@@ -114,5 +91,59 @@
 }
 
 .doodle-card {
-  @apply transition-all duration-300 hover:shadow-lg;
+  @apply transition-all duration-300 hover:shadow-lg border-2 border-black rounded-xl hover:animate-sketch;
+}
+
+.sketchy-box {
+  @apply border-[3px] border-black rounded-xl relative;
+  box-shadow: 3px 3px 0 #000000;
+}
+
+.sketchy-text {
+  @apply relative z-10;
+}
+
+.sketchy-text::after {
+  content: "";
+  @apply absolute inset-0 bg-white -z-10 border-b-2 border-black;
+  transform: rotate(-1deg) translateY(1px);
+}
+
+.sketchy-button {
+  @apply transition-all active:translate-y-1 active:shadow-none shadow-[2px_2px_0_#000000];
+}
+
+.sketchy-divider {
+  @apply h-[3px] bg-black zigzag;
+}
+
+.zigzag {
+  mask-image: url("data:image/svg+xml,%3Csvg width='100' height='8' viewBox='0 0 100 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4C8.33333 1.33333 16.6667 1.33333 25 4C33.3333 6.66667 41.6667 6.66667 50 4C58.3333 1.33333 66.6667 1.33333 75 4C83.3333 6.66667 91.6667 6.66667 100 4' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-size: 40px 100%;
+  mask-repeat: repeat-x;
+}
+
+.animate-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-line 1.5s forwards;
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Cartoon style scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-white border-l border-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-black rounded-full border-2 border-white;
 }
