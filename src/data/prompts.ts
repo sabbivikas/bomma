@@ -114,6 +114,9 @@ export function getPromptByIndex(index: number): string {
 // Function to get today's prompt based on date
 export function getTodaysPrompt(): string {
   const today = new Date();
-  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+  // Calculate day of year by getting milliseconds since Jan 1 and converting to days
+  const startOfYear = new Date(today.getFullYear(), 0, 0);
+  const diff = Number(today) - Number(startOfYear);
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
   return getPromptByIndex(dayOfYear);
 }

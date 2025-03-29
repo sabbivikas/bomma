@@ -244,7 +244,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               <input 
                 type="color" 
                 value={color}
-                onChange={(e) => setTool('pen') && setColor(e.target.value)}
+                onChange={(e) => {
+                  setTool('pen');
+                  setColor(e.target.value);
+                }}
                 className="color-picker"
               />
             </div>
