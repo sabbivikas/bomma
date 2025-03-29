@@ -28,9 +28,9 @@ const Index = () => {
           </p>
           
           <Link to="/create" className="inline-block transform hover:scale-105 transition-transform">
-            <Button className="sketchy-button text-lg font-funky">
+            <Button size="lg" className="sketchy-button text-lg bg-black rounded-md px-6 py-3 font-funky">
               <Pen className="h-5 w-5 mr-2" />
-              <FunkyText text="Create Your Doodle" />
+              Create Your Doodle
             </Button>
           </Link>
         </div>
