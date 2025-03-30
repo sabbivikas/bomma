@@ -791,4 +791,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.touches[0].clientY;
     } else {
       // Fix: For mouse events, get client coordinates rather than offset
-      clientX = event.
+      clientX = event.clientX;
