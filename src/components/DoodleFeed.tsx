@@ -82,17 +82,21 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         loadedDoodles = await generateSampleDoodles();
       }
       
-      // Apply stricter filtering to ensure only cartoon-style doodles are shown:
+      // Apply much stricter filtering to ensure only cartoon-style doodles are shown:
       // 1. Must start with data:image (cartoon/drawing style)
       // 2. Must have a valid prompt
       // 3. Image URL must be of sufficient length (to avoid empty drawings)
-      // 4. No photo-realistic images (generally have larger file sizes)
+      // 4. Image URL must not be too large (to avoid photo-realistic images)
+      // 5. Filter out any suspicious images that contain "photo", "pic", or other keywords
       const filteredDoodles = loadedDoodles.filter(doodle => 
         doodle.imageUrl.startsWith('data:image') && 
         doodle.prompt && 
         doodle.prompt.trim() !== '' &&
-        doodle.imageUrl.length > 100 && // Filter out empty or very small images
-        doodle.imageUrl.length < 100000 // Filter out possibly photo-realistic images (usually larger)
+        doodle.imageUrl.length > 500 && // Ensure it's not empty
+        doodle.imageUrl.length < 80000 && // Filter out very large, likely photo-realistic images
+        !doodle.prompt.toLowerCase().includes('photo') &&
+        !doodle.prompt.toLowerCase().includes('realistic') &&
+        !doodle.prompt.toLowerCase().includes('landscape')
       );
       
       setDoodles(filteredDoodles);
