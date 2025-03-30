@@ -1,9 +1,15 @@
 
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RunningHuman: React.FC = () => {
+  const isMobile = useIsMobile();
+  
+  // Scale down for mobile devices
+  const scale = isMobile ? 0.7 : 1;
+  
   return (
-    <div className="running-human-container">
+    <div className="running-human-container" style={{ transform: `scale(${scale})`, height: isMobile ? '40px' : '80px' }}>
       {/* Human */}
       <svg
         width="60"

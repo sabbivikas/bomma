@@ -10,9 +10,11 @@ import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import RunningHuman from '@/components/RunningHuman';
 import OpeningSequence from '@/components/OpeningSequence';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const [showOpening, setShowOpening] = useState(true);
+  const isMobile = useIsMobile();
   
   const handleOpeningComplete = () => {
     setShowOpening(false);
@@ -30,14 +32,14 @@ const Index = () => {
       
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <div className="mb-12 relative animate-pop-in max-w-2xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6 relative inline-block">
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold mb-6 relative inline-block`}>
             <FunkyText text="Discover Wonderful Creations" />
-            <Laugh className="inline-block ml-3 mb-2 animate-float" />
+            <Laugh className={`inline-block ml-3 mb-2 animate-float ${isMobile ? 'h-5 w-5' : ''}`} />
           </h1>
           
-          <div className="artsy-divider" />
+          <div className="artsy-divider my-4" />
           
-          <p className="text-xl mb-8 font-funky">
+          <p className={`${isMobile ? 'text-base px-2' : 'text-xl'} mb-6 font-funky`}>
             Create your own cartoon worlds and characters, then share them with our community!
           </p>
           
@@ -48,12 +50,13 @@ const Index = () => {
             </Button>
           </Link>
 
-          <div className="relative h-24 mt-6">
+          <div className={`relative ${isMobile ? 'h-16' : 'h-24'} mt-6`}>
             <RunningHuman />
           </div>
         </div>
         
-        <div className="mt-16">
+        {/* Add more spacing before the feed on mobile */}
+        <div className={`${isMobile ? 'mt-8' : 'mt-16'}`}>
           <DoodleFeed />
         </div>
       </main>
