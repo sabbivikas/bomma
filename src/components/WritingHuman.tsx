@@ -22,23 +22,23 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
   }, []);
 
   return (
-    <div className={`writing-human ${className} ${action}`} style={{ width: '40px', height: '40px' }}>
+    <div className={`writing-human ${className} ${action}`}>
       {/* Human body */}
       <svg
-        width="40"
-        height="40"
+        width="30"
+        height="30"
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Head */}
-        <circle cx="12" cy="6" r="3" fill="#333333" />
+        <circle cx="12" cy="6" r="3.5" fill="#333333" />
         
         {/* Body */}
         <path
           d="M12 8.5L12 14"
           stroke="#333333"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         
@@ -52,7 +52,7 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
                 : "M12 10L9 12" // Default writing position
           }
           stroke="#333333"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
           className={action === 'waving' ? "waving-hand" : ""}
         />
@@ -65,7 +65,7 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
               : "M12 10L15 12" // Default position for writing/waving
           }
           stroke="#333333"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
           className={action !== 'thinking' ? "writing-hand" : ""}
         />
@@ -75,7 +75,7 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
           <path
             d="M15 12L18 14"
             stroke="#333333"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             className="pencil"
           />
@@ -93,14 +93,14 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
         {/* Legs */}
         <path
           d="M12 14L14 17"
-          stroke="#333333"
-          strokeWidth="2.5"
+          stroke="#333333" 
+          strokeWidth="3"
           strokeLinecap="round"
         />
         <path
           d="M12 14L10 17"
           stroke="#333333"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
       </svg>

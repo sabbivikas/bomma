@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -36,6 +37,43 @@ const Index = () => {
     }
   }, []);
 
+  // Add dreamy dust particles
+  useEffect(() => {
+    // Only add particles if not on mobile to avoid performance issues
+    if (isMobile) return;
+    
+    const createDreamyDustParticles = () => {
+      const container = document.querySelector('main');
+      if (!container) return;
+      
+      // Limit number of particles for performance
+      for (let i = 0; i < 10; i++) {
+        const dust = document.createElement('div');
+        dust.className = 'dreamy-dust';
+        
+        // Random positioning
+        dust.style.left = `${Math.random() * 100}%`;
+        dust.style.top = `${Math.random() * 100}%`;
+        dust.style.opacity = `${0.3 + Math.random() * 0.5}`;
+        dust.style.width = `${2 + Math.random() * 3}px`;
+        dust.style.height = dust.style.width;
+        
+        // Random animation duration and delay
+        dust.style.animationDuration = `${5 + Math.random() * 10}s`;
+        dust.style.animationDelay = `${Math.random() * 5}s`;
+        
+        container.appendChild(dust);
+      }
+    };
+    
+    createDreamyDustParticles();
+    
+    return () => {
+      const dusts = document.querySelectorAll('.dreamy-dust');
+      dusts.forEach(dust => dust.remove());
+    };
+  }, [isMobile]);
+
   const handleOpeningComplete = () => {
     // Save to localStorage that user has seen opening
     localStorage.setItem('hasSeenOpening', 'true');
@@ -47,21 +85,22 @@ const Index = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-blue-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-blue-50 overflow-hidden">
+      {/* The background ghibli elements */}
       <GhibliAnimations />
       <Cloud />
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
         <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
-          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight relative`}>
+          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight ghibli-shine`}>
             Discover{' '}
-            <span className="wonderful-wrapper relative inline-block">
+            <span className="wonderful-wrapper">
               W<span>o</span>nd<span>e</span>
               <span className="relative">
                 r
                 {/* The human sits on top of the letter "n" */}
-                <WritingHuman className="absolute -top-10 -left-2" />
+                <WritingHuman className="absolute -top-12 -left-2" />
               </span>
               ful
             </span>{' '}

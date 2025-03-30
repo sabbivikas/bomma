@@ -57,6 +57,24 @@
   z-index: 5 !important;
 }
 
+/* Ghibli-inspired dreamy background */
+.bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, #E0F7FA, #B3E5FC, #BBDEFB, #D1C4E9);
+  position: relative;
+}
+
+.bg-gradient-to-b::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 @keyframes float-cloud {
   0% { transform: translateX(0) translateY(0); }
   50% { transform: translateX(20px) translateY(10px); }
@@ -160,3 +178,36 @@
   display: inline-block;
 }
 
+/* Ghibli-style shine effect */
+.ghibli-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.ghibli-shine::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 20%;
+  height: 200%;
+  opacity: 0.2;
+  transform: rotate(30deg);
+  background: rgba(255, 255, 255, 0.7);
+  animation: ghibli-shine 6s ease-in-out infinite;
+}
+
+@keyframes ghibli-shine {
+  0% { transform: rotate(30deg) translateX(-300%); }
+  30%, 100% { transform: rotate(30deg) translateX(400%); }
+}
+
+/* Dreamy dust particles */
+.dreamy-dust {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: float-dust 10s linear infinite;
+}
