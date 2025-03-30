@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -42,8 +41,18 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     const updateCanvasSize = () => {
       const container = canvas.parentElement;
       if (container) {
-        const newWidth = Math.min(container.clientWidth, 800);
-        const newHeight = Math.min(newWidth, 600);
+        let newWidth, newHeight;
+        
+        if (isFullscreen) {
+          // In fullscreen mode, use most of the available screen space
+          newWidth = window.innerWidth * 0.95;
+          newHeight = window.innerHeight * 0.6; // Leave room for controls
+        } else {
+          // Normal mode
+          newWidth = Math.min(container.clientWidth, 800);
+          newHeight = Math.min(newWidth, 600);
+        }
+        
         setCanvasSize({ width: newWidth, height: newHeight });
       }
     };
@@ -70,7 +79,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
     };
-  }, []);
+  }, [isFullscreen]); // Add isFullscreen to dependency array
   
   // Update canvas size
   useEffect(() => {
@@ -370,23 +379,27 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
   
+  // Update toggleFullscreen to handle canvas resizing
   const toggleFullscreen = () => {
     const container = containerRef.current;
     if (!container) return;
     
     if (!isFullscreen) {
       if (container.requestFullscreen) {
-        container.requestFullscreen();
+        container.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
       }
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(err => {
+          console.error(`Error attempting to exit fullscreen: ${err.message}`);
+        });
       }
     }
-    
-    setIsFullscreen(!isFullscreen);
   };
   
+  // Listen for fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -424,7 +437,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   
   return (
     <div className="flex flex-col gap-4 w-full animate-pop-in">
-      {prompt && (
+      {!isFullscreen && prompt && (
         <div className="bg-muted p-4 rounded-lg border-2 border-black sketchy-box">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="h-5 w-5 animate-pulse-light" />
@@ -434,8 +447,17 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         </div>
       )}
       
-      <div ref={containerRef} className="w-full flex flex-col items-center">
-        <div className="canvas-container w-full relative group">
+      <div 
+        ref={containerRef} 
+        className={cn(
+          "w-full flex flex-col items-center",
+          isFullscreen && "fixed inset-0 bg-black/90 z-50 pt-4 px-4"
+        )}
+      >
+        <div className={cn(
+          "canvas-container w-full relative group",
+          isFullscreen && "flex justify-center"
+        )}>
           <canvas
             ref={canvasRef}
             width={canvasSize.width}
@@ -452,72 +474,112 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           <Button
             variant="outline"
             size="icon"
-            className="absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity"
+            className={cn(
+              "absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity",
+              isFullscreen && "bg-white/20 text-white hover:bg-white/40"
+            )}
             onClick={toggleFullscreen}
           >
             {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </Button>
         </div>
         
-        <div className="drawing-tools-container w-full mt-4">
+        <div className={cn(
+          "drawing-tools-container w-full mt-4",
+          isFullscreen && "max-w-5xl mx-auto"
+        )}>
           <Tabs defaultValue="tools" className="w-full">
-            <TabsList className="mb-4 w-full grid grid-cols-3">
-              <TabsTrigger value="tools" className="flex items-center gap-2">
+            <TabsList className={cn(
+              "mb-4 w-full grid grid-cols-3",
+              isFullscreen && "bg-white/10"
+            )}>
+              <TabsTrigger value="tools" className={cn(
+                "flex items-center gap-2",
+                isFullscreen && "text-white data-[state=active]:bg-white/20 data-[state=active]:text-white"
+              )}>
                 <Pen className="h-4 w-4" />
                 <span>Draw</span>
               </TabsTrigger>
-              <TabsTrigger value="effects" className="flex items-center gap-2">
+              <TabsTrigger value="effects" className={cn(
+                "flex items-center gap-2",
+                isFullscreen && "text-white data-[state=active]:bg-white/20 data-[state=active]:text-white"
+              )}>
                 <Wand2 className="h-4 w-4" />
                 <span>Effects</span>
               </TabsTrigger>
-              <TabsTrigger value="colors" className="flex items-center gap-2">
+              <TabsTrigger value="colors" className={cn(
+                "flex items-center gap-2",
+                isFullscreen && "text-white data-[state=active]:bg-white/20 data-[state=active]:text-white"
+              )}>
                 <Palette className="h-4 w-4" />
                 <span>Colors</span>
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="tools" className="space-y-4">
+            <TabsContent value="tools" className={cn(
+              "space-y-4",
+              isFullscreen && "bg-black/50 p-4 rounded-lg"
+            )}>
               <div className="drawing-tools grid grid-cols-5 gap-2">
                 <Button
-                  variant="outline"
+                  variant={isFullscreen ? "secondary" : "outline"}
                   size="icon"
-                  className={`${tool === 'pen' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  className={cn(
+                    tool === 'pen' ? 'bg-black text-white' : '',
+                    'border-2 border-black sketchy-button',
+                    isFullscreen && "border-white/50"
+                  )}
                   onClick={() => setTool('pen')}
                   title="Pen Tool"
                 >
                   <Pen className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={isFullscreen ? "secondary" : "outline"}
                   size="icon"
-                  className={`${tool === 'brush' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  className={cn(
+                    tool === 'brush' ? 'bg-black text-white' : '',
+                    'border-2 border-black sketchy-button',
+                    isFullscreen && "border-white/50"
+                  )}
                   onClick={() => setTool('brush')}
                   title="Brush Tool"
                 >
                   <Paintbrush className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={isFullscreen ? "secondary" : "outline"}
                   size="icon"
-                  className={`${tool === 'spray' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  className={cn(
+                    tool === 'spray' ? 'bg-black text-white' : '',
+                    'border-2 border-black sketchy-button',
+                    isFullscreen && "border-white/50"
+                  )}
                   onClick={() => setTool('spray')}
                   title="Spray Tool"
                 >
                   <Sparkles className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={isFullscreen ? "secondary" : "outline"}
                   size="icon"
-                  className={`${tool === 'eraser' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  className={cn(
+                    tool === 'eraser' ? 'bg-black text-white' : '',
+                    'border-2 border-black sketchy-button',
+                    isFullscreen && "border-white/50"
+                  )}
                   onClick={() => setTool('eraser')}
                   title="Eraser Tool"
                 >
                   <Eraser className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={isFullscreen ? "secondary" : "outline"}
                   size="icon"
-                  className="border-2 border-black sketchy-button"
+                  className={cn(
+                    'border-2 border-black sketchy-button',
+                    isFullscreen && "border-white/50"
+                  )}
                   onClick={handleUndo}
                   title="Undo"
                   disabled={undoStack.length <= 1}
@@ -527,29 +589,41 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
               
               <div className="w-full">
-                <p className="text-sm mb-2">Brush Size: {width[0]}px</p>
+                <p className={cn(
+                  "text-sm mb-2",
+                  isFullscreen && "text-white"
+                )}>Brush Size: {width[0]}px</p>
                 <Slider 
                   min={1} 
                   max={30} 
                   step={1} 
                   value={width} 
                   onValueChange={setWidth} 
-                  className="w-full" 
+                  className={cn(
+                    "w-full",
+                    isFullscreen && "[&_.bg-secondary]:bg-white/30 [&_.bg-primary]:bg-white"
+                  )}
                 />
               </div>
               
               <div className="flex gap-2 justify-between">
                 <Button
-                  variant="outline"
-                  className="border-2 border-black sketchy-button"
+                  variant={isFullscreen ? "secondary" : "outline"}
+                  className={cn(
+                    "border-2 border-black sketchy-button",
+                    isFullscreen && "border-white/50 text-white"
+                  )}
                   onClick={clearCanvas}
                 >
                   <Trash2 className="h-5 w-5 mr-2" />
                   Clear Canvas
                 </Button>
                 <Button
-                  variant="outline"
-                  className="border-2 border-black sketchy-button"
+                  variant={isFullscreen ? "secondary" : "outline"}
+                  className={cn(
+                    "border-2 border-black sketchy-button",
+                    isFullscreen && "border-white/50 text-white"
+                  )}
                   onClick={downloadCanvas}
                 >
                   <Download className="h-5 w-5 mr-2" />
@@ -558,47 +632,61 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
             </TabsContent>
             
-            <TabsContent value="effects" className="space-y-4">
+            <TabsContent value="effects" className={cn(
+              "space-y-4",
+              isFullscreen && "bg-black/50 p-4 rounded-lg"
+            )}>
               <div>
-                <p className="text-sm mb-2">Symmetry Mode:</p>
+                <p className={cn(
+                  "text-sm mb-2",
+                  isFullscreen && "text-white"
+                )}>Symmetry Mode:</p>
                 <div className="grid grid-cols-4 gap-2">
                   <Button
-                    variant="outline"
+                    variant={isFullscreen ? "secondary" : "outline"}
                     className={cn(
                       "border-2 border-black sketchy-button flex-grow",
-                      symmetryMode === 'none' && "bg-black text-white"
+                      symmetryMode === 'none' && "bg-black text-white",
+                      isFullscreen && "border-white/50",
+                      isFullscreen && symmetryMode === 'none' && "bg-white/20"
                     )}
                     onClick={() => setSymmetryMode('none')}
                   >
                     None
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={isFullscreen ? "secondary" : "outline"}
                     className={cn(
                       "border-2 border-black sketchy-button flex-grow",
-                      symmetryMode === 'horizontal' && "bg-black text-white"
+                      symmetryMode === 'horizontal' && "bg-black text-white",
+                      isFullscreen && "border-white/50",
+                      isFullscreen && symmetryMode === 'horizontal' && "bg-white/20"
                     )}
                     onClick={() => setSymmetryMode('horizontal')}
                   >
-                    <FlipHorizontal className="h-4 w-4 mr-2" rotate={90} />
+                    <FlipHorizontal className="h-4 w-4 mr-2" />
                     Horizontal
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={isFullscreen ? "secondary" : "outline"}
                     className={cn(
                       "border-2 border-black sketchy-button flex-grow",
-                      symmetryMode === 'vertical' && "bg-black text-white"
+                      symmetryMode === 'vertical' && "bg-black text-white",
+                      isFullscreen && "border-white/50",
+                      isFullscreen && symmetryMode === 'vertical' && "bg-white/20"
                     )}
                     onClick={() => setSymmetryMode('vertical')}
                   >
-                    <FlipHorizontal className="h-4 w-4 mr-2" />
+                    <FlipHorizontal className="h-4 w-4 mr-2 rotate-90" />
                     Vertical
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={isFullscreen ? "secondary" : "outline"}
                     className={cn(
                       "border-2 border-black sketchy-button flex-grow",
-                      symmetryMode === 'quad' && "bg-black text-white"
+                      symmetryMode === 'quad' && "bg-black text-white",
+                      isFullscreen && "border-white/50",
+                      isFullscreen && symmetryMode === 'quad' && "bg-white/20"
                     )}
                     onClick={() => setSymmetryMode('quad')}
                   >
@@ -608,14 +696,19 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
             </TabsContent>
             
-            <TabsContent value="colors">
+            <TabsContent value="colors" className={cn(
+              isFullscreen && "bg-black/50 p-4 rounded-lg"
+            )}>
               <div className="color-palette grid grid-cols-5 gap-4">
                 {colorPalette.map((colorOption) => (
                   <button
                     key={colorOption}
                     className={cn(
                       "color-circle w-10 h-10 rounded-full border-2",
-                      color === colorOption && tool !== 'eraser' ? 'ring-2 ring-offset-2 ring-black' : ''
+                      color === colorOption && tool !== 'eraser' 
+                        ? 'ring-2 ring-offset-2 ring-black' 
+                        : '',
+                      isFullscreen && color === colorOption && 'ring-white'
                     )}
                     style={{ backgroundColor: colorOption }}
                     onClick={() => {
@@ -639,8 +732,17 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </TabsContent>
           </Tabs>
           
-          <div className="flex justify-end mt-4">
-            <Button onClick={handleSave} className="border-2 border-black sketchy-button gap-2 bg-black text-white">
+          <div className={cn(
+            "flex justify-end mt-4",
+            isFullscreen && "pb-4"
+          )}>
+            <Button 
+              onClick={handleSave} 
+              className={cn(
+                "border-2 border-black sketchy-button gap-2 bg-black text-white",
+                isFullscreen && "border-white bg-white/20 hover:bg-white/30"
+              )}
+            >
               Save & Share <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
