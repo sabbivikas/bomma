@@ -25,28 +25,28 @@ const Index = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-white">
       <GhibliAnimations />
       <Cloud />
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <div className="mb-12 relative animate-pop-in max-w-2xl mx-auto text-center">
-          <h1 className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold mb-6 relative inline-block`}>
-            <FunkyText text="Discover Wonderful Creations" />
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-elegant mb-6 relative inline-block`}>
+            Discover Wonderful Creations
             <Laugh className={`inline-block ml-3 mb-2 animate-float ${isMobile ? 'h-5 w-5' : ''}`} />
           </h1>
           
-          <div className="artsy-divider my-4" />
+          <div className="h-px bg-black/20 my-6 w-24 mx-auto" />
           
-          <p className={`${isMobile ? 'text-base px-2' : 'text-xl'} mb-6 font-funky`}>
-            Create your own cartoon worlds and characters, then share them with our community!
+          <p className={`${isMobile ? 'text-base px-2' : 'text-xl'} mb-8 font-elegant text-gray-700`}>
+            Create your own worlds and characters, then share them with our community.
           </p>
           
           <Link to="/create" className="inline-block transform hover:scale-105 transition-transform">
-            <Button className="sketchy-button font-funky">
+            <Button className="bg-black hover:bg-black/80 text-white font-elegant px-6 py-2 rounded">
               <Pen className="h-5 w-5 mr-2" />
-              Create Your Doodle
+              Create Your Design
             </Button>
           </Link>
 
@@ -55,7 +55,6 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Add more spacing before the feed on mobile */}
         <div className={`${isMobile ? 'mt-8' : 'mt-16'}`}>
           <DoodleFeed />
         </div>

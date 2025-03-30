@@ -2,18 +2,17 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Pen, Home } from "lucide-react";
-import FunkyText from "@/components/FunkyText";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <header className="w-full bg-white sticky top-0 z-10">
+    <header className="w-full bg-white sticky top-0 z-10 border-b border-black/10">
       <div className="container mx-auto px-4 flex justify-between items-center h-16">
         <Link to="/" className="flex items-center space-x-2">
           <Pen className="w-5 h-5" />
-          <span className="font-bold text-lg font-funky">
-            <FunkyText text="Make Something Wonderful" />
+          <span className="font-bold text-lg font-elegant">
+            Make Something Wonderful
           </span>
         </Link>
         
