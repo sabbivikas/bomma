@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
-import { getAllDoodles, generateSampleDoodles } from '@/utils/doodleService';
+import { getAllDoodles } from '@/utils/doodleService';
 import DoodleCard from './DoodleCard';
 import { Smile, RefreshCw, Paintbrush } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -75,13 +74,8 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
     setLastLoadedTime(new Date());
     
     try {
-      // First check if we have existing doodles
+      // Get all doodles without generating sample doodles
       let loadedDoodles = await getAllDoodles();
-      
-      // If there are no doodles, generate sample doodles
-      if (loadedDoodles.length === 0) {
-        loadedDoodles = await generateSampleDoodles();
-      }
       
       // Enhanced filtering to ensure we only show valid submitted doodles:
       const validDoodles = loadedDoodles.filter(doodle => {
@@ -99,23 +93,7 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         const hasValidPrompt = doodle.prompt && 
                               doodle.prompt.trim().length > 0;
         
-        // Avoid extremely large image data which might be corrupted
-        const isAppropriateSize = doodle.imageUrl && 
-                                 doodle.imageUrl.length < 500000 && 
-                                 doodle.imageUrl.length > 500;
-        
-        // Exclude images with landscape/photo keywords that might not be cartoons
-        const isCartoonStyle = !doodle.prompt?.toLowerCase().includes('photo') &&
-                              !doodle.prompt?.toLowerCase().includes('realistic') &&
-                              !doodle.prompt?.toLowerCase().includes('landscape') &&
-                              !doodle.prompt?.toLowerCase().includes('picture');
-        
-        // Check that the base64 image isn't corrupted
-        const isValidBase64 = doodle.imageUrl?.includes(',') && 
-                             doodle.imageUrl?.split(',').length >= 2;
-        
-        return hasValidImage && hasValidPrompt && isAppropriateSize && 
-               isCartoonStyle && isValidBase64;
+        return hasValidImage && hasValidPrompt;
       });
       
       setDoodles(validDoodles);
@@ -190,18 +168,18 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {doodles.map((doodle) => (
-          <DoodleCard 
-            key={doodle.id} 
-            doodle={doodle} 
-            onLike={handleDoodleLiked} 
-            highlight={doodle.id === highlightDoodleId}
-          />
-        ))}
-      </div>
-      
-      {doodles.length === 0 && (
+      {doodles.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {doodles.map((doodle) => (
+            <DoodleCard 
+              key={doodle.id} 
+              doodle={doodle} 
+              onLike={handleDoodleLiked} 
+              highlight={doodle.id === highlightDoodleId}
+            />
+          ))}
+        </div>
+      ) : (
         <div className="text-center py-12 border border-gray-200 rounded-lg bg-white shadow-sm">
           <Paintbrush className="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <p className="text-xl font-medium">No doodles yet</p>
