@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import DoodleFeed from '@/components/DoodleFeed';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,19 @@ import FunkyText from '@/components/FunkyText';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import RunningHuman from '@/components/RunningHuman';
+import OpeningSequence from '@/components/OpeningSequence';
 
 const Index = () => {
+  const [showOpening, setShowOpening] = useState(true);
+  
+  const handleOpeningComplete = () => {
+    setShowOpening(false);
+  };
+
+  if (showOpening) {
+    return <OpeningSequence onComplete={handleOpeningComplete} />;
+  }
+  
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <GhibliAnimations />
