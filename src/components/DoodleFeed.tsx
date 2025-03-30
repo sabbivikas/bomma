@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
 import { getAllDoodles, generateSampleDoodles } from '@/utils/doodleService';
 import DoodleCard from './DoodleCard';
-import { Smile, RefreshCw } from 'lucide-react';
+import { Smile, RefreshCw, Paintbrush } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
@@ -167,9 +167,17 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
       
       {doodles.length === 0 && (
         <div className="text-center py-12 border border-gray-200 rounded-lg bg-white shadow-sm">
-          <Smile className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <Paintbrush className="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <p className="text-xl font-medium">No doodles yet</p>
-          <p className="text-gray-500 mt-2">Be the first to create something wonderful!</p>
+          <p className="text-gray-500 mt-2">Create your first masterpiece and share it with the world!</p>
+          <Button 
+            variant="secondary" 
+            className="mt-4 flex items-center gap-2 mx-auto"
+            onClick={() => window.location.href = '/create'}
+          >
+            <Paintbrush className="w-4 h-4" />
+            Start Drawing
+          </Button>
         </div>
       )}
     </div>
@@ -177,3 +185,4 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
 };
 
 export default DoodleFeed;
+
