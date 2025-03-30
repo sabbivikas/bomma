@@ -783,7 +783,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     event.preventDefault(); // Prevent default behaviors
     
-    let clientX, clientY;
+    let clientX: number, clientY: number;
     
     if ('touches' in event) {
       // Fix: For touch events, get coordinates relative to the page and adjust
@@ -792,4 +792,3 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.touches[0].clientY;
     } else {
       // Fix: For mouse events, get client coordinates rather than offset
-      clientX =
