@@ -6,7 +6,7 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { createDoodle, getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { getTodaysPrompt } from '@/data/prompts';
-import { Lightbulb, CheckCircle2 } from 'lucide-react';
+import { Lightbulb, CheckCircle2, Eye } from 'lucide-react';
 import FunkyText from '@/components/FunkyText';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Doodle } from '@/types/doodle';
+import DoodleCard from '@/components/DoodleCard';
 
 const Create = () => {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ const Create = () => {
   const [prompt] = useState(getTodaysPrompt());
   const [stayOnPage, setStayOnPage] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [publishedDoodle, setPublishedDoodle] = useState<Doodle | null>(null);
   const isMobile = useIsMobile();
   
   // Add dreamy dust particles
@@ -82,6 +85,12 @@ const Create = () => {
     };
   }, [isMobile]);
   
+  const handleDoodleLiked = (updatedDoodle: Doodle) => {
+    if (publishedDoodle && updatedDoodle.id === publishedDoodle.id) {
+      setPublishedDoodle(updatedDoodle);
+    }
+  };
+  
   const handleSave = (canvas: HTMLCanvasElement) => {
     // Convert canvas to data URL
     const imageUrl = canvas.toDataURL('image/png');
@@ -104,6 +113,7 @@ const Create = () => {
     // Set success message to display on page
     if (stayOnPage) {
       setSuccessMessage("Your doodle was published successfully!");
+      setPublishedDoodle(newDoodle);
       
       // Clear success message after 4 seconds
       setTimeout(() => {
@@ -118,6 +128,10 @@ const Create = () => {
         } 
       });
     }
+  };
+
+  const handleCreateNew = () => {
+    setPublishedDoodle(null);
   };
 
   return (
@@ -136,13 +150,15 @@ const Create = () => {
       <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <div className="mb-8 animate-pop-in">
           <h1 className="text-4xl font-bold mb-3 sketchy-text inline-block font-funky">
-            <FunkyText text="Create Your Doodle" />
+            <FunkyText text={publishedDoodle ? "Your Published Doodle" : "Create Your Doodle"} />
           </h1>
           <div className="sketchy-divider my-4"></div>
           <div className="flex items-center gap-2">
             <Lightbulb className="text-black animate-pulse-light" />
             <p className="text-muted-foreground">
-              Let your creativity flow and create something wonderful!
+              {publishedDoodle 
+                ? "Amazing! Your creation is now part of our wonderful community." 
+                : "Let your creativity flow and create something wonderful!"}
             </p>
           </div>
         </div>
@@ -155,18 +171,44 @@ const Create = () => {
         )}
         
         <div className="max-w-3xl mx-auto">
-          <DrawingCanvas onSave={handleSave} prompt={prompt} />
+          {publishedDoodle ? (
+            <div className="flex flex-col items-center">
+              <div className="w-full max-w-md animate-pop-in">
+                <DoodleCard doodle={publishedDoodle} onLike={handleDoodleLiked} highlight={true} />
+              </div>
+              
+              <div className="flex gap-4 mt-6">
+                <Button
+                  onClick={handleCreateNew}
+                  className="border-2 border-black sketchy-button gap-2 bg-black text-white"
+                >
+                  Create Another Doodle
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="border-2 border-black sketchy-button gap-2"
+                >
+                  <Eye className="h-4 w-4" /> View All Doodles
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <DrawingCanvas onSave={handleSave} prompt={prompt} />
 
-          <div className="mt-4 flex items-center space-x-2">
-            <Checkbox 
-              id="stay-on-page" 
-              checked={stayOnPage} 
-              onCheckedChange={(checked) => setStayOnPage(checked === true)}
-            />
-            <Label htmlFor="stay-on-page" className="text-sm text-gray-600">
-              Stay on this page after publishing (create multiple doodles)
-            </Label>
-          </div>
+              <div className="mt-4 flex items-center space-x-2">
+                <Checkbox 
+                  id="stay-on-page" 
+                  checked={stayOnPage} 
+                  onCheckedChange={(checked) => setStayOnPage(checked === true)}
+                />
+                <Label htmlFor="stay-on-page" className="text-sm text-gray-600">
+                  Stay on this page after publishing (create multiple doodles)
+                </Label>
+              </div>
+            </>
+          )}
         </div>
       </main>
       
@@ -185,6 +227,24 @@ const Create = () => {
         @keyframes sparkle-float {
           0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
           50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
+        }
+
+        .animate-pop-in {
+          animation: pop-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes pop-in {
+          0% { opacity: 0; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.4s ease-in forwards;
+        }
+
+        @keyframes fade-in {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
         }
         `}
       </style>
