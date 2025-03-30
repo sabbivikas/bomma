@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -30,6 +31,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastPointRef = useRef<{ x: number, y: number } | null>(null);
   
   // Initialize canvas
   useEffect(() => {
@@ -154,46 +156,101 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   };
   
   // Draw symmetrically based on mode
-  const drawSymmetrically = (x: number, y: number, canvas: HTMLCanvasElement) => {
-    if (!contextRef.current) return;
+  const drawSymmetrically = (currentX: number, currentY: number, prevX: number, prevY: number) => {
+    if (!contextRef.current || !canvasRef.current) return;
     
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const centerX = canvasRef.current.width / (2 * devicePixelRatio);
+    const centerY = canvasRef.current.height / (2 * devicePixelRatio);
     
-    // Original point
-    contextRef.current.lineTo(x, y);
+    // Draw the original line
+    contextRef.current.beginPath();
+    contextRef.current.moveTo(prevX, prevY);
+    contextRef.current.lineTo(currentX, currentY);
+    contextRef.current.stroke();
     
     // Apply symmetry based on selected mode
     if (symmetryMode === 'horizontal' || symmetryMode === 'quad') {
       // Horizontal reflection
-      const reflectedX = x;
-      const reflectedY = 2 * centerY - y;
+      const reflectedPrevY = 2 * centerY - prevY;
+      const reflectedCurrY = 2 * centerY - currentY;
       
-      contextRef.current.moveTo(reflectedX, reflectedY);
-      contextRef.current.lineTo(reflectedX, reflectedY);
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(prevX, reflectedPrevY);
+      contextRef.current.lineTo(currentX, reflectedCurrY);
+      contextRef.current.stroke();
     }
     
     if (symmetryMode === 'vertical' || symmetryMode === 'quad') {
       // Vertical reflection
-      const reflectedX = 2 * centerX - x;
-      const reflectedY = y;
+      const reflectedPrevX = 2 * centerX - prevX;
+      const reflectedCurrX = 2 * centerX - currentX;
       
-      contextRef.current.moveTo(reflectedX, reflectedY);
-      contextRef.current.lineTo(reflectedX, reflectedY);
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(reflectedPrevX, prevY);
+      contextRef.current.lineTo(reflectedCurrX, currentY);
+      contextRef.current.stroke();
     }
     
     if (symmetryMode === 'quad') {
       // Diagonal reflection (fourth quadrant)
-      const reflectedX = 2 * centerX - x;
-      const reflectedY = 2 * centerY - y;
+      const reflectedPrevX = 2 * centerX - prevX;
+      const reflectedCurrX = 2 * centerX - currentX;
+      const reflectedPrevY = 2 * centerY - prevY;
+      const reflectedCurrY = 2 * centerY - currentY;
       
-      contextRef.current.moveTo(reflectedX, reflectedY);
-      contextRef.current.lineTo(reflectedX, reflectedY);
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(reflectedPrevX, reflectedPrevY);
+      contextRef.current.lineTo(reflectedCurrX, reflectedCurrY);
+      contextRef.current.stroke();
     }
   };
   
   // Apply spray brush effect
   const applySprayEffect = (x: number, y: number) => {
+    if (!contextRef.current) return;
+    
+    const density = width[0] * 2;
+    const radius = width[0] * 2;
+    
+    for (let i = 0; i < density; i++) {
+      const offsetX = (Math.random() * 2 - 1) * radius;
+      const offsetY = (Math.random() * 2 - 1) * radius;
+      const distance = offsetX * offsetX + offsetY * offsetY;
+      
+      if (distance <= radius * radius) {
+        contextRef.current.fillStyle = color;
+        contextRef.current.fillRect(x + offsetX, y + offsetY, 1, 1);
+      }
+    }
+    
+    // Apply symmetry for spray tool if enabled
+    if (symmetryMode !== 'none') {
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const centerX = canvasRef.current!.width / (2 * devicePixelRatio);
+      const centerY = canvasRef.current!.height / (2 * devicePixelRatio);
+      
+      // Apply symmetry based on selected mode
+      if (symmetryMode === 'horizontal' || symmetryMode === 'quad') {
+        const reflectedY = 2 * centerY - y;
+        applySprayEffectAt(x, reflectedY);
+      }
+      
+      if (symmetryMode === 'vertical' || symmetryMode === 'quad') {
+        const reflectedX = 2 * centerX - x;
+        applySprayEffectAt(reflectedX, y);
+      }
+      
+      if (symmetryMode === 'quad') {
+        const reflectedX = 2 * centerX - x;
+        const reflectedY = 2 * centerY - y;
+        applySprayEffectAt(reflectedX, reflectedY);
+      }
+    }
+  };
+  
+  // Helper function for symmetrical spray effect
+  const applySprayEffectAt = (x: number, y: number) => {
     if (!contextRef.current) return;
     
     const density = width[0] * 2;
@@ -229,11 +286,15 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.nativeEvent.offsetY;
     }
     
+    lastPointRef.current = { x: clientX, y: clientY };
+    
     if (tool === 'spray') {
       applySprayEffect(clientX, clientY);
     } else {
-      context.beginPath();
-      context.moveTo(clientX, clientY);
+      if (symmetryMode === 'none') {
+        context.beginPath();
+        context.moveTo(clientX, clientY);
+      }
     }
   };
   
@@ -253,22 +314,32 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.nativeEvent.offsetY;
     }
     
+    const prevPoint = lastPointRef.current;
+    if (!prevPoint) return;
+    
     if (tool === 'spray') {
       applySprayEffect(clientX, clientY);
     } else {
       if (symmetryMode !== 'none') {
-        drawSymmetrically(clientX, clientY, canvasRef.current);
+        drawSymmetrically(clientX, clientY, prevPoint.x, prevPoint.y);
       } else {
         contextRef.current.lineTo(clientX, clientY);
+        contextRef.current.stroke();
       }
-      contextRef.current.stroke();
     }
+    
+    lastPointRef.current = { x: clientX, y: clientY };
   };
   
   const stopDrawing = () => {
     if (!contextRef.current) return;
-    contextRef.current.closePath();
+    
+    if (symmetryMode === 'none') {
+      contextRef.current.closePath();
+    }
+    
     setIsDrawing(false);
+    lastPointRef.current = null;
     saveCanvasState();
   };
   
