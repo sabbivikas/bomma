@@ -10,7 +10,6 @@ import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import OpeningSequence from '@/components/OpeningSequence';
 import { useIsMobile } from '@/hooks/use-mobile';
-import RunningHuman from '@/components/RunningHuman';
 
 const Index = () => {
   const [showOpening, setShowOpening] = useState(true);
@@ -42,11 +41,6 @@ const Index = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
-        {/* Running human animation - now visible at the top */}
-        <div className="w-full overflow-hidden h-20 mb-4">
-          <RunningHuman />
-        </div>
-        
         <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
           <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight`}>
             Discover Wonderful Creations

@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -41,8 +42,9 @@
   color: #888;
 }
 
-/* Running human animation */
+/* Running human animation - hidden now */
 .running-human-container {
+  display: none; /* Hide the container completely */
   position: absolute;
   left: -5%;
   animation: run-across 20s linear infinite;
