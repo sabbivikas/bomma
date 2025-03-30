@@ -153,7 +153,8 @@ const Index = () => {
       </main>
 
       {/* Add CSS for enhanced dreamy effects */}
-      <style jsx="true">{`
+      <style>
+        {`
         .ghibli-button::before {
           content: '';
           position: absolute;
@@ -184,7 +185,8 @@ const Index = () => {
           0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
           50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
