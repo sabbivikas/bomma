@@ -412,8 +412,7 @@
 }
 
 .running-human {
-  animation: run-bobbing 0.6s infinite alternate ease-in-out, 
-             run-limbs 0.3s infinite alternate ease-in-out;
+  animation: run-bobbing 0.5s infinite ease-in-out;
 }
 
 @keyframes run-across {
@@ -441,18 +440,51 @@
 
 @keyframes run-bobbing {
   0% {
-    transform: translateY(0px);
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(0deg);
   }
   100% {
-    transform: translateY(-2px);
+    transform: translateY(0) rotate(0deg);
   }
 }
 
-@keyframes run-limbs {
+/* Specific limb animations */
+.arm-front {
+  animation: swing-forward 0.4s infinite alternate ease-in-out;
+  transform-origin: 12px 10px;
+}
+
+.arm-back {
+  animation: swing-backward 0.4s infinite alternate ease-in-out;
+  transform-origin: 12px 10px;
+}
+
+.leg-front {
+  animation: swing-backward 0.4s infinite alternate ease-in-out;
+  transform-origin: 12px 14px;
+}
+
+.leg-back {
+  animation: swing-forward 0.4s infinite alternate ease-in-out;
+  transform-origin: 12px 14px;
+}
+
+@keyframes swing-forward {
   0% {
-    transform: rotate(-3deg);
+    transform: rotate(-30deg);
   }
   100% {
-    transform: rotate(3deg);
+    transform: rotate(15deg);
+  }
+}
+
+@keyframes swing-backward {
+  0% {
+    transform: rotate(30deg);
+  }
+  100% {
+    transform: rotate(-15deg);
   }
 }
