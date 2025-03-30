@@ -44,12 +44,12 @@
 
 /* Cloud styles */
 .cloud {
-  opacity: 0.9 !important;
-  filter: blur(3px) !important;
+  opacity: 0.8 !important;
+  filter: blur(5px) !important;
   background-color: white !important;
   border-radius: 50%;
   position: absolute;
-  box-shadow: 0 0 40px 20px white !important;
+  box-shadow: 0 0 50px 25px white !important;
   z-index: 1;
 }
 
@@ -70,15 +70,15 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+  background: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
   pointer-events: none;
   z-index: 1;
 }
 
 @keyframes float-cloud {
   0% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(20px) translateY(10px); }
-  100% { transform: translateX(-20px) translateY(-10px); }
+  50% { transform: translateX(30px) translateY(15px); }
+  100% { transform: translateX(-30px) translateY(-15px); }
 }
 
 /* Writing human animations */
@@ -125,7 +125,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
   }
 }
 
@@ -191,10 +191,11 @@
   left: -60%;
   width: 20%;
   height: 200%;
-  opacity: 0.2;
+  opacity: 0.4;
   transform: rotate(30deg);
   background: rgba(255, 255, 255, 0.7);
   animation: ghibli-shine 6s ease-in-out infinite;
+  z-index: 2;
 }
 
 @keyframes ghibli-shine {
@@ -207,7 +208,14 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.8);
   border-radius: 50%;
+  box-shadow: 0 0 5px 1px rgba(255, 255, 255, 0.8);
   animation: float-dust 10s linear infinite;
+  z-index: 5;
+}
+
+@keyframes float-dust {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
 }
