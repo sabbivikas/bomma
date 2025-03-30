@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
 import { getAllDoodles, generateSampleDoodles } from '@/utils/doodleService';
@@ -94,8 +93,8 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         const hasValidPrompt = doodle.prompt && 
                               doodle.prompt.trim().length > 0;
         
-        // Filter out photo-realistic or potentially empty images
-        const isAppropriateSize = doodle.imageUrl.length < 80000;
+        // Avoid extremely large image data which might be corrupted
+        const isAppropriateSize = doodle.imageUrl && doodle.imageUrl.length < 500000;
         
         // Exclude images with landscape/photo keywords
         const noPhotoKeywords = !doodle.prompt?.toLowerCase().includes('photo') &&
@@ -103,12 +102,11 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
                                !doodle.prompt?.toLowerCase().includes('landscape') &&
                                !doodle.prompt?.toLowerCase().includes('picture');
         
-        // Check that the image is visually non-empty
-        // Data URLs with very few color variations tend to be empty or nearly empty
-        const imageBase64 = doodle.imageUrl.split(',')[1];
-        const hasComplexVisual = imageBase64 && imageBase64.length > 500;
+        // Check that the base64 image isn't corrupted
+        const isValidBase64 = doodle.imageUrl?.split(',').length === 2;
         
-        return hasValidImage && hasValidPrompt && isAppropriateSize && noPhotoKeywords && hasComplexVisual;
+        return hasValidImage && hasValidPrompt && isAppropriateSize && 
+               noPhotoKeywords && isValidBase64;
       });
       
       setDoodles(filteredDoodles);
