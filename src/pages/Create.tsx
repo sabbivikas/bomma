@@ -36,7 +36,7 @@ const Create = () => {
     toast({
       title: "Doodle published!",
       description: "Your doodle has been added to the feed.",
-      variant: "success",
+      variant: "default",
     });
 
     // Set success message to display on page
