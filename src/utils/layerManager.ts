@@ -48,6 +48,10 @@ export class LayerManager {
   public getLayer(id: string): Layer | undefined {
     return this.layers.get(id);
   }
+
+  public getLayers(): Map<string, Layer> {
+    return this.layers;
+  }
   
   public addLayer(id = uuidv4(), name = 'New Layer'): Layer {
     // Find the highest zIndex and add 1

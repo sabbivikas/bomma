@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -795,3 +796,602 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     // Handle panning with space key or middle mouse button
     if (event.nativeEvent instanceof MouseEvent && event.nativeEvent.button === 1) {
       setIsPanning(true);
+      return;
+    }
+    
+    const { x, y } = convertCoords(clientX, clientY);
+    
+    if (tool === 'text') {
+      setTextPosition({ x, y });
+      setShowTextInput(true);
+      return;
+    }
+    
+    if (tool === 'fill') {
+      applyFill(x, y);
+      return;
+    }
+    
+    setIsDrawing(true);
+    
+    if (tool === 'spray') {
+      applySprayEffect(x, y);
+    }
+    
+    startPointRef.current = { x, y };
+    lastPointRef.current = { x, y };
+  };
+  
+  const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !layerManagerRef.current) return;
+    
+    event.preventDefault();
+    
+    let clientX, clientY;
+    
+    if ('touches' in event) {
+      const rect = canvasRef.current!.getBoundingClientRect();
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    }
+    
+    if (isPanning) {
+      // Handle panning
+      if (lastPointRef.current) {
+        const dx = clientX - lastPointRef.current.x;
+        const dy = clientY - lastPointRef.current.y;
+        setPan(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      }
+      lastPointRef.current = { x: clientX, y: clientY };
+      return;
+    }
+    
+    const { x, y } = convertCoords(clientX, clientY);
+    
+    if (tool === 'spray') {
+      applySprayEffect(x, y);
+      return;
+    }
+    
+    // For shape tools, just update the current point to show preview
+    if (['line', 'square', 'circle', 'triangle'].includes(tool)) {
+      lastPointRef.current = { x, y };
+      drawShapeOnOverlay();
+      return;
+    }
+    
+    // For drawing tools, draw lines between points
+    if (lastPointRef.current) {
+      const prevX = lastPointRef.current.x;
+      const prevY = lastPointRef.current.y;
+      
+      if (tool === 'pen' || tool === 'brush' || tool === 'eraser') {
+        drawSymmetrically(x, y, prevX, prevY);
+      }
+    }
+    
+    lastPointRef.current = { x, y };
+  };
+  
+  const endDrawing = () => {
+    if (!isDrawing) return;
+    
+    if (['line', 'square', 'circle', 'triangle'].includes(tool) && startPointRef.current && lastPointRef.current) {
+      finalizeShape();
+    }
+    
+    setIsDrawing(false);
+    setIsPanning(false);
+    startPointRef.current = null;
+    
+    // Save the canvas state when drawing ends
+    saveCanvasState();
+  };
+  
+  const handleClear = () => {
+    if (!layerManagerRef.current) return;
+    
+    // Clear all layers except background
+    const layers = Array.from(layerManagerRef.current.getLayers().values()).filter(layer => layer.id !== 'background');
+    layers.forEach(layer => {
+      if (layer.context && layer.canvas) {
+        layer.context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+      }
+    });
+    
+    renderLayers();
+    saveCanvasState();
+  };
+  
+  const handleSave = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      onSave(canvas);
+    }
+  };
+  
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+  
+  const addNewLayer = () => {
+    if (!layerManagerRef.current) return;
+    
+    const newLayer = layerManagerRef.current.addLayer();
+    setActiveLayer(newLayer.id);
+    setLayers(Array.from(layerManagerRef.current.getLayers().values()));
+  };
+  
+  const removeLayer = (layerId: string) => {
+    if (!layerManagerRef.current) return;
+    
+    layerManagerRef.current.removeLayer(layerId);
+    // If the active layer was removed, switch to the first available layer
+    if (layerId === activeLayer) {
+      const layers = Array.from(layerManagerRef.current.getLayers().values());
+      setActiveLayer(layers[0]?.id || 'background');
+    }
+    
+    setLayers(Array.from(layerManagerRef.current.getLayers().values()));
+    renderLayers();
+    saveCanvasState();
+  };
+  
+  const toggleLayerVisibility = (layerId: string) => {
+    if (!layerManagerRef.current) return;
+    
+    layerManagerRef.current.toggleLayerVisibility(layerId);
+    setLayers(Array.from(layerManagerRef.current.getLayers().values()));
+    renderLayers();
+  };
+  
+  // Set up touch events
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDrawing) {
+        e.preventDefault(); // Prevent scrolling when drawing
+      }
+    };
+    
+    // Add event listener to prevent page scroll when drawing
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
+    return () => {
+      canvas.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [isDrawing]);
+  
+  // Update selected tool indicators
+  return (
+    <div className="flex flex-col gap-4" ref={containerRef}>
+      {prompt && (
+        <div className="bg-muted p-3 rounded-md">
+          <p className="text-sm italic">"{prompt}"</p>
+        </div>
+      )}
+      
+      <div className="flex flex-col gap-4">
+        <Tabs defaultValue="tools" className="w-full">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="tools">Tools</TabsTrigger>
+            <TabsTrigger value="layers">Layers</TabsTrigger>
+            <TabsTrigger value="effects">Effects</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="tools" className="p-2 space-y-4">
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Toggle
+                pressed={tool === 'pen'}
+                onClick={() => setTool('pen')}
+                aria-label="Pen tool"
+                className="p-2"
+              >
+                <Pen />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'brush'}
+                onClick={() => setTool('brush')}
+                aria-label="Brush tool"
+                className="p-2"
+              >
+                <Paintbrush />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'eraser'}
+                onClick={() => setTool('eraser')}
+                aria-label="Eraser tool"
+                className="p-2"
+              >
+                <Eraser />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'spray'}
+                onClick={() => setTool('spray')}
+                aria-label="Spray tool"
+                className="p-2"
+              >
+                <Droplet />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'fill'}
+                onClick={() => setTool('fill')}
+                aria-label="Fill tool"
+                className="p-2"
+              >
+                <Palette />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'line'}
+                onClick={() => setTool('line')}
+                aria-label="Line tool"
+                className="p-2"
+              >
+                <Minus />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'square'}
+                onClick={() => setTool('square')}
+                aria-label="Square tool"
+                className="p-2"
+              >
+                <Square />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'circle'}
+                onClick={() => setTool('circle')}
+                aria-label="Circle tool"
+                className="p-2"
+              >
+                <Circle />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'triangle'}
+                onClick={() => setTool('triangle')}
+                aria-label="Triangle tool"
+                className="p-2"
+              >
+                <Triangle />
+              </Toggle>
+              <Toggle
+                pressed={tool === 'text'}
+                onClick={() => setTool('text')}
+                aria-label="Text tool"
+                className="p-2"
+              >
+                <Text />
+              </Toggle>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Brush Width</label>
+              <Slider
+                defaultValue={width}
+                max={50}
+                step={1}
+                min={1}
+                onValueChange={setWidth}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Opacity</label>
+              <Slider
+                defaultValue={opacity}
+                max={100}
+                step={1}
+                min={1}
+                onValueChange={setOpacity}
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <label className="text-sm font-medium w-full">Color</label>
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-10 h-10 p-1 border rounded"
+              />
+              {['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'].map((colorOption) => (
+                <button
+                  key={colorOption}
+                  onClick={() => setColor(colorOption)}
+                  className={`w-8 h-8 rounded-full border-2 ${color === colorOption ? 'border-primary' : 'border-gray-300'}`}
+                  style={{ backgroundColor: colorOption }}
+                  aria-label={`Color ${colorOption}`}
+                />
+              ))}
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Shape Style</label>
+              <div className="flex gap-2">
+                <Toggle
+                  pressed={shapeMode === 'fill'}
+                  onClick={() => setShapeMode('fill')}
+                  aria-label="Fill shape"
+                  className="flex-1"
+                >
+                  Fill
+                </Toggle>
+                <Toggle
+                  pressed={shapeMode === 'stroke'}
+                  onClick={() => setShapeMode('stroke')}
+                  aria-label="Stroke shape"
+                  className="flex-1"
+                >
+                  Stroke
+                </Toggle>
+                <Toggle
+                  pressed={shapeMode === 'both'}
+                  onClick={() => setShapeMode('both')}
+                  aria-label="Fill and stroke shape"
+                  className="flex-1"
+                >
+                  Both
+                </Toggle>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="layers" className="p-2 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium">Layers</h3>
+              <Button size="sm" onClick={addNewLayer} variant="outline">Add Layer</Button>
+            </div>
+            
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {layers.sort((a, b) => b.zIndex - a.zIndex).map(layer => (
+                <div
+                  key={layer.id}
+                  className={cn(
+                    "flex items-center justify-between p-2 rounded",
+                    activeLayer === layer.id && "bg-muted"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Toggle
+                      pressed={layer.visible}
+                      onClick={() => toggleLayerVisibility(layer.id)}
+                      aria-label={`Toggle ${layer.name} visibility`}
+                      className="w-6 h-6 p-0"
+                    >
+                      <Layers className="w-4 h-4" />
+                    </Toggle>
+                    <span
+                      className="text-sm cursor-pointer"
+                      onClick={() => setActiveLayer(layer.id)}
+                    >
+                      {layer.name}
+                    </span>
+                  </div>
+                  
+                  {layer.id !== 'background' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeLayer(layer.id)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="effects" className="p-2 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Symmetry</label>
+              <div className="flex flex-wrap gap-2">
+                <Toggle
+                  pressed={symmetryMode === 'none'}
+                  onClick={() => setSymmetryMode('none')}
+                  aria-label="No symmetry"
+                  className="flex-1"
+                >
+                  None
+                </Toggle>
+                <Toggle
+                  pressed={symmetryMode === 'horizontal'}
+                  onClick={() => setSymmetryMode('horizontal')}
+                  aria-label="Horizontal symmetry"
+                  className="flex-1"
+                >
+                  Horizontal
+                </Toggle>
+                <Toggle
+                  pressed={symmetryMode === 'vertical'}
+                  onClick={() => setSymmetryMode('vertical')}
+                  aria-label="Vertical symmetry"
+                  className="flex-1"
+                >
+                  Vertical
+                </Toggle>
+                <Toggle
+                  pressed={symmetryMode === 'quad'}
+                  onClick={() => setSymmetryMode('quad')}
+                  aria-label="Quad symmetry"
+                  className="flex-1"
+                >
+                  Quad
+                </Toggle>
+                <Toggle
+                  pressed={symmetryMode === 'radial'}
+                  onClick={() => setSymmetryMode('radial')}
+                  aria-label="Radial symmetry"
+                  className="flex-1"
+                >
+                  Radial
+                </Toggle>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filters</label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setFilterType('blur')}
+                >
+                  Blur
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setFilterType('invert')}
+                >
+                  Invert
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setFilterType('grayscale')}
+                >
+                  Grayscale
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setFilterType('sepia')}
+                >
+                  Sepia
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Zoom</label>
+              <div className="flex gap-2">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setZoom(prev => Math.max(0.1, prev - 0.1))}
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <div className="flex-1 flex items-center justify-center">
+                  {Math.round(zoom * 100)}%
+                </div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setZoom(prev => Math.min(5, prev + 0.1))}
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        {showTextInput && (
+          <div className="flex flex-col p-3 bg-muted rounded gap-2">
+            <input
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Enter text"
+              className="px-3 py-2 border rounded"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <select
+                value={textFont}
+                onChange={(e) => setTextFont(e.target.value)}
+                className="px-3 py-2 border rounded flex-1"
+              >
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+              </select>
+              <input
+                type="number"
+                value={textSize}
+                onChange={(e) => setTextSize(Number(e.target.value))}
+                min={8}
+                max={72}
+                className="px-3 py-2 border rounded w-20"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddText} variant="default">Add Text</Button>
+              <Button onClick={() => setShowTextInput(false)} variant="outline">Cancel</Button>
+            </div>
+          </div>
+        )}
+        
+        <div
+          className={cn(
+            "relative overflow-hidden border rounded",
+            isFullscreen ? "w-full h-[60vh]" : "w-full aspect-square max-w-full"
+          )}
+        >
+          <div
+            className="relative"
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: 'top left',
+              translate: `${pan.x}px ${pan.y}px`
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={endDrawing}
+              onMouseLeave={endDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={endDrawing}
+              className="absolute top-0 left-0"
+            />
+            <canvas
+              ref={overlayCanvasRef}
+              className="absolute top-0 left-0 pointer-events-none"
+            />
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleUndo} variant="outline" disabled={undoStack.length <= 1}>
+            <RotateCcw className="mr-1 w-4 h-4" />
+            Undo
+          </Button>
+          <Button onClick={handleRedo} variant="outline" disabled={redoStack.length === 0}>
+            <RotateCw className="mr-1 w-4 h-4" />
+            Redo
+          </Button>
+          <Button onClick={handleClear} variant="outline">
+            <Trash2 className="mr-1 w-4 h-4" />
+            Clear
+          </Button>
+          <Button onClick={toggleFullscreen} variant="outline">
+            {isFullscreen ? (
+              <Minimize className="mr-1 w-4 h-4" />
+            ) : (
+              <Maximize className="mr-1 w-4 h-4" />
+            )}
+            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          </Button>
+          <Button onClick={handleSave} className="ml-auto">
+            <Download className="mr-1 w-4 h-4" />
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
