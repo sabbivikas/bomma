@@ -576,8 +576,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         </div>
       </div>
       
-      <style>
-        {`
+      <style dangerouslySetInnerHTML={{ __html: `
         .canvas-container {
           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
@@ -608,8 +607,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         canvas {
           touch-action: none;
         }
-        `}
-      </style>
+      ` }} />
     </div>
   );
 };
