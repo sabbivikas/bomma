@@ -2,9 +2,17 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Pen, Eraser, Trash2, Download, ArrowRight, Sparkles } from 'lucide-react';
+import { 
+  Pen, Eraser, Trash2, Download, ArrowRight, 
+  Sparkles, RotateCcw, Wand2, Paintbrush, Palette, 
+  FlipHorizontal, Maximize, Minimize
+} from 'lucide-react';
+import { Toggle } from "@/components/ui/toggle";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
-type Tool = 'pen' | 'eraser';
+type Tool = 'pen' | 'eraser' | 'brush' | 'spray';
+type SymmetryMode = 'none' | 'horizontal' | 'vertical' | 'quad';
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -17,8 +25,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [tool, setTool] = useState<Tool>('pen');
   const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState([5]);
+  const [undoStack, setUndoStack] = useState<string[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 500, height: 500 });
+  const [symmetryMode, setSymmetryMode] = useState<SymmetryMode>('none');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Initialize canvas
   useEffect(() => {
@@ -49,6 +61,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       // Fill with white background
       context.fillStyle = 'white';
       context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Save initial canvas state for undo
+      saveCanvasState();
     }
     
     return () => {
@@ -93,9 +108,109 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   // Update tool properties
   useEffect(() => {
     if (!contextRef.current) return;
-    contextRef.current.strokeStyle = tool === 'pen' ? color : '#FFFFFF';
+    contextRef.current.strokeStyle = tool === 'eraser' ? '#FFFFFF' : color;
     contextRef.current.lineWidth = width[0];
+    
+    // Set different drawing styles based on the tool
+    if (contextRef.current) {
+      if (tool === 'brush') {
+        contextRef.current.shadowBlur = 3;
+        contextRef.current.shadowColor = color;
+      } else if (tool === 'spray') {
+        contextRef.current.shadowBlur = 0;
+      } else {
+        contextRef.current.shadowBlur = 0;
+      }
+    }
   }, [color, width, tool]);
+  
+  // Save canvas state for undo functionality
+  const saveCanvasState = () => {
+    if (!canvasRef.current) return;
+    const imageData = canvasRef.current.toDataURL('image/png');
+    setUndoStack(prevStack => [...prevStack, imageData]);
+  };
+  
+  // Undo last action
+  const handleUndo = () => {
+    if (undoStack.length <= 1) return;
+    
+    const newStack = [...undoStack];
+    newStack.pop(); // Remove current state
+    const previousState = newStack[newStack.length - 1];
+    
+    // Load the previous state
+    const canvas = canvasRef.current;
+    const context = contextRef.current;
+    if (canvas && context) {
+      const img = new Image();
+      img.src = previousState;
+      img.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+    }
+    
+    setUndoStack(newStack);
+  };
+  
+  // Draw symmetrically based on mode
+  const drawSymmetrically = (x: number, y: number, canvas: HTMLCanvasElement) => {
+    if (!contextRef.current) return;
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    // Original point
+    contextRef.current.lineTo(x, y);
+    
+    // Apply symmetry based on selected mode
+    if (symmetryMode === 'horizontal' || symmetryMode === 'quad') {
+      // Horizontal reflection
+      const reflectedX = x;
+      const reflectedY = 2 * centerY - y;
+      
+      contextRef.current.moveTo(reflectedX, reflectedY);
+      contextRef.current.lineTo(reflectedX, reflectedY);
+    }
+    
+    if (symmetryMode === 'vertical' || symmetryMode === 'quad') {
+      // Vertical reflection
+      const reflectedX = 2 * centerX - x;
+      const reflectedY = y;
+      
+      contextRef.current.moveTo(reflectedX, reflectedY);
+      contextRef.current.lineTo(reflectedX, reflectedY);
+    }
+    
+    if (symmetryMode === 'quad') {
+      // Diagonal reflection (fourth quadrant)
+      const reflectedX = 2 * centerX - x;
+      const reflectedY = 2 * centerY - y;
+      
+      contextRef.current.moveTo(reflectedX, reflectedY);
+      contextRef.current.lineTo(reflectedX, reflectedY);
+    }
+  };
+  
+  // Apply spray brush effect
+  const applySprayEffect = (x: number, y: number) => {
+    if (!contextRef.current) return;
+    
+    const density = width[0] * 2;
+    const radius = width[0] * 2;
+    
+    for (let i = 0; i < density; i++) {
+      const offsetX = (Math.random() * 2 - 1) * radius;
+      const offsetY = (Math.random() * 2 - 1) * radius;
+      const distance = offsetX * offsetX + offsetY * offsetY;
+      
+      if (distance <= radius * radius) {
+        contextRef.current.fillStyle = color;
+        contextRef.current.fillRect(x + offsetX, y + offsetY, 1, 1);
+      }
+    }
+  };
   
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -115,8 +230,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.nativeEvent.offsetY;
     }
     
-    context.beginPath();
-    context.moveTo(clientX, clientY);
+    if (tool === 'spray') {
+      applySprayEffect(clientX, clientY);
+    } else {
+      context.beginPath();
+      context.moveTo(clientX, clientY);
+    }
   };
   
   const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -135,14 +254,23 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.nativeEvent.offsetY;
     }
     
-    contextRef.current.lineTo(clientX, clientY);
-    contextRef.current.stroke();
+    if (tool === 'spray') {
+      applySprayEffect(clientX, clientY);
+    } else {
+      if (symmetryMode !== 'none') {
+        drawSymmetrically(clientX, clientY, canvasRef.current);
+      } else {
+        contextRef.current.lineTo(clientX, clientY);
+      }
+      contextRef.current.stroke();
+    }
   };
   
   const stopDrawing = () => {
     if (!contextRef.current) return;
     contextRef.current.closePath();
     setIsDrawing(false);
+    saveCanvasState();
   };
   
   const clearCanvas = () => {
@@ -152,6 +280,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     context.fillStyle = 'white';
     context.fillRect(0, 0, canvas.width, canvas.height);
+    saveCanvasState();
   };
   
   const downloadCanvas = () => {
@@ -171,12 +300,56 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
   
-  const predefinedColors = [
+  const toggleFullscreen = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    if (!isFullscreen) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+    
+    setIsFullscreen(!isFullscreen);
+  };
+  
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+  
+  // Expanded color palette with more vibrant options
+  const colorPalette = [
+    // Grayscale
     '#000000', // Black
     '#555555', // Dark Gray
     '#888888', // Medium Gray
     '#BBBBBB', // Light Gray
     '#FFFFFF', // White
+    // Primary Colors
+    '#FF0000', // Red
+    '#00FF00', // Green
+    '#0000FF', // Blue
+    // Secondary Colors
+    '#FFFF00', // Yellow
+    '#FF00FF', // Magenta
+    '#00FFFF', // Cyan
+    // Additional Colors
+    '#FF8800', // Orange
+    '#8800FF', // Purple
+    '#00FF88', // Teal
+    '#FF0088', // Pink
   ];
   
   return (
@@ -191,13 +364,13 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         </div>
       )}
       
-      <div className="w-full flex flex-col items-center">
-        <div className="canvas-container w-full">
+      <div ref={containerRef} className="w-full flex flex-col items-center">
+        <div className="canvas-container w-full relative group">
           <canvas
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            className="bg-white cursor-crosshair touch-none"
+            className="bg-white cursor-crosshair touch-none rounded-lg border-2 border-gray-200"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
@@ -206,82 +379,195 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
           />
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-2 right-2 opacity-50 hover:opacity-100 transition-opacity"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+          </Button>
         </div>
         
         <div className="drawing-tools-container w-full mt-4">
-          <div className="drawing-tools">
-            <Button
-              variant="outline"
-              size="icon"
-              className={`${tool === 'pen' ? 'active' : ''} border-2 border-black sketchy-button`}
-              onClick={() => setTool('pen')}
-            >
-              <Pen className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className={`${tool === 'eraser' ? 'active' : ''} border-2 border-black sketchy-button`}
-              onClick={() => setTool('eraser')}
-            >
-              <Eraser className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="border-2 border-black sketchy-button"
-              onClick={clearCanvas}
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="border-2 border-black sketchy-button"
-              onClick={downloadCanvas}
-            >
-              <Download className="h-5 w-5" />
-            </Button>
+          <Tabs defaultValue="tools" className="w-full">
+            <TabsList className="mb-4 w-full grid grid-cols-3">
+              <TabsTrigger value="tools" className="flex items-center gap-2">
+                <Pen className="h-4 w-4" />
+                <span>Draw</span>
+              </TabsTrigger>
+              <TabsTrigger value="effects" className="flex items-center gap-2">
+                <Wand2 className="h-4 w-4" />
+                <span>Effects</span>
+              </TabsTrigger>
+              <TabsTrigger value="colors" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                <span>Colors</span>
+              </TabsTrigger>
+            </TabsList>
             
-            {/* Color picker input acting as a custom color option */}
-            <div className="flex items-center justify-center">
-              <input 
-                type="color" 
-                value={color}
-                onChange={(e) => {
-                  setTool('pen');
-                  setColor(e.target.value);
-                }}
-                className="color-picker"
-              />
-            </div>
-          </div>
-          
-          <div className="color-palette flex gap-2 mt-4 justify-center">
-            {predefinedColors.map((colorOption) => (
-              <button
-                key={colorOption}
-                className={`color-circle ${color === colorOption && tool === 'pen' ? 'active' : ''}`}
-                style={{ backgroundColor: colorOption }}
-                onClick={() => {
-                  setTool('pen');
-                  setColor(colorOption);
-                }}
-              />
-            ))}
-          </div>
-          
-          <div className="w-full mt-4">
-            <p className="text-sm mb-2">Brush Size: {width[0]}px</p>
-            <Slider 
-              min={1} 
-              max={20} 
-              step={1} 
-              value={width} 
-              onValueChange={setWidth} 
-              className="w-full" 
-            />
-          </div>
+            <TabsContent value="tools" className="space-y-4">
+              <div className="drawing-tools grid grid-cols-5 gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`${tool === 'pen' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  onClick={() => setTool('pen')}
+                  title="Pen Tool"
+                >
+                  <Pen className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`${tool === 'brush' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  onClick={() => setTool('brush')}
+                  title="Brush Tool"
+                >
+                  <Paintbrush className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`${tool === 'spray' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  onClick={() => setTool('spray')}
+                  title="Spray Tool"
+                >
+                  <Sparkles className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`${tool === 'eraser' ? 'bg-black text-white' : ''} border-2 border-black sketchy-button`}
+                  onClick={() => setTool('eraser')}
+                  title="Eraser Tool"
+                >
+                  <Eraser className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-2 border-black sketchy-button"
+                  onClick={handleUndo}
+                  title="Undo"
+                  disabled={undoStack.length <= 1}
+                >
+                  <RotateCcw className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="w-full">
+                <p className="text-sm mb-2">Brush Size: {width[0]}px</p>
+                <Slider 
+                  min={1} 
+                  max={30} 
+                  step={1} 
+                  value={width} 
+                  onValueChange={setWidth} 
+                  className="w-full" 
+                />
+              </div>
+              
+              <div className="flex gap-2 justify-between">
+                <Button
+                  variant="outline"
+                  className="border-2 border-black sketchy-button"
+                  onClick={clearCanvas}
+                >
+                  <Trash2 className="h-5 w-5 mr-2" />
+                  Clear Canvas
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-2 border-black sketchy-button"
+                  onClick={downloadCanvas}
+                >
+                  <Download className="h-5 w-5 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="effects" className="space-y-4">
+              <div>
+                <p className="text-sm mb-2">Symmetry Mode:</p>
+                <div className="grid grid-cols-4 gap-2">
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "border-2 border-black sketchy-button flex-grow",
+                      symmetryMode === 'none' && "bg-black text-white"
+                    )}
+                    onClick={() => setSymmetryMode('none')}
+                  >
+                    None
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "border-2 border-black sketchy-button flex-grow",
+                      symmetryMode === 'horizontal' && "bg-black text-white"
+                    )}
+                    onClick={() => setSymmetryMode('horizontal')}
+                  >
+                    <FlipHorizontal className="h-4 w-4 mr-2" rotate={90} />
+                    Horizontal
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "border-2 border-black sketchy-button flex-grow",
+                      symmetryMode === 'vertical' && "bg-black text-white"
+                    )}
+                    onClick={() => setSymmetryMode('vertical')}
+                  >
+                    <FlipHorizontal className="h-4 w-4 mr-2" />
+                    Vertical
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "border-2 border-black sketchy-button flex-grow",
+                      symmetryMode === 'quad' && "bg-black text-white"
+                    )}
+                    onClick={() => setSymmetryMode('quad')}
+                  >
+                    Quadrant
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="colors">
+              <div className="color-palette grid grid-cols-5 gap-4">
+                {colorPalette.map((colorOption) => (
+                  <button
+                    key={colorOption}
+                    className={cn(
+                      "color-circle w-10 h-10 rounded-full border-2",
+                      color === colorOption && tool !== 'eraser' ? 'ring-2 ring-offset-2 ring-black' : ''
+                    )}
+                    style={{ backgroundColor: colorOption }}
+                    onClick={() => {
+                      setTool(tool === 'eraser' ? 'pen' : tool);
+                      setColor(colorOption);
+                    }}
+                  />
+                ))}
+                <div className="flex items-center justify-center">
+                  <input 
+                    type="color" 
+                    value={color}
+                    onChange={(e) => {
+                      setTool(tool === 'eraser' ? 'pen' : tool);
+                      setColor(e.target.value);
+                    }}
+                    className="color-picker w-10 h-10 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
           
           <div className="flex justify-end mt-4">
             <Button onClick={handleSave} className="border-2 border-black sketchy-button gap-2 bg-black text-white">
@@ -290,6 +576,39 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        .canvas-container {
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+        }
+        
+        .canvas-container:hover {
+          box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .color-picker {
+          -webkit-appearance: none;
+          appearance: none;
+          background-color: transparent;
+          border: none;
+          cursor: pointer;
+        }
+        
+        .color-picker::-webkit-color-swatch {
+          border-radius: 50%;
+          border: 2px solid #ddd;
+        }
+        
+        .color-picker::-moz-color-swatch {
+          border-radius: 50%;
+          border: 2px solid #ddd;
+        }
+        
+        canvas {
+          touch-action: none;
+        }
+      `}</style>
     </div>
   );
 };
