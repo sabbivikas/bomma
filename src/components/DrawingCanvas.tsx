@@ -276,7 +276,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     contextRef.current.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
     
     // Render each visible layer in order of zIndex
-    layerManagerRef.current.renderToCanvas(canvasRef.current!);\
+    layerManagerRef.current.renderToCanvas(canvasRef.current!);
   };
   
   // Save canvas state for undo functionality
@@ -795,3 +795,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     // Handle panning with space key or middle mouse button
     if (event.nativeEvent instanceof MouseEvent && event.nativeEvent.button === 1) {
       setIsPanning(true);
+      return;
