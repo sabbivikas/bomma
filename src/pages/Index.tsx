@@ -9,6 +9,7 @@ import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import OpeningSequence from '@/components/OpeningSequence';
 import { useIsMobile } from '@/hooks/use-mobile';
+import RunningHuman from '@/components/RunningHuman';
 
 const Index = () => {
   const [showOpening, setShowOpening] = useState(true);
@@ -29,31 +30,30 @@ const Index = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
-        <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center bg-white rounded-lg shadow-sm border border-gray-100 max-w-3xl mx-auto`}>
-          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-3`}>
-            Make Something Wonderful
-            <Sparkles className={`inline-block ml-2 mb-1 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
+        <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
+          <h1 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-elegant mb-6 tracking-tight`}>
+            Discover Wonderful Creations
           </h1>
           
-          <div className="h-px bg-gray-200 my-4 w-24 mx-auto" />
+          <div className="h-px bg-gray-200 my-6 w-24 mx-auto" />
           
-          <p className={`${isMobile ? 'text-sm px-4' : 'text-base px-8'} mb-6 font-elegant text-gray-600 max-w-lg mx-auto`}>
-            Share your creativity with the world. Create unique doodles and join our growing community of artists.
+          <p className={`${isMobile ? 'text-sm px-4' : 'text-lg px-8'} mb-8 font-elegant text-gray-600 max-w-lg mx-auto`}>
+            Create your own worlds and characters, then share them with our community.
           </p>
           
           <Link to="/create" className="inline-block">
-            <Button className="bg-black hover:bg-black/80 text-white font-elegant px-6 py-2 rounded-full">
+            <Button className="bg-black hover:bg-black/80 text-white font-elegant px-8 py-3 rounded-full">
               <Pen className="h-4 w-4 mr-2" />
-              Create Now
+              Create Your Design
             </Button>
           </Link>
         </div>
         
-        <div className={`${isMobile ? 'mt-6' : 'mt-8'} max-w-6xl mx-auto`}>
-          <h2 className="text-xl font-elegant mb-4 flex items-center">
-            <span className="bg-black h-5 w-1 rounded-full inline-block mr-3"></span>
-            Explore Creations
-          </h2>
+        <div className="absolute bottom-0 right-0 pointer-events-none">
+          <RunningHuman />
+        </div>
+        
+        <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>
           <DoodleFeed />
         </div>
       </main>
