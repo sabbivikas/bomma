@@ -44,11 +44,10 @@
 
 /* Running human animation */
 .running-human-container {
-  position: absolute;
+  position: relative;
   left: -5%;
   animation: run-across 20s linear infinite;
   z-index: 5;
-  position: relative;
 }
 
 .running-human {
