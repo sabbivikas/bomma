@@ -187,14 +187,19 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       >
         <motion.h1 
           className="text-5xl font-bold font-funky text-center px-10 py-6 bg-white/70 backdrop-blur-sm rounded-lg border-2 border-black shadow-lg"
+          style={{
+            fontFamily: "'Comic Sans MS', cursive, sans-serif",
+            textShadow: "1px 1px 3px rgba(0,0,0,0.2)"
+          }}
           animate={{ y: [0, -5, 0] }}
           transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
         >
-          Creative Canvas Club
+          Make Something Wonderful
         </motion.h1>
         
         <motion.p
           className="mt-4 text-xl font-funky text-center text-black/80 bg-white/50 backdrop-blur-sm px-6 py-2 rounded-lg inline-block"
+          style={{ fontFamily: "'Comic Sans MS', cursive, sans-serif" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: stage >= 2 ? 1 : 0 }}
           transition={{ duration: 1.5, delay: 0.5 }}
