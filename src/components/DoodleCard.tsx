@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { likeDoodle, addComment, getCommentsForDoodle, getSessionId } from '@/utils/doodleService';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
+import { getUsernameForSession } from '@/utils/usernameGenerator';
 
 interface DoodleCardProps {
   doodle: Doodle;
@@ -61,6 +63,16 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
       return (words[0][0] + words[1][0]).toUpperCase();
     }
     return doodle.prompt.substring(0, 2).toUpperCase();
+  };
+
+  // Get username for doodle creator
+  const getDoodleUsername = () => {
+    return getUsernameForSession(doodle.sessionId);
+  };
+  
+  // Get username for comment
+  const getCommentUsername = (comment: Comment) => {
+    return getUsernameForSession(comment.sessionId);
   };
   
   const handleLike = async () => {
@@ -117,12 +129,9 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
   };
   
   const getCommentInitials = (comment: Comment) => {
-    const text = comment.text;
-    const words = text.split(' ');
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return text.substring(0, 2).toUpperCase();
+    // Get initials from the username
+    const username = getCommentUsername(comment);
+    return username.substring(0, 2).toUpperCase();
   };
   
   const handleShare = async () => {
@@ -169,10 +178,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <p className="font-medium text-sm">{doodle.prompt.length > 20 
-            ? doodle.prompt.substring(0, 20) + '...' 
-            : doodle.prompt}
-          </p>
+          <p className="font-medium text-sm">{getDoodleUsername()}</p>
           <p className="text-xs text-gray-500">{timeAgo}</p>
         </div>
         <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
@@ -255,10 +261,15 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="text-xs">{comment.text}</p>
-                      <p className="text-xs text-gray-500">
+                      <div className="flex items-center">
+                        <p className="text-xs font-medium">{getCommentUsername(comment)}</p>
+                        {comment.sessionId === sessionId && (
+                          <span className="ml-1 text-[10px] bg-gray-100 px-1 rounded text-gray-500">You</span>
+                        )}
+                      </div>
+                      <p className="text-xs mt-1">{comment.text}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
                         {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                        {comment.sessionId === sessionId && " · You"}
                       </p>
                     </div>
                   </div>
