@@ -57,7 +57,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const overlayContextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);\
   const lastPointRef = useRef<{ x: number, y: number } | null>(null);
   const startPointRef = useRef<{ x: number, y: number } | null>(null);
   const layerManagerRef = useRef<LayerManager | null>(null);
@@ -791,4 +791,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.touches[0].clientY;
     } else {
       // Fix: For mouse events, get client coordinates rather than offset
-      clientX = event.clientX;
+      clientX = event.
