@@ -57,7 +57,7 @@ const RunningHuman: React.FC = () => {
         />
       </svg>
 
-      {/* Puppy following the human - facing forward now */}
+      {/* Puppy following the human - in side profile running position */}
       <svg
         width="40"
         height="30"
@@ -67,48 +67,52 @@ const RunningHuman: React.FC = () => {
         className="running-puppy"
         style={{ position: 'absolute', left: '25px', top: '35px' }}
       >
-        {/* Dog head - facing forward */}
-        <circle cx="12" cy="8" r="3" fill="#000000" />
+        {/* Dog head - side profile */}
+        <circle cx="8" cy="10" r="3" fill="#000000" />
         
-        {/* Dog ears */}
+        {/* Dog ear */}
         <path
-          d="M9 6L7 4"
+          d="M8 7L9 5"
           stroke="#000000"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M15 6L17 4"
-          stroke="#000000"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
         />
         
-        {/* Dog body - more oblong for forward-facing appearance */}
-        <ellipse cx="12" cy="13" rx="3" ry="2.5" fill="#000000" />
-        
-        {/* Dog front legs - side by side for forward motion */}
+        {/* Dog snout */}
         <path
-          className="paw-front-left"
-          d="M10 15L9 18"
+          d="M5 10L3 10.5"
           stroke="#000000"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          className="paw-front-right"
-          d="M14 15L15 18"
-          stroke="#000000"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
         />
         
-        {/* Dog tail - slightly showing from behind */}
+        {/* Dog body - side profile */}
+        <ellipse cx="13" cy="12" rx="5" ry="2.5" fill="#000000" />
+        
+        {/* Dog front leg */}
         <path
-          className="tail-wag"
-          d="M12 16L12 19"
+          className="dog-front-leg"
+          d="M10 14L9 17"
           stroke="#000000"
-          strokeWidth="2"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Dog back leg */}
+        <path
+          className="dog-back-leg"
+          d="M16 14L17 17"
+          stroke="#000000"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Dog tail */}
+        <path
+          className="dog-tail"
+          d="M18 11L20 10"
+          stroke="#000000"
+          strokeWidth="1.5"
           strokeLinecap="round"
         />
       </svg>
