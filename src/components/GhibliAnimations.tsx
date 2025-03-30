@@ -64,6 +64,55 @@ const GhibliAnimations: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Cute Butterflies (like in "The Secret World of Arrietty") */}
+      <div className="butterflies">
+        {Array(7).fill(0).map((_, i) => (
+          <div 
+            key={`butterfly-${i}`} 
+            className="butterfly absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              transform: `scale(${0.6 + Math.random() * 0.4})`,
+              animation: `flutter ${Math.random() * 10 + 15}s ease-in-out infinite ${Math.random() * 5}s`
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="butterfly-wings">
+              {/* Left wing */}
+              <path 
+                d="M12 12C8 8 5 8 3 10C1 12 1 15 3 17C5 19 8 18 12 12Z" 
+                fill="none" 
+                stroke="black" 
+                strokeOpacity="0.2" 
+                strokeWidth="1" 
+              />
+              {/* Right wing */}
+              <path 
+                d="M12 12C16 8 19 8 21 10C23 12 23 15 21 17C19 19 16 18 12 12Z" 
+                fill="none" 
+                stroke="black" 
+                strokeOpacity="0.2" 
+                strokeWidth="1" 
+              />
+              {/* Body */}
+              <path 
+                d="M12 6C12 6 12 18 12 18" 
+                stroke="black" 
+                strokeOpacity="0.3" 
+                strokeWidth="1" 
+              />
+              {/* Antennas */}
+              <path 
+                d="M12 6C11 4 10 3 9 3M12 6C13 4 14 3 15 3" 
+                stroke="black" 
+                strokeOpacity="0.3" 
+                strokeWidth="1" 
+              />
+            </svg>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

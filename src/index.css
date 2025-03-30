@@ -315,6 +315,54 @@
   }
 }
 
+/* Butterfly animation */
+@keyframes flutter {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(0.8);
+    opacity: 0.4;
+  }
+  10% {
+    transform: translateY(-5vh) translateX(5vw) rotate(10deg) scale(0.9);
+    opacity: 0.7;
+  }
+  20% {
+    transform: translateY(-15vh) translateX(15vw) rotate(-5deg) scale(0.8);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-25vh) translateX(20vw) rotate(10deg) scale(0.9);
+    opacity: 0.8;
+  }
+  40% {
+    transform: translateY(-30vh) translateX(15vw) rotate(0deg) scale(0.7);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-40vh) translateX(25vw) rotate(-10deg) scale(1);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translateY(-50vh) translateX(15vw) rotate(5deg) scale(0.8);
+    opacity: 0.7;
+  }
+  70% {
+    transform: translateY(-60vh) translateX(20vw) rotate(-5deg) scale(0.9);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateY(-70vh) translateX(10vw) rotate(10deg) scale(0.7);
+    opacity: 0.6;
+  }
+  90% {
+    transform: translateY(-80vh) translateX(5vw) rotate(0deg) scale(0.9);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-90vh) translateX(0) rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
 .ghibli-animations {
   position: fixed;
   width: 100%;
@@ -338,4 +386,18 @@
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.1); }
+}
+
+/* Butterfly wings animation */
+.butterfly-wings {
+  animation: flap-wings 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes flap-wings {
+  0% {
+    transform: scaleX(0.8);
+  }
+  100% {
+    transform: scaleX(1);
+  }
 }
