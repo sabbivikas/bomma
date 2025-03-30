@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -62,7 +61,7 @@ const Index = () => {
               <span className="relative">
                 r
                 {/* The human sits on top of the letter "n" */}
-                <WritingHuman className="absolute -top-8 -left-1" />
+                <WritingHuman className="absolute -top-10 -left-2" />
               </span>
               ful
             </span>{' '}

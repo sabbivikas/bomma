@@ -177,7 +177,7 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
             <span className="relative">
               r
               {/* The human sits on top of the letter "n" */}
-              <WritingHuman className="absolute -top-7 left-[2px]" />
+              <WritingHuman className="absolute -top-10 -left-2" />
             </span>
             ful
           </span>
