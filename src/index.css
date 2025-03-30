@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -127,4 +128,26 @@
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-in-out;
+}
+
+/* Ghibli-inspired animations */
+@keyframes float-dust {
+  0% { transform: translateY(0); opacity: 0.2; }
+  100% { transform: translateY(-50px); opacity: 0; }
+}
+
+@keyframes float-leaf {
+  0% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(180deg) translateY(-20px); }
+  100% { transform: rotate(360deg) translateY(0); }
+}
+
+@keyframes float-soot {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100px); }
+}
+
+@keyframes flutter {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px) translateX(15px); }
 }

@@ -35,7 +35,7 @@ const Index = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-blue-50">
       <GhibliAnimations />
       <Cloud />
       <Navbar />
