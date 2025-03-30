@@ -56,7 +56,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [textSize, setTextSize] = useState(16);
   
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const overlayContextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const overlayContextRef = useRef<CanvasRenderingContext2D | null>(null);\
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPointRef = useRef<{ x: number, y: number } | null>(null);
   const startPointRef = useRef<{ x: number, y: number } | null>(null);
