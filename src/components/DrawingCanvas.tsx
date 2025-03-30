@@ -6,7 +6,7 @@ import {
   Sparkles, RotateCcw, Wand2, Paintbrush, Palette, 
   FlipHorizontal, Maximize, Minimize, Square, Circle, 
   Triangle, Minus, Text, Layers, Droplet, ZoomIn, 
-  ZoomOut, RotateCw
+  ZoomOut, RotateCw, Eye, EyeOff, X
 } from 'lucide-react';
 import { Toggle } from "@/components/ui/toggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,7 +58,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const overlayContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const lastPointRef = useRef<{ x: number, y: number } | null>(null);
+  const lastPointRef = useRef<{ x: number, y: number } | null>(null);\
   const startPointRef = useRef<{ x: number, y: number } | null>(null);
   const layerManagerRef = useRef<LayerManager | null>(null);
   
@@ -171,7 +171,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     const hexColor = color.substring(1);
     const r = parseInt(hexColor.substring(0, 2), 16);
     const g = parseInt(hexColor.substring(2, 4), 16);
-    const b = parseInt(hexColor.substring(4, 6), 16);
+    const b = parseInt(hexColor.substring(4, 6), 16);\
     
     contextRef.current.strokeStyle = tool === 'eraser' ? 
       'rgba(255, 255, 255, 1)' : 
@@ -791,4 +791,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientX = event.touches[0].clientX;
       clientY = event.touches[0].clientY;
     } else {
-      // Fix: For mouse events, get client coordinates rather than offset
+      // Fix: For mouse events
