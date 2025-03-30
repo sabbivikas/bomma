@@ -1,3 +1,4 @@
+
 import { Doodle, DoodleCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +46,12 @@ export async function getAllDoodles(): Promise<Doodle[]> {
 
 // Add a new doodle to Supabase
 export async function createDoodle(input: DoodleCreateInput): Promise<Doodle | null> {
+  // Additional validation before saving to database
+  if (!input.imageUrl || input.imageUrl.length < 1000 || !input.prompt || input.prompt.trim().length < 3) {
+    console.error('Invalid doodle data - missing required fields or content');
+    return null;
+  }
+  
   const newDoodle = {
     image_url: input.imageUrl,
     prompt: input.prompt,
@@ -231,8 +238,8 @@ export async function addComment(doodleId: string, text: string): Promise<Commen
   };
 }
 
-// Generate sample doodles for new users - but now we'll never call this function
-// Keeping it here in case we want to reintroduce sample doodles in the future
+// Generate sample doodles for new users - completely disable this functionality
 export async function generateSampleDoodles(): Promise<Doodle[]> {
-  return [];  // Just return empty array - no sample doodles
+  // Explicitly return empty array, no sample doodles anymore
+  return [];
 }

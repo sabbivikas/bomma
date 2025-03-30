@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
 import { getAllDoodles } from '@/utils/doodleService';
@@ -74,29 +75,33 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
     setLastLoadedTime(new Date());
     
     try {
-      // Get all doodles without generating sample doodles
       let loadedDoodles = await getAllDoodles();
       
-      // Enhanced filtering to ensure we only show valid submitted doodles:
+      // Strict filtering to ensure we only show valid submitted doodles with actual content
       const validDoodles = loadedDoodles.filter(doodle => {
         // Ensure we have all required fields
         if (!doodle.id || !doodle.imageUrl || !doodle.prompt) {
           return false;
         }
         
-        // Ensure the image URL is valid and has content
+        // Ensure the image URL is valid and has actual content
         const hasValidImage = doodle.imageUrl && 
-                             doodle.imageUrl.startsWith('data:image') && 
-                             doodle.imageUrl.length > 1000;
+                            doodle.imageUrl.startsWith('data:image') && 
+                            doodle.imageUrl.length > 5000; // Requiring substantial image data
         
         // Check for valid prompt - must have actual content
         const hasValidPrompt = doodle.prompt && 
-                              doodle.prompt.trim().length > 0;
+                            doodle.prompt.trim().length > 3; // Minimum 4 characters
         
         return hasValidImage && hasValidPrompt;
       });
       
+      // If we have no valid doodles after filtering, set empty array
       setDoodles(validDoodles);
+      
+      // Log for debugging
+      console.log(`Loaded ${loadedDoodles.length} doodles, ${validDoodles.length} are valid`);
+      
     } catch (error) {
       console.error('Error loading doodles:', error);
       toast({
