@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, X } from "lucide-react";
 import { Doodle } from '@/types/doodle';
 import { formatDistanceToNow } from 'date-fns';
 import { likeDoodle } from '@/utils/doodleService';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "@/hooks/use-toast";
 
 interface DoodleCardProps {
   doodle: Doodle;
@@ -15,6 +16,8 @@ interface DoodleCardProps {
 
 const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
   const timeAgo = formatDistanceToNow(new Date(doodle.createdAt), { addSuffix: true });
   
   // Get initials from prompt for avatar
@@ -30,6 +33,48 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
     const updatedDoodle = likeDoodle(doodle.id);
     if (updatedDoodle && onLike) {
       onLike(updatedDoodle);
+    }
+  };
+  
+  const handleCommentToggle = () => {
+    setShowComments(!showComments);
+  };
+  
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (commentText.trim()) {
+      toast({
+        title: "Comment added",
+        description: "Your comment has been added to the doodle."
+      });
+      setCommentText('');
+    }
+  };
+  
+  const handleShare = async () => {
+    // If Web Share API is available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: doodle.prompt,
+          text: `Check out this amazing doodle: ${doodle.prompt}`,
+          url: window.location.href
+        });
+        toast({
+          title: "Shared successfully",
+          description: "The doodle was shared successfully"
+        });
+      } catch (error) {
+        // User probably canceled the share operation
+        console.log('Share canceled');
+      }
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied",
+        description: "The link has been copied to your clipboard"
+      });
     }
   };
 
@@ -93,6 +138,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
             variant="ghost"
             size="sm"
             className="flex items-center gap-1 p-0 hover:bg-transparent hover:text-black"
+            onClick={handleCommentToggle}
           >
             <MessageCircle size={18} strokeWidth={2} />
             <span className="text-sm">Comment</span>
@@ -103,10 +149,40 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
           variant="ghost"
           size="sm"
           className="p-0 hover:bg-transparent"
+          onClick={handleShare}
         >
           <Share2 size={18} strokeWidth={2} />
         </Button>
       </CardFooter>
+
+      {/* Comment Section */}
+      {showComments && (
+        <div className="px-4 pb-4 border-t border-gray-100">
+          <div className="flex items-center justify-between py-2">
+            <h4 className="text-sm font-medium">Comments</h4>
+            <Button variant="ghost" size="sm" className="p-1 h-6" onClick={handleCommentToggle}>
+              <X size={16} />
+            </Button>
+          </div>
+          
+          <div className="max-h-36 overflow-y-auto mb-3">
+            <p className="text-xs text-gray-500 italic text-center py-2">No comments yet</p>
+          </div>
+          
+          <form onSubmit={handleCommentSubmit} className="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="Add a comment..." 
+              className="flex-1 border border-gray-200 rounded px-3 py-2 text-sm"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+            <Button type="submit" variant="secondary" size="sm" className="px-3">
+              Post
+            </Button>
+          </form>
+        </div>
+      )}
     </Card>
   );
 };
