@@ -107,7 +107,8 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
       </svg>
       
       {/* Add CSS animations for the different actions */}
-      <style jsx>{`
+      <style>
+        {`
         .waving-hand {
           animation: wave 1s infinite alternate;
           transform-origin: 10px 8.5px;
@@ -137,7 +138,8 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
           0% { opacity: 0.5; transform: scale(0.95); }
           100% { opacity: 0.9; transform: scale(1.05); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
