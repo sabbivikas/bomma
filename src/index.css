@@ -405,24 +405,29 @@
 /* Running human animation */
 .running-human-container {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: run-across 15s linear infinite;
+  left: -5%;
+  animation: run-across 20s linear infinite;
   z-index: 5;
+  display: flex;
+  gap: 20px;
 }
 
 .running-human {
   animation: run-bobbing 0.5s infinite ease-in-out;
 }
 
+.running-puppy {
+  margin-left: -25px;
+  margin-top: 15px;
+  animation: puppy-run 0.4s infinite alternate ease-in-out;
+}
+
 @keyframes run-across {
   0% {
-    left: -5%;
-    transform: translateX(0) scaleX(1);
+    left: -10%;
   }
   100% {
-    left: 105%;
-    transform: translateX(0) scaleX(1);
+    left: 110%;
   }
 }
 
@@ -435,6 +440,15 @@
   }
   100% {
     transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes puppy-run {
+  0% {
+    transform: translateY(0) scaleY(1);
+  }
+  100% {
+    transform: translateY(-2px) scaleY(0.95);
   }
 }
 
@@ -459,6 +473,22 @@
   transform-origin: 12px 14px;
 }
 
+.paw-front {
+  animation: paw-swing 0.3s infinite alternate ease-in-out;
+  transform-origin: 10px 15px;
+}
+
+.paw-back {
+  animation: paw-swing 0.3s infinite alternate ease-in-out;
+  transform-origin: 14px 15px;
+  animation-delay: 0.15s;
+}
+
+.tail-wag {
+  animation: tail-wag 0.3s infinite alternate ease-in-out;
+  transform-origin: 16px 12px;
+}
+
 @keyframes swing-forward {
   0% {
     transform: rotate(-30deg);
@@ -474,5 +504,23 @@
   }
   100% {
     transform: rotate(-15deg);
+  }
+}
+
+@keyframes paw-swing {
+  0% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes tail-wag {
+  0% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(10deg);
   }
 }
