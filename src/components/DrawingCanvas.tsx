@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Download,
-  Paintbrush, Palette
+  Paintbrush, Palette, Share
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState([5]);
+  const [isPublishing, setIsPublishing] = useState(false);
   
   // Simple canvas size
   const [canvasSize] = useState({ width: 800, height: 600 });
@@ -114,10 +115,17 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     contextRef.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
   };
   
-  // Save canvas
-  const handleSave = () => {
+  // Handle publish
+  const handlePublish = () => {
     if (!canvasRef.current) return;
-    onSave(canvasRef.current);
+    setIsPublishing(true);
+    
+    try {
+      onSave(canvasRef.current);
+    } catch (error) {
+      console.error("Error publishing doodle:", error);
+      setIsPublishing(false);
+    }
   };
   
   // Color options
@@ -175,11 +183,13 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           
           <Button
             size="sm"
-            className="flex items-center gap-2"
-            onClick={handleSave}
+            variant="success"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white ml-2"
+            onClick={handlePublish}
+            disabled={isPublishing}
           >
-            <Download className="h-4 w-4" />
-            <span>Save</span>
+            <Share className="h-4 w-4" />
+            <span>{isPublishing ? "Publishing..." : "Publish to Feed"}</span>
           </Button>
         </div>
         
