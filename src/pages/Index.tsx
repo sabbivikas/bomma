@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -72,8 +71,8 @@ const Index = () => {
             </Button>
           </Link>
           
-          {/* Running animation container with better height and visibility */}
-          <div className="mt-8 overflow-visible relative h-32">
+          {/* Improved running animation container with more height and full visibility */}
+          <div className="mt-12 overflow-visible relative h-40 mb-6">
             <RunningHuman />
           </div>
         </div>

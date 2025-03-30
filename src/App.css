@@ -47,7 +47,7 @@
   display: block;
   position: relative;
   left: -5%;
-  animation: run-across 10s linear infinite;
+  animation: run-across 8s linear infinite;
   z-index: 5;
   margin-top: 20px;
   width: 100px;
@@ -55,13 +55,13 @@
 
 /* Human animation */
 .running-human {
-  animation: run-bobbing 0.3s infinite alternate ease-in-out;
+  animation: run-bobbing 0.25s infinite alternate ease-in-out;
   position: relative;
 }
 
 /* Puppy animation */
 .running-puppy {
-  animation: puppy-run 0.3s infinite alternate ease-in-out;
+  animation: puppy-run 0.25s infinite alternate ease-in-out;
   position: absolute;
   left: -25px;
   top: 35px;
@@ -70,29 +70,29 @@
 /* Animation for running across the screen */
 @keyframes run-across {
   0% {
-    left: -15%;
+    left: -20%;
   }
   100% {
-    left: 110%;
+    left: 120%;
   }
 }
 
 /* Animation for bobbing up and down while running */
 @keyframes run-bobbing {
   0% {
-    transform: translateY(0) rotate(3deg);
+    transform: translateY(0) rotate(5deg);
   }
   100% {
-    transform: translateY(-5px) rotate(-3deg);
+    transform: translateY(-8px) rotate(-5deg);
   }
 }
 
 /* Animation for the puppy running */
 @keyframes puppy-run {
   0% {
-    transform: translateY(0) rotate(5deg);
+    transform: translateY(0) rotate(8deg);
   }
   100% {
-    transform: translateY(-4px) rotate(-5deg);
+    transform: translateY(-6px) rotate(-8deg);
   }
 }
