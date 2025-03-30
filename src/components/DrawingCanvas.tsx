@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -796,4 +797,682 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       return;
     }
     
-    // Get coordinates adjusted
+    // Get coordinates adjusted for zoom and pan
+    const { x, y } = convertCoords(clientX, clientY);
+    
+    // If text tool is selected, set position and show text input
+    if (tool === 'text') {
+      setTextPosition({ x, y });
+      setShowTextInput(true);
+      return;
+    }
+    
+    // If fill tool is selected, apply fill at click location
+    if (tool === 'fill') {
+      applyFill(x, y);
+      saveCanvasState();
+      return;
+    }
+    
+    // For shape tools, record the start point
+    if (tool === 'line' || tool === 'square' || tool === 'circle' || tool === 'triangle') {
+      startPointRef.current = { x, y };
+      lastPointRef.current = { x, y };
+    }
+    
+    setIsDrawing(true);
+    
+    // For spray brush, apply immediately
+    if (tool === 'spray') {
+      applySprayEffect(x, y);
+      saveCanvasState();
+    } else if (tool === 'pen' || tool === 'brush' || tool === 'eraser') {
+      // For drawing tools, get the active layer
+      const layer = layerManagerRef.current.getLayer(activeLayer);
+      if (layer && layer.context) {
+        const context = layer.context;
+        context.beginPath();
+        context.moveTo(x, y);
+        context.lineTo(x, y + 0.01); // Small line to ensure single dots are drawn
+        context.stroke();
+      }
+    }
+    
+    lastPointRef.current = { x, y };
+  };
+  
+  const continueDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    
+    if (!isDrawing && !isPanning) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas || !lastPointRef.current || !layerManagerRef.current) return;
+    
+    let clientX, clientY;
+    
+    if ('touches' in event) {
+      const rect = canvas.getBoundingClientRect();
+      clientX = event.touches[0].clientX - rect.left;
+      clientY = event.touches[0].clientY - rect.top;
+    } else {
+      clientX = event.nativeEvent.offsetX;
+      clientY = event.nativeEvent.offsetY;
+    }
+    
+    // Handle panning
+    if (isPanning) {
+      const dx = clientX - lastPointRef.current.x;
+      const dy = clientY - lastPointRef.current.y;
+      
+      setPan(prev => ({
+        x: prev.x + dx,
+        y: prev.y + dy
+      }));
+      
+      lastPointRef.current = { x: clientX, y: clientY };
+      return;
+    }
+    
+    // Get coordinates adjusted for zoom and pan
+    const { x, y } = convertCoords(clientX, clientY);
+    
+    // Handle shape tools
+    if (tool === 'line' || tool === 'square' || tool === 'circle' || tool === 'triangle') {
+      lastPointRef.current = { x, y };
+      drawShapeOnOverlay();
+      return;
+    }
+    
+    // Handle spray brush
+    if (tool === 'spray') {
+      applySprayEffect(x, y);
+      lastPointRef.current = { x, y };
+      return;
+    }
+    
+    // Handle regular drawing tools
+    if (tool === 'pen' || tool === 'brush' || tool === 'eraser') {
+      const layer = layerManagerRef.current.getLayer(activeLayer);
+      if (layer && layer.context) {
+        const lastX = lastPointRef.current.x;
+        const lastY = lastPointRef.current.y;
+        
+        // Draw with symmetry if enabled
+        drawSymmetrically(x, y, lastX, lastY);
+        
+        lastPointRef.current = { x, y };
+      }
+    }
+  };
+  
+  const stopDrawing = () => {
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+    
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    
+    // Finalize shapes
+    if (tool === 'line' || tool === 'square' || tool === 'circle' || tool === 'triangle') {
+      finalizeShape();
+    }
+    
+    // Save state for undo
+    saveCanvasState();
+  };
+  
+  const handleClearCanvas = () => {
+    if (!layerManagerRef.current) return;
+    
+    // Clear all layers except background
+    layerManagerRef.current.getLayer('background')?.context?.fillStyle = 'white';
+    layerManagerRef.current.getLayer('background')?.context?.fillRect(
+      0, 0, 
+      canvasRef.current?.width ?? 500, 
+      canvasRef.current?.height ?? 500
+    );
+    
+    // Clear all other layers
+    layerManagerRef.current.getLayer('main')?.context?.clearRect(
+      0, 0, 
+      canvasRef.current?.width ?? 500, 
+      canvasRef.current?.height ?? 500
+    );
+    
+    renderLayers();
+    saveCanvasState();
+  };
+  
+  const handleDownload = () => {
+    if (!canvasRef.current) return;
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.download = 'doodle.png';
+    link.href = canvasRef.current.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  const handleAddLayer = () => {
+    if (!layerManagerRef.current) return;
+    
+    const newLayer = layerManagerRef.current.addLayer();
+    setLayers(prevLayers => [...prevLayers, newLayer]);
+    setActiveLayer(newLayer.id);
+    
+    renderLayers();
+  };
+  
+  const handleRemoveLayer = (id: string) => {
+    if (!layerManagerRef.current) return;
+    
+    layerManagerRef.current.removeLayer(id);
+    
+    setLayers(prevLayers => prevLayers.filter(l => l.id !== id));
+    
+    // If we're removing the active layer, set the active layer to the highest remaining layer
+    if (id === activeLayer) {
+      const remainingLayers = Array.from(layerManagerRef.current.getLayer('main') 
+        ? ['main'] 
+        : ['background']);
+      setActiveLayer(remainingLayers[remainingLayers.length - 1]);
+    }
+    
+    renderLayers();
+    saveCanvasState();
+  };
+  
+  const toggleLayerVisibility = (id: string) => {
+    if (!layerManagerRef.current) return;
+    
+    layerManagerRef.current.toggleLayerVisibility(id);
+    
+    setLayers(prevLayers => 
+      prevLayers.map(layer => 
+        layer.id === id 
+          ? { ...layer, visible: !layer.visible } 
+          : layer
+      )
+    );
+    
+    renderLayers();
+  };
+  
+  const handleSave = () => {
+    if (!canvasRef.current) return;
+    onSave(canvasRef.current);
+  };
+  
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.2, 5)); // Limit max zoom to 5x
+  };
+  
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.2, 0.2)); // Limit min zoom to 0.2x
+  };
+  
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+  
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+  
+  return (
+    <div className="drawing-canvas-container flex flex-col gap-4 w-full" ref={containerRef}>
+      {/* Prompt display */}
+      {prompt && (
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-md p-4 mb-2">
+          <h3 className="text-lg font-medium text-purple-800 flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            Today's Prompt
+          </h3>
+          <p className="text-purple-700">{prompt}</p>
+        </div>
+      )}
+      
+      {/* Main drawing area */}
+      <div className="relative border-2 border-gray-300 rounded-md bg-white overflow-hidden"
+        style={{
+          width: canvasSize.width,
+          height: canvasSize.height,
+          margin: '0 auto',
+          cursor: tool === 'fill' 
+            ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23000000\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M19 11h4a2 2 0 0 0 2-2V6c0-1.1-.9-2-2-2h-4\'/%3E%3Cpath d=\'M14 10V4a2 2 0 1 0-4 0v6\'/%3E%3Cpath d=\'M10 10H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h5\'/%3E%3Cpath d=\'M14 10h5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-5\'/%3E%3Cpath d=\'M13.1 16H13a3 3 0 1 1 0 6\'/%3E%3C/svg%3E") 16 16, auto'
+            : tool === 'eraser'
+              ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23000000\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21\'/%3E%3Cpath d=\'M22 21H7\'/%3E%3Cpath d=\'m5 11 9 9\'/%3E%3C/svg%3E") 16 16, auto'
+              : tool === 'text'
+                ? 'text'
+                : 'crosshair',
+          transform: `scale(${zoom})`,
+          transformOrigin: 'center center',
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={continueDrawing}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={continueDrawing}
+          onTouchEnd={stopDrawing}
+          style={{ position: 'absolute', transform: `translate(${pan.x}px, ${pan.y}px)` }}
+        />
+        <canvas
+          ref={overlayCanvasRef}
+          style={{ 
+            position: 'absolute', 
+            pointerEvents: 'none',
+            transform: `translate(${pan.x}px, ${pan.y}px)`
+          }}
+        />
+        
+        {showTextInput && (
+          <div
+            className="absolute bg-white border border-gray-300 p-2 rounded-md"
+            style={{
+              left: (textPosition.x * zoom) + pan.x,
+              top: (textPosition.y * zoom) + pan.y,
+              zIndex: 10
+            }}
+          >
+            <input
+              type="text"
+              className="border border-gray-300 p-1 mb-2 w-full"
+              autoFocus
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Type your text..."
+            />
+            <div className="flex gap-2">
+              <select
+                value={textFont}
+                onChange={(e) => setTextFont(e.target.value)}
+                className="border border-gray-300 p-1 text-sm"
+              >
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+              </select>
+              <input
+                type="number"
+                min="8"
+                max="72"
+                value={textSize}
+                onChange={(e) => setTextSize(Number(e.target.value))}
+                className="border border-gray-300 p-1 w-16 text-sm"
+              />
+              <Button size="sm" onClick={handleAddText}>Add</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowTextInput(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Tools and options */}
+      <Tabs defaultValue="tools" className="w-full">
+        <TabsList className="grid grid-cols-4 mb-4">
+          <TabsTrigger value="tools">Tools</TabsTrigger>
+          <TabsTrigger value="layers">Layers</TabsTrigger>
+          <TabsTrigger value="effects">Effects</TabsTrigger>
+          <TabsTrigger value="actions">Actions</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="tools" className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {/* Drawing tools */}
+            <Toggle pressed={tool === 'pen'} onClick={() => setTool('pen')} className="flex-grow" aria-label="Pen">
+              <Pen className="h-4 w-4 mr-1" /> Pen
+            </Toggle>
+            <Toggle pressed={tool === 'brush'} onClick={() => setTool('brush')} className="flex-grow" aria-label="Brush">
+              <Paintbrush className="h-4 w-4 mr-1" /> Brush
+            </Toggle>
+            <Toggle pressed={tool === 'spray'} onClick={() => setTool('spray')} className="flex-grow" aria-label="Spray">
+              <Droplet className="h-4 w-4 mr-1" /> Spray
+            </Toggle>
+            <Toggle pressed={tool === 'eraser'} onClick={() => setTool('eraser')} className="flex-grow" aria-label="Eraser">
+              <Eraser className="h-4 w-4 mr-1" /> Eraser
+            </Toggle>
+            <Toggle pressed={tool === 'fill'} onClick={() => setTool('fill')} className="flex-grow" aria-label="Fill">
+              <Droplet className="h-4 w-4 mr-1" /> Fill
+            </Toggle>
+            <Toggle pressed={tool === 'text'} onClick={() => setTool('text')} className="flex-grow" aria-label="Text">
+              <Text className="h-4 w-4 mr-1" /> Text
+            </Toggle>
+            
+            {/* Shape tools */}
+            <Toggle pressed={tool === 'line'} onClick={() => setTool('line')} className="flex-grow" aria-label="Line">
+              <Line className="h-4 w-4 mr-1" /> Line
+            </Toggle>
+            <Toggle pressed={tool === 'square'} onClick={() => setTool('square')} className="flex-grow" aria-label="Square">
+              <Square className="h-4 w-4 mr-1" /> Square
+            </Toggle>
+            <Toggle pressed={tool === 'circle'} onClick={() => setTool('circle')} className="flex-grow" aria-label="Circle">
+              <Circle className="h-4 w-4 mr-1" /> Circle
+            </Toggle>
+            <Toggle pressed={tool === 'triangle'} onClick={() => setTool('triangle')} className="flex-grow" aria-label="Triangle">
+              <Triangle className="h-4 w-4 mr-1" /> Triangle
+            </Toggle>
+          </div>
+          
+          {/* Shape mode options (only visible when a shape tool is selected) */}
+          {(tool === 'square' || tool === 'circle' || tool === 'triangle') && (
+            <div className="flex gap-2">
+              <Toggle pressed={shapeMode === 'fill'} onClick={() => setShapeMode('fill')} aria-label="Fill">
+                Fill
+              </Toggle>
+              <Toggle pressed={shapeMode === 'stroke'} onClick={() => setShapeMode('stroke')} aria-label="Stroke">
+                Stroke
+              </Toggle>
+              <Toggle pressed={shapeMode === 'both'} onClick={() => setShapeMode('both')} aria-label="Both">
+                Both
+              </Toggle>
+            </div>
+          )}
+          
+          {/* Color selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-8 h-8 border-none"
+              />
+              <div className="grid grid-cols-10 gap-1">
+                {[
+                  '#000000', '#FFFFFF', '#FF0000', '#FF9900', '#FFFF00', 
+                  '#00FF00', '#00FFFF', '#0000FF', '#9900FF', '#FF00FF',
+                  '#795548', '#607D8B', '#9E9E9E', '#FFEB3B', '#FF5722',
+                  '#4CAF50', '#2196F3', '#3F51B5', '#673AB7', '#E91E63'
+                ].map((c) => (
+                  <div
+                    key={c}
+                    className={`w-5 h-5 rounded-full cursor-pointer ${c === '#FFFFFF' ? 'border border-gray-300' : ''}`}
+                    style={{ backgroundColor: c }}
+                    onClick={() => setColor(c)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Size slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <label className="text-sm font-medium text-gray-700">Size</label>
+              <span className="text-sm text-gray-500">{width[0]}px</span>
+            </div>
+            <Slider
+              value={width}
+              onValueChange={setWidth}
+              min={1}
+              max={50}
+              step={1}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Opacity slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <label className="text-sm font-medium text-gray-700">Opacity</label>
+              <span className="text-sm text-gray-500">{opacity[0]}%</span>
+            </div>
+            <Slider
+              value={opacity}
+              onValueChange={setOpacity}
+              min={1}
+              max={100}
+              step={1}
+              className="w-full"
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="layers">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Layers</h3>
+              <Button onClick={handleAddLayer} size="sm" variant="outline">Add Layer</Button>
+            </div>
+            
+            <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+              {layerManagerRef.current && Array.from(layers)
+                .sort((a, b) => b.zIndex - a.zIndex)
+                .map((layer) => (
+                  <div key={layer.id} 
+                    className={cn(
+                      "flex items-center justify-between p-2 rounded",
+                      activeLayer === layer.id ? "bg-gray-100" : ""
+                    )}
+                    onClick={() => setActiveLayer(layer.id)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={layer.visible}
+                        onChange={() => toggleLayerVisibility(layer.id)}
+                        className="h-4 w-4"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span>{layer.name}</span>
+                    </div>
+                    
+                    {layer.id !== 'background' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveLayer(layer.id);
+                        }}
+                        className="text-red-500 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="effects" className="space-y-4">
+          {/* Symmetry options */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Symmetry</label>
+            <div className="flex flex-wrap gap-2">
+              <Toggle pressed={symmetryMode === 'none'} onClick={() => setSymmetryMode('none')} className="flex-grow" aria-label="No Symmetry">
+                None
+              </Toggle>
+              <Toggle pressed={symmetryMode === 'horizontal'} onClick={() => setSymmetryMode('horizontal')} className="flex-grow" aria-label="Horizontal">
+                Horizontal
+              </Toggle>
+              <Toggle pressed={symmetryMode === 'vertical'} onClick={() => setSymmetryMode('vertical')} className="flex-grow" aria-label="Vertical">
+                Vertical
+              </Toggle>
+              <Toggle pressed={symmetryMode === 'quad'} onClick={() => setSymmetryMode('quad')} className="flex-grow" aria-label="Quad">
+                Quad
+              </Toggle>
+              <Toggle pressed={symmetryMode === 'radial'} onClick={() => setSymmetryMode('radial')} className="flex-grow" aria-label="Radial">
+                Radial
+              </Toggle>
+            </div>
+          </div>
+          
+          {/* Filter options */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Filters</label>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setFilterType('blur')} size="sm" variant="outline">Blur</Button>
+              <Button onClick={() => setFilterType('invert')} size="sm" variant="outline">Invert</Button>
+              <Button onClick={() => setFilterType('grayscale')} size="sm" variant="outline">Grayscale</Button>
+              <Button onClick={() => setFilterType('sepia')} size="sm" variant="outline">Sepia</Button>
+            </div>
+          </div>
+          
+          {/* Flip options */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Transform</label>
+            <div className="flex gap-2">
+              <Button onClick={() => {
+                if (!layerManagerRef.current) return;
+                const layer = layerManagerRef.current.getLayer(activeLayer);
+                if (!layer || !layer.context || !layer.canvas) return;
+                
+                // Create temp canvas
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = layer.canvas.width;
+                tempCanvas.height = layer.canvas.height;
+                
+                if (!tempCtx) return;
+                
+                // Draw the original canvas onto the temp canvas
+                tempCtx.drawImage(layer.canvas, 0, 0);
+                
+                // Clear the original canvas
+                layer.context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+                
+                // Flip horizontally
+                layer.context.translate(layer.canvas.width, 0);
+                layer.context.scale(-1, 1);
+                layer.context.drawImage(tempCanvas, 0, 0);
+                
+                // Reset transform
+                layer.context.setTransform(1, 0, 0, 1, 0, 0);
+                
+                renderLayers();
+                saveCanvasState();
+              }} size="sm" variant="outline">
+                <FlipHorizontal className="h-4 w-4 mr-1" /> Flip Horizontal
+              </Button>
+              <Button onClick={() => {
+                if (!layerManagerRef.current) return;
+                const layer = layerManagerRef.current.getLayer(activeLayer);
+                if (!layer || !layer.context || !layer.canvas) return;
+                
+                // Create temp canvas
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = layer.canvas.width;
+                tempCanvas.height = layer.canvas.height;
+                
+                if (!tempCtx) return;
+                
+                // Draw the original canvas onto the temp canvas
+                tempCtx.drawImage(layer.canvas, 0, 0);
+                
+                // Clear the original canvas
+                layer.context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+                
+                // Flip vertically
+                layer.context.translate(0, layer.canvas.height);
+                layer.context.scale(1, -1);
+                layer.context.drawImage(tempCanvas, 0, 0);
+                
+                // Reset transform
+                layer.context.setTransform(1, 0, 0, 1, 0, 0);
+                
+                renderLayers();
+                saveCanvasState();
+              }} size="sm" variant="outline">
+                <RotateCw className="h-4 w-4 mr-1" /> Flip Vertical
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="actions" className="space-y-4">
+          {/* View controls */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Zoom & View</label>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleZoomIn} size="sm" variant="outline">
+                <ZoomIn className="h-4 w-4 mr-1" /> Zoom In
+              </Button>
+              <Button onClick={handleZoomOut} size="sm" variant="outline">
+                <ZoomOut className="h-4 w-4 mr-1" /> Zoom Out
+              </Button>
+              <Button onClick={handleResetZoom} size="sm" variant="outline">
+                Reset View
+              </Button>
+              <Button onClick={toggleFullscreen} size="sm" variant="outline">
+                {isFullscreen ? (
+                  <><Minimize className="h-4 w-4 mr-1" /> Exit Fullscreen</>
+                ) : (
+                  <><Maximize className="h-4 w-4 mr-1" /> Fullscreen</>
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Undo/Redo */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">History</label>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleUndo} 
+                disabled={undoStack.length <= 1} 
+                size="sm" 
+                variant="outline"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" /> Undo
+              </Button>
+              <Button 
+                onClick={handleRedo} 
+                disabled={redoStack.length === 0} 
+                size="sm" 
+                variant="outline"
+              >
+                <RotateCw className="h-4 w-4 mr-1" /> Redo
+              </Button>
+            </div>
+          </div>
+          
+          {/* Canvas actions */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Canvas Actions</label>
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={handleClearCanvas}
+                size="sm" 
+                variant="destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" /> Clear Canvas
+              </Button>
+              <Button 
+                onClick={handleDownload}
+                size="sm" 
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-1" /> Download
+              </Button>
+              <Button 
+                onClick={handleSave}
+                size="sm" 
+                variant="default"
+              >
+                <ArrowRight className="h-4 w-4 mr-1" /> Publish Doodle
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
