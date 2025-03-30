@@ -82,32 +82,32 @@ const GhibliAnimations: React.FC = () => {
               {/* Left wing */}
               <path 
                 d="M12 12C8 8 5 8 3 10C1 12 1 15 3 17C5 19 8 18 12 12Z" 
-                fill="none" 
-                stroke="black" 
-                strokeOpacity="0.2" 
+                fill="#333333" 
+                stroke="#222222" 
+                strokeOpacity="0.7" 
                 strokeWidth="1" 
               />
               {/* Right wing */}
               <path 
                 d="M12 12C16 8 19 8 21 10C23 12 23 15 21 17C19 19 16 18 12 12Z" 
-                fill="none" 
-                stroke="black" 
-                strokeOpacity="0.2" 
+                fill="#333333" 
+                stroke="#222222" 
+                strokeOpacity="0.7" 
                 strokeWidth="1" 
               />
               {/* Body */}
               <path 
                 d="M12 6C12 6 12 18 12 18" 
-                stroke="black" 
-                strokeOpacity="0.3" 
-                strokeWidth="1" 
+                stroke="#222222" 
+                strokeOpacity="0.8" 
+                strokeWidth="1.5" 
               />
               {/* Antennas */}
               <path 
                 d="M12 6C11 4 10 3 9 3M12 6C13 4 14 3 15 3" 
-                stroke="black" 
-                strokeOpacity="0.3" 
-                strokeWidth="1" 
+                stroke="#222222" 
+                strokeOpacity="0.8" 
+                strokeWidth="1.2" 
               />
             </svg>
           </div>
