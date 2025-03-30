@@ -56,7 +56,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [textSize, setTextSize] = useState(16);
   
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const overlayContextRef = useRef<CanvasRenderingContext2D | null>(null);\
+  const overlayContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPointRef = useRef<{ x: number, y: number } | null>(null);
   const startPointRef = useRef<{ x: number, y: number } | null>(null);
@@ -401,7 +401,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
     
     if (symmetryMode === 'radial') {
-      // Radial symmetry (8-way)\
+      // Radial symmetry (8-way)
       const angles = [45, 90, 135, 180, 225, 270, 315];
       
       angles.forEach(angle => {
@@ -776,6 +776,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     saveCanvasState();
   };
   
+  // Start drawing
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || !layerManagerRef.current) return;
@@ -791,4 +792,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.touches[0].clientY;
     } else {
       // Fix: For mouse events, get client coordinates rather than offset
-      clientX = event.
+      clientX =
