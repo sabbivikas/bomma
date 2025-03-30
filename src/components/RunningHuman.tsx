@@ -65,6 +65,7 @@ const RunningHuman: React.FC = () => {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="running-puppy"
+        style={{ position: 'absolute', left: '25px', top: '35px' }}
       >
         {/* Dog head */}
         <circle cx="12" cy="8" r="3" fill="#000000" />
