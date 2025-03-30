@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Cloud, Star, Palette, Brush, Sparkles, ArrowRight } from 'lucide-react';
@@ -24,7 +23,9 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
 
   const handleEnterClick = () => {
     setFadeOut(true);
-    setTimeout(() => onComplete(), 1000);
+    setTimeout(() => {
+      onComplete();
+    }, 1000);
   };
 
   // Random brush stroke colors

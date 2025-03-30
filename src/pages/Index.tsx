@@ -12,7 +12,7 @@ import OpeningSequence from '@/components/OpeningSequence';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
-  const [showOpening, setShowOpening] = useState(true);
+  const [showOpening, setShowOpening] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
   const [newDoodleId, setNewDoodleId] = useState<string | null>(null);
@@ -26,7 +26,19 @@ const Index = () => {
     }
   }, [location.state]);
   
+  // Check if it's the first visit using localStorage
+  useEffect(() => {
+    const hasSeenOpening = localStorage.getItem('hasSeenOpening');
+    
+    if (!hasSeenOpening) {
+      setShowOpening(true);
+      // Don't set localStorage here - we'll do it after user clicks Enter
+    }
+  }, []);
+
   const handleOpeningComplete = () => {
+    // Save to localStorage that user has seen opening
+    localStorage.setItem('hasSeenOpening', 'true');
     setShowOpening(false);
   };
 
