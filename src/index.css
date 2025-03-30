@@ -401,3 +401,58 @@
     transform: scaleX(1);
   }
 }
+
+/* Running human animation */
+.running-human-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: run-across 10s linear infinite;
+  z-index: 5;
+}
+
+.running-human {
+  animation: run-bobbing 0.6s infinite alternate ease-in-out, 
+             run-limbs 0.3s infinite alternate ease-in-out;
+}
+
+@keyframes run-across {
+  0% {
+    left: 0;
+    transform: translateX(-100%) scaleX(1);
+  }
+  45% {
+    left: 50%;
+    transform: translateX(-50%) scaleX(1);
+  }
+  50% {
+    left: 60%;
+    transform: translateX(-50%) scaleX(-1);
+  }
+  95% {
+    left: 10%;
+    transform: translateX(-50%) scaleX(-1);
+  }
+  100% {
+    left: 0;
+    transform: translateX(-100%) scaleX(1);
+  }
+}
+
+@keyframes run-bobbing {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes run-limbs {
+  0% {
+    transform: rotate(-3deg);
+  }
+  100% {
+    transform: rotate(3deg);
+  }
+}

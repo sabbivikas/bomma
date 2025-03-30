@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import FunkyText from '@/components/FunkyText';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
+import RunningHuman from '@/components/RunningHuman';
 
 const Index = () => {
   return (
@@ -35,6 +36,10 @@ const Index = () => {
               Create Your Doodle
             </Button>
           </Link>
+
+          <div className="relative h-24 mt-6">
+            <RunningHuman />
+          </div>
         </div>
         
         <div className="mt-16">
