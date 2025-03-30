@@ -82,7 +82,13 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         loadedDoodles = await generateSampleDoodles();
       }
       
-      setDoodles(loadedDoodles);
+      // Filter out any non-cartoon doodles (those with URLs that don't start with data:image)
+      // This ensures we only show cartoon/drawing-style doodles
+      const cartoonDoodles = loadedDoodles.filter(doodle => 
+        doodle.imageUrl.startsWith('data:image')
+      );
+      
+      setDoodles(cartoonDoodles);
     } catch (error) {
       console.error('Error loading doodles:', error);
       toast({
@@ -185,4 +191,3 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
 };
 
 export default DoodleFeed;
-
