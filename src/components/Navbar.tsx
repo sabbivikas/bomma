@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { WandSparkles, Home } from "lucide-react";
+import { PencilLine, Home } from "lucide-react";
 import WritingHuman from "@/components/WritingHuman";
 
 const Navbar: React.FC = () => {
@@ -34,7 +34,7 @@ const Navbar: React.FC = () => {
               location.pathname === "/create" ? "text-black" : "text-gray-500"
             }`}
           >
-            <WandSparkles className="w-6 h-6" />
+            <PencilLine className="w-6 h-6" />
           </Link>
         </nav>
       </div>
