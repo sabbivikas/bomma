@@ -252,3 +252,90 @@
   background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,10 Q25,20 50,10 T100,10 T150,10 T200,10' stroke='black' fill='none' stroke-width='2' /%3E%3C/svg%3E");
   background-repeat: repeat-x;
 }
+
+/* Studio Ghibli inspired animations */
+@keyframes float-dust {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translateY(-30vh) translateX(10vw);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-60vh) translateX(5vw);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(-90vh) translateX(-5vw);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes float-leaf {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.2;
+  }
+  25% {
+    transform: translateY(-20vh) translateX(10vw) rotate(120deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-30vh) translateX(20vw) rotate(240deg);
+    opacity: 0.3;
+  }
+  75% {
+    transform: translateY(-40vh) translateX(10vw) rotate(360deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-50vh) translateX(0) rotate(480deg);
+    opacity: 0;
+  }
+}
+
+@keyframes float-soot {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(-40vh) scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-80vh) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.ghibli-animations {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.dust-particle {
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+.soot {
+  filter: blur(0.5px);
+}
+
+/* Apply pulse to soot sprites */
+.soot svg {
+  animation: pulse 3s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}

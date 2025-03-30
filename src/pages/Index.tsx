@@ -7,10 +7,12 @@ import { Pen, Laugh } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FunkyText from '@/components/FunkyText';
 import Cloud from '@/components/Cloud';
+import GhibliAnimations from '@/components/GhibliAnimations';
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <GhibliAnimations />
       <Cloud />
       <Navbar />
       
