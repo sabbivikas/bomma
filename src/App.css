@@ -42,14 +42,15 @@
   color: #888;
 }
 
-/* Running human animation - hidden now */
+/* Running human animation - now visible and positioned below Create Your Design button */
 .running-human-container {
-  display: none; /* Hide the container completely */
+  display: block; /* Show the container */
   position: absolute;
   left: -5%;
   animation: run-across 20s linear infinite;
   z-index: 5;
   position: relative;
+  margin-top: 40px;
 }
 
 .running-human {

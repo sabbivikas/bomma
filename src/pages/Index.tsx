@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import OpeningSequence from '@/components/OpeningSequence';
+import RunningHuman from '@/components/RunningHuman';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
@@ -70,6 +71,11 @@ const Index = () => {
               Create Your Design
             </Button>
           </Link>
+          
+          {/* Add the Running Human below the button */}
+          <div className="mt-4 overflow-hidden relative h-20">
+            <RunningHuman />
+          </div>
         </div>
         
         <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>

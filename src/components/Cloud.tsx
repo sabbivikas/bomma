@@ -18,18 +18,18 @@ const Cloud: React.FC = () => {
             background: 'white',
             boxShadow: '20px 20px 80px white',
             filter: 'blur(15px)',
-            animation: `float-cloud ${15 + Math.random() * 30}s linear infinite alternate ${Math.random() * 10}s`
+            animation: `float-cloud ${35 + Math.random() * 20}s linear infinite alternate ${Math.random() * 10}s`
           }}
         />
       ))}
 
-      {/* Add Ghibli-style CSS keyframe animation for clouds */}
+      {/* Add CSS keyframe animation for slow-moving clouds */}
       <style>
         {`
           @keyframes float-cloud {
             0% { transform: translateX(0) translateY(0); }
-            50% { transform: translateX(${Math.random() * 30 + 10}px) translateY(${Math.random() * 10}px); }
-            100% { transform: translateX(${Math.random() * -30 - 10}px) translateY(${Math.random() * -10}px); }
+            50% { transform: translateX(${Math.random() * 10 + 5}px) translateY(${Math.random() * 5}px); }
+            100% { transform: translateX(${Math.random() * -10 - 5}px) translateY(${Math.random() * -5}px); }
           }
         `}
       </style>
