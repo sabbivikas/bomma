@@ -23,84 +23,85 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
 
   return (
     <div className={`writing-human ${className} ${action}`}>
-      {/* Human body */}
+      {/* Human body - reduced viewBox size for smaller default rendering */}
       <svg
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
+        width="100%"
+        height="100%"
+        viewBox="0 0 20 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        style={{ maxWidth: '100%', maxHeight: '100%' }}
       >
-        {/* Head */}
-        <circle cx="12" cy="6" r="3.5" fill="#333333" />
+        {/* Head - scaled down */}
+        <circle cx="10" cy="5" r="2.5" fill="#333333" />
         
-        {/* Body */}
+        {/* Body - scaled down */}
         <path
-          d="M12 8.5L12 14"
+          d="M10 7L10 11"
           stroke="#333333"
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
         />
         
-        {/* Left arm - changes based on action */}
+        {/* Left arm - changes based on action - scaled down */}
         <path
           d={
             action === 'thinking' 
-              ? "M12 10L9 7" // Arm up to head in thinking pose
+              ? "M10 8.5L8 6.5" // Arm up to head in thinking pose
               : action === 'waving' 
-                ? "M12 10L8 8" // Arm up in waving position
-                : "M12 10L9 12" // Default writing position
+                ? "M10 8.5L7 7" // Arm up in waving position
+                : "M10 8.5L8 10" // Default writing position
           }
           stroke="#333333"
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
           className={action === 'waving' ? "waving-hand" : ""}
         />
         
-        {/* Right arm - changes based on action */}
+        {/* Right arm - changes based on action - scaled down */}
         <path
           d={
             action === 'thinking' 
-              ? "M12 10L14 8" // Arm slightly up in thinking pose
-              : "M12 10L15 12" // Default position for writing/waving
+              ? "M10 8.5L12 7" // Arm slightly up in thinking pose
+              : "M10 8.5L12.5 10" // Default position for writing/waving
           }
           stroke="#333333"
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
           className={action !== 'thinking' ? "writing-hand" : ""}
         />
         
-        {/* Pencil - only visible when writing */}
+        {/* Pencil - only visible when writing - scaled down */}
         {action === 'writing' && (
           <path
-            d="M15 12L18 14"
+            d="M12.5 10L14.5 11.5"
             stroke="#333333"
-            strokeWidth="2.5"
+            strokeWidth="1.5"
             strokeLinecap="round"
             className="pencil"
           />
         )}
         
-        {/* Thought bubble - only visible when thinking */}
+        {/* Thought bubble - only visible when thinking - scaled down */}
         {action === 'thinking' && (
           <>
-            <circle cx="17" cy="4" r="1" fill="#333333" className="thought-bubble" />
-            <circle cx="19" cy="3" r="1.5" fill="#333333" className="thought-bubble" />
-            <circle cx="21" cy="2" r="1" fill="#333333" className="thought-bubble" />
+            <circle cx="14" cy="3.5" r="0.7" fill="#333333" className="thought-bubble" />
+            <circle cx="15.5" cy="2.5" r="1" fill="#333333" className="thought-bubble" />
+            <circle cx="17" cy="1.5" r="0.7" fill="#333333" className="thought-bubble" />
           </>
         )}
         
-        {/* Legs */}
+        {/* Legs - scaled down */}
         <path
-          d="M12 14L14 17"
+          d="M10 11L11.5 13.5"
           stroke="#333333" 
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
         />
         <path
-          d="M12 14L10 17"
+          d="M10 11L8.5 13.5"
           stroke="#333333"
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
         />
       </svg>
