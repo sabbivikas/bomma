@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import DoodleFeed from '@/components/DoodleFeed';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,17 @@ import RunningHuman from '@/components/RunningHuman';
 const Index = () => {
   const [showOpening, setShowOpening] = useState(true);
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const [newDoodleId, setNewDoodleId] = useState<string | null>(null);
+  
+  // Check if we have a newly created doodle from the navigation state
+  useEffect(() => {
+    if (location.state && location.state.newDoodle) {
+      setNewDoodleId(location.state.newDoodle);
+      // Clear the state after reading it to prevent it from persisting on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   
   const handleOpeningComplete = () => {
     setShowOpening(false);
@@ -55,7 +67,7 @@ const Index = () => {
         </div>
         
         <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>
-          <DoodleFeed />
+          <DoodleFeed highlightDoodleId={newDoodleId} />
         </div>
       </main>
     </div>

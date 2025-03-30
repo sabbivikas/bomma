@@ -12,9 +12,10 @@ import { toast } from "@/hooks/use-toast";
 interface DoodleCardProps {
   doodle: Doodle;
   onLike?: (doodle: Doodle) => void;
+  highlight?: boolean;
 }
 
-const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
+const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -22,6 +23,18 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
   const [isLoading, setIsLoading] = useState(false);
   const timeAgo = formatDistanceToNow(new Date(doodle.createdAt), { addSuffix: true });
   const sessionId = getSessionId();
+  
+  // Reference to the card element for scrolling into view
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (highlight && cardRef.current) {
+      // Scroll the highlighted card into view with smooth behavior
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [highlight]);
   
   useEffect(() => {
     if (showComments) {
@@ -107,7 +120,10 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
 
   return (
     <Card 
-      className="w-full overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-all duration-200 hover:shadow-md bg-white"
+      ref={cardRef}
+      className={`w-full overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:shadow-md bg-white ${
+        highlight ? 'ring-4 ring-blue-400 animate-pulse-once shadow-lg' : 'border-gray-200'
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

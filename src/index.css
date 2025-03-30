@@ -1,6 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,526 +5,126 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --foreground: 222.2 47.4% 11.2%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 222.2 47.4% 11.2%;
 
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 0 0% 53%;
-    --secondary-foreground: 0 0% 100%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
 
-    --accent: 0 0% 80%;
-    --accent-foreground: 0 0% 0%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 33%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 0% 0%;
-    --destructive-foreground: 0 0% 100%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --border: 0 0% 0%;
-    --input: 0 0% 94%;
-    --ring: 0 0% 0%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --radius: 0.75rem;
+    --ring: 222.2 47.4% 11.2%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 217.2 32.6% 17.5%;
+
+    --radius: 0.5rem;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+@layer utilities {
+  .font-funky {
+    font-family: "Permanent Marker", sans-serif;
   }
-
-  body {
-    @apply bg-background text-foreground font-cartoon bg-doodle-bg bg-repeat;
-    background-size: 400px;
+  .font-elegant {
+    font-family: "Patrick Hand", sans-serif;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-funky font-bold;
+  .sketchy-text {
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
   }
-}
-
-.canvas-container {
-  touch-action: none;
-  @apply border-[3px] border-black border-dashed rounded-xl overflow-hidden;
-}
-
-.drawing-tools {
-  @apply grid gap-2 grid-cols-3 sm:grid-cols-6;
-}
-
-.drawing-tools button {
-  @apply flex items-center justify-center p-2 rounded-lg transition-all hover:bg-black/5 active:scale-95;
-}
-
-.drawing-tools button.active {
-  @apply bg-black/10 ring-2 ring-black;
-}
-
-.color-circle {
-  @apply w-6 h-6 rounded-full border-2 transition-transform;
-}
-
-.color-circle.active {
-  @apply border-black scale-110;
-}
-
-.color-picker {
-  @apply w-8 h-8 appearance-none bg-transparent cursor-pointer;
-}
-
-.color-picker::-webkit-color-swatch-wrapper {
-  @apply p-0 m-0 rounded-full overflow-hidden;
-}
-
-.color-picker::-webkit-color-swatch {
-  @apply border-none rounded-full;
-}
-
-.doodle-card {
-  @apply transition-all duration-300 hover:shadow-lg border-2 border-black rounded-xl hover:animate-sketch bg-white;
-}
-
-.sketchy-box {
-  @apply border-[3px] border-black rounded-xl relative;
-  box-shadow: 3px 3px 0 #000000;
-}
-
-.sketchy-text {
-  @apply relative z-10;
-}
-
-.sketchy-text::after {
-  content: "";
-  @apply absolute inset-0 bg-white -z-10 border-b-2 border-black;
-  transform: rotate(-1deg) translateY(1px);
-}
-
-.funky-text {
-  @apply relative inline-block;
-}
-
-.funky-text span {
-  @apply inline-block;
-  animation: letter-dance 2s infinite ease-in-out;
-}
-
-.funky-text span:nth-child(odd) {
-  animation-delay: 0.1s;
-}
-
-.funky-text span:nth-child(even) {
-  animation-delay: 0.2s;
-}
-
-.funky-text span:nth-child(3n) {
-  animation-delay: 0.3s;
-}
-
-@keyframes letter-dance {
-  0%, 100% { transform: translateY(0); }
-  25% { transform: translateY(-2px) rotate(3deg); }
-  75% { transform: translateY(2px) rotate(-3deg); }
-}
-
-.sketchy-button {
-  @apply transition-all active:translate-y-1 active:shadow-none shadow-[2px_2px_0_#000000] bg-black text-white rounded-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  padding: 0.75rem 1.5rem;
-}
-
-.sketchy-divider {
-  @apply h-[3px] bg-black zigzag;
-}
-
-.zigzag {
-  mask-image: url("data:image/svg+xml,%3Csvg width='100' height='8' viewBox='0 0 100 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4C8.33333 1.33333 16.6667 1.33333 25 4C33.3333 6.66667 41.6667 6.66667 50 4C58.3333 1.33333 66.6667 1.33333 75 4C83.3333 6.66667 91.6667 6.66667 100 4' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
-  mask-size: 40px 100%;
-  mask-repeat: repeat-x;
-}
-
-.animate-draw {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: draw-line 1.5s forwards;
-}
-
-@keyframes draw-line {
-  to {
-    stroke-dashoffset: 0;
+  .sketchy-divider {
+    height: 4px;
+    background: repeating-linear-gradient(
+      -45deg,
+      #000,
+      #000 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+  .sketchy-box {
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+  }
+  .sketchy-button {
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+  }
+  .animate-pulse-light {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .h-screen-80 {
+    height: 80vh;
   }
 }
 
-/* Cartoon style scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-white border-l border-black;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-black rounded-full border-2 border-white;
-}
-
-/* Floating clouds */
-.cloud {
-  @apply absolute opacity-70 pointer-events-none z-0;
-  animation: float-cloud 20s linear infinite;
-}
-
-.cloud-1 {
-  top: 10%;
-  left: -10%;
-  width: 120px;
-}
-
-.cloud-2 {
-  top: 40%;
-  right: -5%;
-  width: 80px;
-  animation-duration: 25s;
-  animation-delay: -5s;
-}
-
-@keyframes float-cloud {
+@keyframes pulse-once {
   0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(calc(100vw + 200px));
-  }
-}
-
-/* Create a FunkyText component styling */
-.wavy-text {
-  @apply relative inline-flex;
-}
-
-.wavy-text span {
-  @apply inline-block transition-transform;
-  animation: wavy-animation 2s infinite ease-in-out;
-}
-
-@keyframes wavy-animation {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
-/* Updated sketchy button style to ensure text fits within box */
-.doodle-card {
-  @apply relative transition-all duration-300 hover:rotate-1 bg-white;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
-}
-
-.doodle-card::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border: 2px solid black;
-  border-radius: 2px;
-  background: transparent;
-  z-index: -1;
-}
-
-.artsy-divider {
-  position: relative;
-  height: 20px;
-  margin: 2rem 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,10 Q25,20 50,10 T100,10 T150,10 T200,10' stroke='black' fill='none' stroke-width='2' /%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-}
-
-/* Studio Ghibli inspired animations */
-@keyframes float-dust {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-    opacity: 0.5;
-  }
-  25% {
-    transform: translateY(-30vh) translateX(10vw);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translateY(-60vh) translateX(5vw);
-    opacity: 0.6;
-  }
-  75% {
-    transform: translateY(-90vh) translateX(-5vw);
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(0);
-    opacity: 0;
-  }
-}
-
-@keyframes float-leaf {
-  0% {
-    transform: translateY(0) translateX(0) rotate(0deg);
-    opacity: 0.2;
-  }
-  25% {
-    transform: translateY(-20vh) translateX(10vw) rotate(120deg);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translateY(-30vh) translateX(20vw) rotate(240deg);
-    opacity: 0.3;
-  }
-  75% {
-    transform: translateY(-40vh) translateX(10vw) rotate(360deg);
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(-50vh) translateX(0) rotate(480deg);
-    opacity: 0;
-  }
-}
-
-@keyframes float-soot {
-  0% {
-    transform: translateY(0) scale(0.8);
-    opacity: 0.2;
-  }
-  50% {
-    transform: translateY(-40vh) scale(1);
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateY(-80vh) scale(0.8);
-    opacity: 0;
-  }
-}
-
-/* Butterfly animation */
-@keyframes flutter {
-  0% {
-    transform: translateY(0) translateX(0) rotate(0deg) scale(0.8);
-    opacity: 0.4;
-  }
-  10% {
-    transform: translateY(-5vh) translateX(5vw) rotate(10deg) scale(0.9);
-    opacity: 0.7;
-  }
-  20% {
-    transform: translateY(-15vh) translateX(15vw) rotate(-5deg) scale(0.8);
-    opacity: 0.6;
-  }
-  30% {
-    transform: translateY(-25vh) translateX(20vw) rotate(10deg) scale(0.9);
-    opacity: 0.8;
-  }
-  40% {
-    transform: translateY(-30vh) translateX(15vw) rotate(0deg) scale(0.7);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateY(-40vh) translateX(25vw) rotate(-10deg) scale(1);
-    opacity: 0.9;
-  }
-  60% {
-    transform: translateY(-50vh) translateX(15vw) rotate(5deg) scale(0.8);
-    opacity: 0.7;
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
   }
   70% {
-    transform: translateY(-60vh) translateX(20vw) rotate(-5deg) scale(0.9);
-    opacity: 0.8;
-  }
-  80% {
-    transform: translateY(-70vh) translateX(10vw) rotate(10deg) scale(0.7);
-    opacity: 0.6;
-  }
-  90% {
-    transform: translateY(-80vh) translateX(5vw) rotate(0deg) scale(0.9);
-    opacity: 0.4;
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
   }
   100% {
-    transform: translateY(-90vh) translateX(0) rotate(0deg) scale(0.8);
-    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
 }
 
-.ghibli-animations {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
+.animate-pulse-once {
+  animation: pulse-once 2s ease-in-out 1;
 }
 
-.dust-particle {
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-.soot {
-  filter: blur(0.5px);
-}
-
-/* Apply pulse to soot sprites */
-.soot svg {
-  animation: pulse 3s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-/* Butterfly wings animation */
-.butterfly-wings {
-  animation: flap-wings 0.5s infinite alternate ease-in-out;
-}
-
-@keyframes flap-wings {
-  0% {
-    transform: scaleX(0.8);
-  }
-  100% {
-    transform: scaleX(1);
-  }
-}
-
-/* Running human animation */
-.running-human-container {
-  position: absolute;
-  left: -5%;
-  animation: run-across 20s linear infinite;
-  z-index: 5;
-  position: relative;
-}
-
-.running-human {
-  animation: run-bobbing 0.5s infinite ease-in-out;
-}
-
-.running-puppy {
-  animation: puppy-run 0.4s infinite alternate ease-in-out;
-}
-
-@keyframes run-across {
-  0% {
-    left: -10%;
-  }
-  100% {
-    left: 110%;
-  }
-}
-
-@keyframes run-bobbing {
-  0% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-3px) rotate(0deg);
-  }
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-}
-
-@keyframes puppy-run {
-  0% {
-    transform: translateY(0) scaleY(1);
-  }
-  100% {
-    transform: translateY(-2px) scaleY(0.95);
-  }
-}
-
-/* Specific limb animations */
-.arm-front {
-  animation: swing-forward 0.4s infinite alternate ease-in-out;
-  transform-origin: 12px 10px;
-}
-
-.arm-back {
-  animation: swing-backward 0.4s infinite alternate ease-in-out;
-  transform-origin: 12px 10px;
-}
-
-.leg-front {
-  animation: swing-backward 0.4s infinite alternate ease-in-out;
-  transform-origin: 12px 14px;
-}
-
-.leg-back {
-  animation: swing-forward 0.4s infinite alternate ease-in-out;
-  transform-origin: 12px 14px;
-}
-
-/* Dog animation for side profile running */
-.dog-front-leg {
-  animation: dog-leg-forward 0.3s infinite alternate ease-in-out;
-  transform-origin: 10px 14px;
-}
-
-.dog-back-leg {
-  animation: dog-leg-backward 0.3s infinite alternate ease-in-out;
-  transform-origin: 16px 14px;
-  animation-delay: 0.15s;
-}
-
-.dog-tail {
-  animation: tail-wag 0.3s infinite alternate ease-in-out;
-  transform-origin: 18px 11px;
-}
-
-@keyframes swing-forward {
-  0% {
-    transform: rotate(-30deg);
-  }
-  100% {
-    transform: rotate(15deg);
-  }
-}
-
-@keyframes swing-backward {
-  0% {
-    transform: rotate(30deg);
-  }
-  100% {
-    transform: rotate(-15deg);
-  }
-}
-
-@keyframes dog-leg-forward {
-  0% {
-    transform: rotate(-20deg);
-  }
-  100% {
-    transform: rotate(20deg);
-  }
-}
-
-@keyframes dog-leg-backward {
-  0% {
-    transform: rotate(20deg);
-  }
-  100% {
-    transform: rotate(-20deg);
-  }
-}
-
-@keyframes tail-wag {
-  0% {
-    transform: rotate(-15deg);
-  }
-  100% {
-    transform: rotate(15deg);
-  }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
 }

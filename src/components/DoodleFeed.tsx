@@ -6,7 +6,11 @@ import DoodleCard from './DoodleCard';
 import { Smile } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const DoodleFeed: React.FC = () => {
+interface DoodleFeedProps {
+  highlightDoodleId?: string | null;
+}
+
+const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
   const [doodles, setDoodles] = useState<Doodle[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const isMobile = useIsMobile();
@@ -14,6 +18,13 @@ const DoodleFeed: React.FC = () => {
   useEffect(() => {
     // Load doodles
     loadDoodles();
+    
+    // Set up event listener for doodle publishing from other components/tabs
+    window.addEventListener('doodle-published', loadDoodles);
+    
+    return () => {
+      window.removeEventListener('doodle-published', loadDoodles);
+    };
   }, []);
   
   const loadDoodles = () => {
@@ -70,7 +81,12 @@ const DoodleFeed: React.FC = () => {
     <div className="w-full py-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {doodles.map((doodle) => (
-          <DoodleCard key={doodle.id} doodle={doodle} onLike={handleDoodleLiked} />
+          <DoodleCard 
+            key={doodle.id} 
+            doodle={doodle} 
+            onLike={handleDoodleLiked} 
+            highlight={doodle.id === highlightDoodleId}
+          />
         ))}
       </div>
       
