@@ -1,173 +1,118 @@
 
 import React from 'react';
 
-const GhibliAnimations = () => {
-  // Generate random animation delays
-  const getRandomDelay = () => Math.random() * 10;
-  const getRandomDuration = (min: number, max: number) => min + Math.random() * (max - min);
-
-  // Create dust particles
-  const dustParticles = Array.from({ length: 15 }, (_, i) => ({
-    id: `dust-${i}`,
-    delay: getRandomDelay(),
-    duration: getRandomDuration(8, 15),
-    size: 2 + Math.random() * 4,
-    left: `${Math.random() * 100}%`,
-    opacity: 0.4 + Math.random() * 0.4,
-  }));
-
-  // Create leaf particles
-  const leaves = Array.from({ length: 5 }, (_, i) => ({
-    id: `leaf-${i}`,
-    delay: getRandomDelay(),
-    duration: getRandomDuration(15, 25),
-    size: 8 + Math.random() * 6,
-    left: `${Math.random() * 100}%`,
-  }));
-
-  // Create soot sprites
-  const sootSprites = Array.from({ length: 6 }, (_, i) => ({
-    id: `soot-${i}`,
-    delay: getRandomDelay(),
-    duration: getRandomDuration(12, 18),
-    size: 6 + Math.random() * 4,
-    left: `${10 + Math.random() * 80}%`,
-  }));
-
-  // Create butterflies
-  const butterflies = Array.from({ length: 3 }, (_, i) => ({
-    id: `butterfly-${i}`,
-    delay: getRandomDelay(),
-    duration: getRandomDuration(20, 30),
-    size: 12 + Math.random() * 8,
-    startPosition: `${Math.random() * 30}%`,
-  }));
-
+const GhibliAnimations: React.FC = () => {
   return (
-    <div className="ghibli-animations fixed inset-0 pointer-events-none overflow-hidden">
-      {/* Dust particles */}
-      {dustParticles.map((particle) => (
-        <div
-          key={particle.id}
-          className="absolute bottom-0"
-          style={{
-            left: particle.left,
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            borderRadius: '50%',
-            animation: `float-dust ${particle.duration}s linear infinite`,
-            animationDelay: `${particle.delay}s`,
-            opacity: particle.opacity,
-          }}
-        ></div>
-      ))}
-
-      {/* Leaves */}
-      {leaves.map((leaf) => (
-        <div
-          key={leaf.id}
-          className="absolute bottom-0"
-          style={{
-            left: leaf.left,
-            animation: `float-leaf ${leaf.duration}s linear infinite`,
-            animationDelay: `${leaf.delay}s`,
-            zIndex: 2,
-          }}
-        >
-          <svg
-            width={leaf.size}
-            height={leaf.size}
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+    <div className="ghibli-animations fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {/* Floating dust particles (like in "My Neighbor Totoro" and "Spirited Away") */}
+      <div className="dust-particles">
+        {Array(20).fill(0).map((_, i) => (
+          <div 
+            key={`dust-${i}`} 
+            className="dust-particle absolute rounded-full bg-black/5"
+            style={{
+              width: `${Math.random() * 6 + 2}px`,
+              height: `${Math.random() * 6 + 2}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `float-dust ${Math.random() * 15 + 10}s linear infinite ${Math.random() * 10}s`
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Floating leaves (like in "Totoro" or "Princess Mononoke") */}
+      <div className="floating-leaves">
+        {Array(8).fill(0).map((_, i) => (
+          <div 
+            key={`leaf-${i}`} 
+            className="leaf absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              opacity: 0.6,
+              transform: `rotate(${Math.random() * 360}deg)`,
+              animation: `float-leaf ${Math.random() * 20 + 20}s ease-in-out infinite ${Math.random() * 10}s`
+            }}
           >
-            <path
-              d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"
-              fill="#4CAF50"
-              fillOpacity="0.4"
-            />
-            <path d="M12 12L12 6" stroke="#4CAF50" strokeOpacity="0.7" strokeWidth="2" />
-          </svg>
-        </div>
-      ))}
-
-      {/* Soot sprites */}
-      {sootSprites.map((sprite) => (
-        <div
-          key={sprite.id}
-          className="absolute bottom-0"
-          style={{
-            left: sprite.left,
-            width: `${sprite.size}px`,
-            height: `${sprite.size}px`,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: '50%',
-            animation: `float-soot ${sprite.duration}s linear infinite`,
-            animationDelay: `${sprite.delay}s`,
-            zIndex: 3,
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              top: '20%',
-              left: '15%',
-              width: '30%',
-              height: '30%',
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              borderRadius: '50%',
-            }}
-          ></div>
-          <div
-            style={{
-              position: 'absolute',
-              top: '20%',
-              right: '15%',
-              width: '30%',
-              height: '30%',
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              borderRadius: '50%',
-            }}
-          ></div>
-        </div>
-      ))}
-
-      {/* Butterflies */}
-      {butterflies.map((butterfly) => (
-        <div
-          key={butterfly.id}
-          className="absolute bottom-10"
-          style={{
-            left: butterfly.startPosition,
-            animation: `flutter ${butterfly.duration}s linear infinite`,
-            animationDelay: `${butterfly.delay}s`,
-            zIndex: 4,
-          }}
-        >
-          <div className="butterfly-wings">
-            <svg
-              width={butterfly.size}
-              height={butterfly.size * 0.8}
-              viewBox="0 0 24 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 9C12 9 8 5 2 5C2 5 4 13 12 9Z"
-                fill="#FF9D9D"
-                fillOpacity="0.7"
-              />
-              <path
-                d="M12 9C12 9 16 5 22 5C22 5 20 13 12 9Z"
-                fill="#FF9D9D"
-                fillOpacity="0.7"
-              />
-              <path d="M12 2L12 16" stroke="#333" strokeOpacity="0.6" strokeWidth="0.5" />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 21.5C17.5 21.5 21.5 17.5 21.5 12C21.5 6.5 17.5 2.5 12 2.5C6.5 2.5 2.5 6.5 2.5 12C2.5 17.5 6.5 21.5 12 21.5Z" fill="none" stroke="black" strokeOpacity="0.15" strokeWidth="1" />
+              <path d="M12 21.5C15 18.5 16 15 16 12C16 9 15 5.5 12 2.5C9 5.5 8 9 8 12C8 15 9 18.5 12 21.5Z" fill="none" stroke="black" strokeOpacity="0.15" strokeWidth="1" />
             </svg>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      
+      {/* Tiny soot sprites (like in "Spirited Away") */}
+      <div className="soot-sprites">
+        {Array(6).fill(0).map((_, i) => (
+          <div 
+            key={`soot-${i}`} 
+            className="soot absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              bottom: `-20px`,
+              opacity: 0.6,
+              animation: `float-soot ${Math.random() * 10 + 15}s ease-in-out infinite ${Math.random() * 5}s`
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="8" fill="black" fillOpacity="0.1" />
+              <circle cx="7" cy="8" r="1" fill="black" fillOpacity="0.2" />
+              <circle cx="12" cy="8" r="1" fill="black" fillOpacity="0.2" />
+            </svg>
+          </div>
+        ))}
+      </div>
+
+      {/* Cute Butterflies (like in "The Secret World of Arrietty") */}
+      <div className="butterflies">
+        {Array(7).fill(0).map((_, i) => (
+          <div 
+            key={`butterfly-${i}`} 
+            className="butterfly absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              transform: `scale(${0.6 + Math.random() * 0.4})`,
+              animation: `flutter ${Math.random() * 10 + 15}s ease-in-out infinite ${Math.random() * 5}s`
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="butterfly-wings">
+              {/* Left wing */}
+              <path 
+                d="M12 12C8 8 5 8 3 10C1 12 1 15 3 17C5 19 8 18 12 12Z" 
+                fill="#333333" 
+                stroke="#222222" 
+                strokeOpacity="0.7" 
+                strokeWidth="1" 
+              />
+              {/* Right wing */}
+              <path 
+                d="M12 12C16 8 19 8 21 10C23 12 23 15 21 17C19 19 16 18 12 12Z" 
+                fill="#333333" 
+                stroke="#222222" 
+                strokeOpacity="0.7" 
+                strokeWidth="1" 
+              />
+              {/* Body */}
+              <path 
+                d="M12 6C12 6 12 18 12 18" 
+                stroke="#222222" 
+                strokeOpacity="0.8" 
+                strokeWidth="1.5" 
+              />
+              {/* Antennas */}
+              <path 
+                d="M12 6C11 4 10 3 9 3M12 6C13 4 14 3 15 3" 
+                stroke="#222222" 
+                strokeOpacity="0.8" 
+                strokeWidth="1.2" 
+              />
+            </svg>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,26 +1,127 @@
 
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RunningHuman: React.FC = () => {
+  const isMobile = useIsMobile();
+  
+  // Scale down for mobile devices
+  const scale = isMobile ? 0.7 : 1;
+  
   return (
-    <div className="running-human-container absolute">
-      {/* Running person */}
-      <div className="running-human">
-        <svg width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 10C17.7614 10 20 7.76142 20 5C20 2.23858 17.7614 0 15 0C12.2386 0 10 2.23858 10 5C10 7.76142 12.2386 10 15 10Z" fill="black"/>
-          <path d="M15 12C13.5 12 11.5 12.5 10 13.5C8.5 14.5 8 16 8 17.5C8 19 8 22 8 22L12 20V40H16V24L23 26V18L16 16C16 16 16.5 14.5 18 14.5C19.5 14.5 22 16 22 16V12C22 12 19.5 12 18 12H15Z" fill="black"/>
-        </svg>
-      </div>
-      
-      {/* Running dog/puppy */}
-      <div className="running-puppy" style={{ position: 'absolute', left: '40px', top: '25px' }}>
-        <svg width="30" height="20" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7 8C8.5 8 9.5 6.5 9.5 5C9.5 3.5 8.5 2 7 2C5.5 2 4.5 3.5 4.5 5C4.5 6.5 5.5 8 7 8Z" fill="black"/>
-          <path d="M30 8C30 8 27 2 22 2C17 2 16 8 13 8C10 8 9 6 7 6C5 6 0 8 0 8V10C0 10 4 8 6 8C8 8 10 10 12 10C14 10 16 4 22 4C28 4 28 10 28 10L30 8Z" fill="black"/>
-          <path d="M6 8L4 16" stroke="black" strokeWidth="2" strokeLinecap="round"/>
-          <path d="M26 8L28 16" stroke="black" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </div>
+    <div className="running-human-container" style={{ transform: `scale(${scale})`, height: isMobile ? '40px' : '80px' }}>
+      {/* Human */}
+      <svg
+        width="60"
+        height="80"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="running-human"
+      >
+        {/* Head */}
+        <circle cx="12" cy="6" r="2.5" fill="#222222" />
+        
+        {/* Body */}
+        <path
+          d="M12 8.5L12 14"
+          stroke="#222222"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        
+        {/* Arms */}
+        <path
+          className="arm-front"
+          d="M12 10L15 7"
+          stroke="#222222"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          className="arm-back"
+          d="M12 10L9 13"
+          stroke="#222222"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        
+        {/* Legs */}
+        <path
+          className="leg-front"
+          d="M12 14L15 17"
+          stroke="#222222"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          className="leg-back"
+          d="M12 14L9 17"
+          stroke="#222222"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* Puppy following the human - proper side profile facing right */}
+      <svg
+        width="40"
+        height="30"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="running-puppy"
+        style={{ position: 'absolute', left: '-55px', top: '35px' }}
+      >
+        {/* Dog head - side profile facing right */}
+        <circle cx="16" cy="10" r="3" fill="#000000" />
+        
+        {/* Dog ear */}
+        <path
+          d="M16 7L15 5"
+          stroke="#000000"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Dog snout */}
+        <path
+          d="M19 10L21 10.5"
+          stroke="#000000"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Dog body - side profile */}
+        <ellipse cx="11" cy="12" rx="5" ry="2.5" fill="#000000" />
+        
+        {/* Dog front leg */}
+        <path
+          className="dog-front-leg"
+          d="M14 14L15 17"
+          stroke="#000000"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Dog back leg */}
+        <path
+          className="dog-back-leg"
+          d="M8 14L7 17"
+          stroke="#000000"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Dog tail */}
+        <path
+          className="dog-tail"
+          d="M6 11L4 10"
+          stroke="#000000"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
     </div>
   );
 };

@@ -42,8 +42,8 @@ const Index = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
-        {/* Running human animation - position as absolute */}
-        <div className="w-full overflow-hidden h-20 mb-4 relative">
+        {/* Running human animation - now visible at the top */}
+        <div className="w-full overflow-hidden h-20 mb-4">
           <RunningHuman />
         </div>
         
