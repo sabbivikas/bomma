@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -9,6 +10,7 @@ import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import OpeningSequence from '@/components/OpeningSequence';
 import { useIsMobile } from '@/hooks/use-mobile';
+import WritingHuman from '@/components/WritingHuman';
 
 const Index = () => {
   const [showOpening, setShowOpening] = useState(false);
@@ -54,7 +56,17 @@ const Index = () => {
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
         <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
           <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight relative`}>
-            Discover Wonderful Creations
+            Discover{' '}
+            <span className="wonderful-wrapper relative inline-block">
+              W<span>o</span>nd<span>e</span>
+              <span className="relative">
+                r
+                {/* The human sits on top of the letter "n" */}
+                <WritingHuman className="absolute -top-8 -left-1" />
+              </span>
+              ful
+            </span>{' '}
+            Creations
           </h1>
           
           <div className="h-px bg-gray-200 my-6 w-24 mx-auto" />

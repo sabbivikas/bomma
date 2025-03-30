@@ -66,7 +66,7 @@
 /* Writing human animations */
 .writing-human {
   position: absolute;
-  z-index: 10;
+  z-index: 20;
   transform-origin: center bottom;
   display: inline-block;
   pointer-events: none;
@@ -74,31 +74,37 @@
 
 @keyframes writing-motion {
   0% {
-    transform: rotate(-5deg);
+    transform: rotate(-8deg);
   }
   50% {
-    transform: rotate(5deg);
+    transform: rotate(8deg);
   }
   100% {
-    transform: rotate(-5deg);
+    transform: rotate(-8deg);
   }
 }
 
 .writing-hand {
-  animation: writing-motion 0.8s infinite ease-in-out;
-  transform-origin: bottom right;
+  animation: writing-motion 0.6s infinite ease-in-out;
+  transform-origin: center right;
 }
 
 /* Pencil writing animation */
 @keyframes pencil-writing {
   0%, 100% {
-    transform: translateX(-1px) translateY(1px);
+    transform: translateX(-2px) translateY(1px);
   }
   50% {
-    transform: translateX(1px) translateY(-1px);
+    transform: translateX(2px) translateY(-1px);
   }
 }
 
 .pencil {
   animation: pencil-writing 0.3s infinite ease-in-out;
+}
+
+/* Wonderful text position */
+.wonderful-wrapper {
+  position: relative;
+  display: inline-block;
 }
