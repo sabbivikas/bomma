@@ -43,11 +43,11 @@ const Index = () => {
     if (isMobile) return;
     
     const createDreamyDustParticles = () => {
-      const container = document.querySelector('main');
+      const container = document.querySelector('.index-page-container');
       if (!container) return;
       
-      // Increase number of particles for more visible effect
-      for (let i = 0; i < 20; i++) {
+      // Create dust particles - increased for more visible effect
+      for (let i = 0; i < 25; i++) {
         const dust = document.createElement('div');
         dust.className = 'dreamy-dust';
         
@@ -65,8 +65,8 @@ const Index = () => {
         container.appendChild(dust);
       }
       
-      // Add floating sparkles
-      for (let i = 0; i < 10; i++) {
+      // Add floating sparkles - increased for more visible effect
+      for (let i = 0; i < 15; i++) {
         const sparkle = document.createElement('div');
         sparkle.className = 'ghibli-sparkle';
         
@@ -75,8 +75,8 @@ const Index = () => {
         sparkle.style.top = `${Math.random() * 100}%`;
         sparkle.style.opacity = `${0.3 + Math.random() * 0.3}`;
         
-        // Random size
-        const size = 4 + Math.random() * 8;
+        // Random size - slightly larger for better visibility
+        const size = 5 + Math.random() * 10;
         sparkle.style.width = `${size}px`;
         sparkle.style.height = `${size}px`;
         
@@ -107,15 +107,17 @@ const Index = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-blue-50 relative overflow-hidden">
-      {/* Enhanced background gradient for Ghibli effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#E0F7FA] via-[#B3E5FC] to-[#D1C4E9] opacity-70 z-0"></div>
+    <div className="min-h-screen flex flex-col relative index-page-container overflow-hidden">
+      {/* Enhanced background gradient for Ghibli effect - stronger opacity */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#E0F7FA] via-[#B3E5FC] to-[#D1C4E9] opacity-80 z-0"></div>
       
-      {/* Light rays */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.8),transparent_70%)] z-0"></div>
+      {/* Light rays - more pronounced */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.9),transparent_70%)] z-0"></div>
       
-      {/* The background ghibli elements */}
+      {/* The background ghibli elements - higher z-index */}
       <GhibliAnimations />
+      
+      {/* More visible clouds */}
       <Cloud />
       <Navbar />
       
@@ -152,7 +154,7 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Add CSS for enhanced dreamy effects */}
+      {/* Enhanced CSS for dreamy effects */}
       <style>
         {`
         .ghibli-button::before {
@@ -185,8 +187,30 @@ const Index = () => {
           0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
           50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
         }
+
+        /* Additional Ghibli-style animations */
+        .floating-light {
+          position: absolute;
+          width: 15px;
+          height: 15px;
+          background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        @keyframes float-around {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(20px, -30px); }
+          50% { transform: translate(40px, 0); }
+          75% { transform: translate(20px, 30px); }
+        }
         `}
       </style>
+
+      {/* Add floating light particles */}
+      <div className="absolute top-1/4 left-1/4 floating-light" style={{ animation: 'float-around 20s infinite ease-in-out', opacity: 0.7 }}></div>
+      <div className="absolute top-1/3 right-1/4 floating-light" style={{ animation: 'float-around 25s infinite ease-in-out 2s', opacity: 0.6 }}></div>
+      <div className="absolute bottom-1/4 left-1/3 floating-light" style={{ animation: 'float-around 30s infinite ease-in-out 5s', opacity: 0.5 }}></div>
     </div>
   );
 };

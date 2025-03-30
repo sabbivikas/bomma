@@ -4,7 +4,7 @@ import React from 'react';
 const GhibliAnimations: React.FC = () => {
   return (
     <div className="ghibli-animations fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Animated Butterflies (only 3) */}
+      {/* More Animated Butterflies (5 total) */}
       <div className="butterflies">
         {/* Top left butterfly */}
         <div 
@@ -137,6 +137,98 @@ const GhibliAnimations: React.FC = () => {
               <path 
                 d="M15 7.5C13.75 5 12.5 3.75 11.25 3.75M15 7.5C16.25 5 17.5 3.75 18.75 3.75" 
                 stroke="#FFB74D" 
+                strokeOpacity="0.8" 
+                strokeWidth="0.8" 
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Bottom left butterfly (new) */}
+        <div 
+          className="butterfly absolute"
+          style={{
+            left: '25%',
+            bottom: '15%',
+            transform: 'scale(0.5) rotate(10deg)',
+            animation: 'flutter-path 32s ease-in-out infinite 3s'
+          }}
+        >
+          <div className="butterfly-inner" style={{ animation: 'flutter-wings 0.3s ease-in-out infinite alternate' }}>
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Left wing */}
+              <path 
+                d="M15 15C10.5 10.5 6 10.5 3.5 12.5C1 14.5 1 18.75 3.5 21.25C6 23.75 10.5 22.5 15 15Z" 
+                fill="#E1BEE7" 
+                stroke="#9C27B0" 
+                strokeOpacity="0.7" 
+                strokeWidth="0.5" 
+              />
+              {/* Right wing */}
+              <path 
+                d="M15 15C19.5 10.5 24 10.5 26.5 12.5C29 14.5 29 18.75 26.5 21.25C24 23.75 19.5 22.5 15 15Z" 
+                fill="#E1BEE7" 
+                stroke="#9C27B0" 
+                strokeOpacity="0.7" 
+                strokeWidth="0.5" 
+              />
+              {/* Body */}
+              <path 
+                d="M15 7.5C15 7.5 15 22.5 15 22.5" 
+                stroke="#9C27B0" 
+                strokeOpacity="0.8" 
+                strokeWidth="1" 
+              />
+              {/* Antennas */}
+              <path 
+                d="M15 7.5C13.75 5 12.5 3.75 11.25 3.75M15 7.5C16.25 5 17.5 3.75 18.75 3.75" 
+                stroke="#9C27B0" 
+                strokeOpacity="0.8" 
+                strokeWidth="0.8" 
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Bottom right butterfly (new) */}
+        <div 
+          className="butterfly absolute"
+          style={{
+            right: '15%',
+            bottom: '25%',
+            transform: 'scale(0.65) rotate(-5deg)',
+            animation: 'flutter-path 27s ease-in-out infinite 7s'
+          }}
+        >
+          <div className="butterfly-inner" style={{ animation: 'flutter-wings 0.3s ease-in-out infinite alternate' }}>
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Left wing */}
+              <path 
+                d="M15 15C10.5 10.5 6 10.5 3.5 12.5C1 14.5 1 18.75 3.5 21.25C6 23.75 10.5 22.5 15 15Z" 
+                fill="#C5E1A5" 
+                stroke="#8BC34A" 
+                strokeOpacity="0.7" 
+                strokeWidth="0.5" 
+              />
+              {/* Right wing */}
+              <path 
+                d="M15 15C19.5 10.5 24 10.5 26.5 12.5C29 14.5 29 18.75 26.5 21.25C24 23.75 19.5 22.5 15 15Z" 
+                fill="#C5E1A5" 
+                stroke="#8BC34A" 
+                strokeOpacity="0.7" 
+                strokeWidth="0.5" 
+              />
+              {/* Body */}
+              <path 
+                d="M15 7.5C15 7.5 15 22.5 15 22.5" 
+                stroke="#8BC34A" 
+                strokeOpacity="0.8" 
+                strokeWidth="1" 
+              />
+              {/* Antennas */}
+              <path 
+                d="M15 7.5C13.75 5 12.5 3.75 11.25 3.75M15 7.5C16.25 5 17.5 3.75 18.75 3.75" 
+                stroke="#8BC34A" 
                 strokeOpacity="0.8" 
                 strokeWidth="0.8" 
               />
