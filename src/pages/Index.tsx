@@ -28,7 +28,7 @@ const Index = () => {
           </p>
           
           <Link to="/create" className="inline-block transform hover:scale-105 transition-transform">
-            <Button size="lg" className="sketchy-button text-lg bg-black rounded-md px-6 py-3 font-funky">
+            <Button className="sketchy-button font-funky">
               <Pen className="h-5 w-5 mr-2" />
               Create Your Doodle
             </Button>

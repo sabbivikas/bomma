@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
 
@@ -139,11 +138,13 @@
 }
 
 .sketchy-button {
-  @apply transition-all active:translate-y-1 active:shadow-none shadow-[2px_2px_0_#000000];
+  @apply transition-all active:translate-y-1 active:shadow-none shadow-[2px_2px_0_#000000] bg-black text-white rounded-md;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: nowrap;
   white-space: nowrap;
+  padding: 0.75rem 1.5rem;
 }
 
 .sketchy-divider {
@@ -226,11 +227,6 @@
 }
 
 /* Updated sketchy button style to ensure text fits within box */
-.sketchy-button {
-  @apply relative inline-block transition-transform active:translate-y-1;
-  box-shadow: 3px 3px 0 #000;
-}
-
 .doodle-card {
   @apply relative transition-all duration-300 hover:rotate-1 bg-white;
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
