@@ -42,70 +42,7 @@
   color: #888;
 }
 
-/* Running human and puppy container */
-.running-human-container {
-  display: block;
-  position: relative;
-  width: 100px;
-  height: 100px;
-  left: -10%;
-  animation: run-across 6s linear infinite;
-  z-index: 10;
-  margin-top: 20px;
-  pointer-events: none;
-}
-
-/* Human animation */
-.running-human {
-  animation: run-bobbing 0.3s infinite alternate ease-in-out;
-  position: relative;
-  transform-origin: center bottom;
-  z-index: 20;
-}
-
-/* Puppy animation */
-.running-puppy {
-  animation: puppy-run 0.3s infinite alternate ease-in-out;
-  position: absolute;
-  left: -25px;
-  top: 35px;
-  transform-origin: center bottom;
-  z-index: 20;
-}
-
-/* Animation for running across the screen */
-@keyframes run-across {
-  0% {
-    left: -10%;
-    transform: translateX(0);
-  }
-  100% {
-    left: 110%;
-    transform: translateX(0);
-  }
-}
-
-/* Animation for bobbing up and down while running */
-@keyframes run-bobbing {
-  0% {
-    transform: translateY(0) rotate(5deg);
-  }
-  100% {
-    transform: translateY(-10px) rotate(-5deg);
-  }
-}
-
-/* Animation for the puppy running */
-@keyframes puppy-run {
-  0% {
-    transform: translateY(0) rotate(10deg);
-  }
-  100% {
-    transform: translateY(-8px) rotate(-10deg);
-  }
-}
-
-/* Cloud styles - make them more visible */
+/* Cloud styles */
 .cloud {
   opacity: 0.9 !important;
   filter: blur(3px) !important;
@@ -124,4 +61,44 @@
   0% { transform: translateX(0) translateY(0); }
   50% { transform: translateX(20px) translateY(10px); }
   100% { transform: translateX(-20px) translateY(-10px); }
+}
+
+/* Writing human animations */
+.writing-human {
+  position: absolute;
+  z-index: 10;
+  transform-origin: center bottom;
+  display: inline-block;
+  pointer-events: none;
+}
+
+@keyframes writing-motion {
+  0% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(-5deg);
+  }
+}
+
+.writing-hand {
+  animation: writing-motion 0.8s infinite ease-in-out;
+  transform-origin: bottom right;
+}
+
+/* Pencil writing animation */
+@keyframes pencil-writing {
+  0%, 100% {
+    transform: translateX(-1px) translateY(1px);
+  }
+  50% {
+    transform: translateX(1px) translateY(-1px);
+  }
+}
+
+.pencil {
+  animation: pencil-writing 0.3s infinite ease-in-out;
 }

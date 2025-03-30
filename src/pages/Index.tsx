@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -9,7 +8,6 @@ import { Link } from 'react-router-dom';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import OpeningSequence from '@/components/OpeningSequence';
-import RunningHuman from '@/components/RunningHuman';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
@@ -55,7 +53,7 @@ const Index = () => {
       
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
         <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
-          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight`}>
+          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight relative`}>
             Discover Wonderful Creations
           </h1>
           
@@ -71,11 +69,6 @@ const Index = () => {
               Create Your Design
             </Button>
           </Link>
-          
-          {/* Running animation container with improved visibility and height */}
-          <div className="mt-12 h-32 relative overflow-visible border-t border-b border-transparent">
-            <RunningHuman />
-          </div>
         </div>
         
         <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>

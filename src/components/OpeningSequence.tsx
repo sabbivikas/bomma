@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Cloud, Star, Palette, Brush, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
+import WritingHuman from './WritingHuman';
 
 const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const [stage, setStage] = useState(0);
@@ -158,7 +159,7 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
       <div className="z-10 text-center px-4 relative">
         {/* Title with artistic animation - now outside of box */}
         <motion.h1
-          className="text-6xl font-elegant tracking-tight mb-6 text-black"
+          className="text-6xl font-elegant tracking-tight mb-6 text-black relative"
           initial={{ opacity: 0, y: 20, letterSpacing: '10px' }}
           animate={{ 
             opacity: stage >= 2 ? 1 : 0,
@@ -170,7 +171,16 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
             textShadow: "2px 2px 4px rgba(0,0,0,0.1)"
           }}
         >
-          Make Something Wonderful
+          Make Something{' '}
+          <span className="relative inline-block">
+            W<span className="relative">o</span>nd<span className="relative">e</span>
+            <span className="relative">
+              r
+              {/* The human sits on top of the letter "n" */}
+              <WritingHuman className="absolute -top-7 left-[2px]" />
+            </span>
+            ful
+          </span>
         </motion.h1>
         
         {/* Subtitle with creative fade in - outside of box */}
