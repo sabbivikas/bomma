@@ -67,37 +67,37 @@ const RunningHuman: React.FC = () => {
         className="running-puppy"
       >
         {/* Dog head */}
-        <circle cx="12" cy="8" r="3" fill="#8B4513" />
+        <circle cx="12" cy="8" r="3" fill="#000000" />
         
         {/* Dog ears */}
         <path
           d="M9 6L7 4"
-          stroke="#8B4513"
+          stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />
         <path
           d="M15 6L17 4"
-          stroke="#8B4513"
+          stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />
         
         {/* Dog body */}
-        <ellipse cx="12" cy="13" rx="4" ry="3" fill="#8B4513" />
+        <ellipse cx="12" cy="13" rx="4" ry="3" fill="#000000" />
         
         {/* Dog legs */}
         <path
           className="paw-front"
           d="M10 15L9 18"
-          stroke="#8B4513"
+          stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />
         <path
           className="paw-back"
           d="M14 15L15 18"
-          stroke="#8B4513"
+          stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -106,7 +106,7 @@ const RunningHuman: React.FC = () => {
         <path
           className="tail-wag"
           d="M16 12L19 11"
-          stroke="#8B4513"
+          stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />

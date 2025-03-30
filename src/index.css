@@ -409,7 +409,7 @@
   animation: run-across 20s linear infinite;
   z-index: 5;
   display: flex;
-  gap: 20px;
+  flex-direction: row;
 }
 
 .running-human {
@@ -417,8 +417,8 @@
 }
 
 .running-puppy {
-  margin-left: -25px;
-  margin-top: 15px;
+  margin-left: -10px;
+  margin-top: 20px;
   animation: puppy-run 0.4s infinite alternate ease-in-out;
 }
 
