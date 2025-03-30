@@ -188,8 +188,8 @@ const Create = () => {
           </div>
         )}
         
-        {/* Change from max-w-3xl to max-w-5xl to allow more space for the canvas */}
-        <div className="max-w-5xl mx-auto">
+        {/* Increase max-width to allow more space for the canvas */}
+        <div className="max-w-6xl mx-auto">
           {publishedDoodle ? (
             <div className="flex flex-col items-center">
               <div className="w-full max-w-md animate-pop-in">
