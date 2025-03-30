@@ -51,29 +51,34 @@
   z-index: 5;
   margin-top: 20px;
   width: 100px;
+  pointer-events: none;
 }
 
 /* Human animation */
 .running-human {
-  animation: run-bobbing 0.25s infinite alternate ease-in-out;
+  animation: run-bobbing 0.2s infinite alternate ease-in-out;
   position: relative;
+  transform-origin: center bottom;
 }
 
 /* Puppy animation */
 .running-puppy {
-  animation: puppy-run 0.25s infinite alternate ease-in-out;
+  animation: puppy-run 0.2s infinite alternate ease-in-out;
   position: absolute;
   left: -25px;
   top: 35px;
+  transform-origin: center bottom;
 }
 
 /* Animation for running across the screen */
 @keyframes run-across {
   0% {
     left: -20%;
+    transform: translateX(0);
   }
   100% {
     left: 120%;
+    transform: translateX(0);
   }
 }
 
@@ -90,9 +95,27 @@
 /* Animation for the puppy running */
 @keyframes puppy-run {
   0% {
-    transform: translateY(0) rotate(8deg);
+    transform: translateY(0) rotate(10deg);
   }
   100% {
-    transform: translateY(-6px) rotate(-8deg);
+    transform: translateY(-6px) rotate(-10deg);
   }
+}
+
+/* Cloud styles - make sure they're visible */
+.cloud {
+  opacity: 0.8 !important;
+  filter: blur(5px) !important;
+  background-color: white !important;
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: 0 0 40px 20px white !important;
+  z-index: 1;
+  animation: float-cloud 30s infinite alternate !important;
+}
+
+@keyframes float-cloud {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(20px) translateY(10px); }
+  100% { transform: translateX(-20px) translateY(-10px); }
 }

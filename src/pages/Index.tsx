@@ -71,8 +71,8 @@ const Index = () => {
             </Button>
           </Link>
           
-          {/* Improved running animation container with more height and full visibility */}
-          <div className="mt-12 overflow-visible relative h-40 mb-6">
+          {/* Enhanced running animation container with clear visibility */}
+          <div className="mt-12 overflow-visible relative h-40 mb-8 border-t border-b border-transparent">
             <RunningHuman />
           </div>
         </div>

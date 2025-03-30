@@ -5,11 +5,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const RunningHuman: React.FC = () => {
   const isMobile = useIsMobile();
   
-  // Scale down for mobile devices
-  const scale = isMobile ? 0.7 : 1;
+  // Scale for different devices
+  const scale = isMobile ? 0.8 : 1;
   
   return (
-    <div className="running-human-container" style={{ transform: `scale(${scale})`, height: isMobile ? '60px' : '80px' }}>
+    <div className="running-human-container" style={{ transform: `scale(${scale})`, height: '80px' }}>
       {/* Human */}
       <svg
         width="60"
@@ -20,96 +20,95 @@ const RunningHuman: React.FC = () => {
         className="running-human"
       >
         {/* Head */}
-        <circle cx="12" cy="6" r="2.5" fill="#222222" />
+        <circle cx="12" cy="6" r="3" fill="#000000" />
         
-        {/* Body - animated with dashes to simulate movement */}
+        {/* Body */}
         <path
           d="M12 8.5L12 14"
-          stroke="#222222"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeDasharray="1 1"
-        />
-        
-        {/* Arms - exaggerated running position */}
-        <path
-          d="M12 10L17 7"
-          stroke="#222222"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M12 10L7 12"
-          stroke="#222222"
-          strokeWidth="2"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
         
-        {/* Legs - exaggerated running position */}
+        {/* Arms - more exaggerated running position */}
         <path
-          d="M12 14L17 17"
-          stroke="#222222"
-          strokeWidth="2"
+          d="M12 10L18 7"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
         <path
-          d="M12 14L8 16"
-          stroke="#222222"
-          strokeWidth="2"
+          d="M12 10L6 12"
+          stroke="#000000"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        
+        {/* Legs - more exaggerated running position */}
+        <path
+          d="M12 14L18 18"
+          stroke="#000000"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M12 14L7 17"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
       </svg>
 
-      {/* Puppy - more visible and animated */}
+      {/* Puppy - bolder lines and more contrast */}
       <svg
-        width="40"
-        height="30"
+        width="50"
+        height="40"
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="running-puppy"
       >
         {/* Dog head */}
-        <circle cx="16" cy="10" r="3" fill="#333333" />
+        <circle cx="16" cy="10" r="3.5" fill="#000000" />
         
-        {/* Dog ear - floppy ear */}
+        {/* Dog ear */}
         <path
-          d="M16 7L13 5"
-          stroke="#333333"
-          strokeWidth="2"
+          d="M16 7L13 4"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
         
         {/* Dog snout */}
         <path
-          d="M19 10L21 10"
-          stroke="#333333"
-          strokeWidth="2"
+          d="M19 10L22 10"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
         
-        {/* Dog body - side profile */}
-        <ellipse cx="11" cy="12" rx="5" ry="2.5" fill="#333333" />
+        {/* Dog body */}
+        <ellipse cx="11" cy="12" rx="5.5" ry="3" fill="#000000" />
         
-        {/* Dog legs - exaggerated running position */}
+        {/* Dog legs - more exaggerated */}
         <path
-          d="M14 14L17 18"
-          stroke="#333333"
-          strokeWidth="2"
+          d="M14 14L18 19"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
         <path
-          d="M8 14L5 18"
-          stroke="#333333"
-          strokeWidth="2"
+          d="M8 14L4 19"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
         
-        {/* Dog tail - wagging */}
+        {/* Dog tail - more visible */}
         <path
-          d="M6 11L3 9"
-          stroke="#333333"
-          strokeWidth="2"
+          d="M6 11L2 9"
+          stroke="#000000"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
       </svg>
