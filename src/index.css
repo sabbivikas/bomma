@@ -407,7 +407,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  animation: run-across 10s linear infinite;
+  animation: run-across 15s linear infinite;
   z-index: 5;
 }
 
@@ -417,24 +417,12 @@
 
 @keyframes run-across {
   0% {
-    left: 0;
-    transform: translateX(-100%) scaleX(1);
-  }
-  45% {
-    left: 50%;
-    transform: translateX(-50%) scaleX(1);
-  }
-  50% {
-    left: 60%;
-    transform: translateX(-50%) scaleX(-1);
-  }
-  95% {
-    left: 10%;
-    transform: translateX(-50%) scaleX(-1);
+    left: -5%;
+    transform: translateX(0) scaleX(1);
   }
   100% {
-    left: 0;
-    transform: translateX(-100%) scaleX(1);
+    left: 105%;
+    transform: translateX(0) scaleX(1);
   }
 }
 
