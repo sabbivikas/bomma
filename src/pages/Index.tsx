@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import DoodleFeed from '@/components/DoodleFeed';
 import { Button } from '@/components/ui/button';
-import { Pen, Sparkles } from 'lucide-react';
+import { Pen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
@@ -30,6 +30,11 @@ const Index = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
+        {/* Running human animation - now visible at the top */}
+        <div className="w-full overflow-hidden h-20 mb-4">
+          <RunningHuman />
+        </div>
+        
         <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
           <h1 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-elegant mb-6 tracking-tight`}>
             Discover Wonderful Creations
@@ -47,10 +52,6 @@ const Index = () => {
               Create Your Design
             </Button>
           </Link>
-        </div>
-        
-        <div className="absolute bottom-0 right-0 pointer-events-none">
-          <RunningHuman />
         </div>
         
         <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>
