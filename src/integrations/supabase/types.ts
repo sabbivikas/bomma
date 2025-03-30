@@ -9,7 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      comments: {
+        Row: {
+          created_at: string
+          doodle_id: string
+          id: string
+          session_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          doodle_id: string
+          id?: string
+          session_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          doodle_id?: string
+          id?: string
+          session_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_doodle_id_fkey"
+            columns: ["doodle_id"]
+            isOneToOne: false
+            referencedRelation: "doodles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doodles: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          likes: number
+          prompt: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          likes?: number
+          prompt: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          likes?: number
+          prompt?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

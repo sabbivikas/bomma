@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,10 +38,21 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
   useEffect(() => {
     if (showComments) {
       // Load comments when comment section is opened
-      const doodleComments = getCommentsForDoodle(doodle.id);
-      setComments(doodleComments);
+      loadComments();
     }
   }, [showComments, doodle.id]);
+  
+  const loadComments = async () => {
+    setIsLoading(true);
+    try {
+      const doodleComments = await getCommentsForDoodle(doodle.id);
+      setComments(doodleComments);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Get initials from prompt for avatar
   const getInitials = () => {
@@ -53,10 +63,19 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     return doodle.prompt.substring(0, 2).toUpperCase();
   };
   
-  const handleLike = () => {
-    const updatedDoodle = likeDoodle(doodle.id);
-    if (updatedDoodle && onLike) {
-      onLike(updatedDoodle);
+  const handleLike = async () => {
+    try {
+      const updatedDoodle = await likeDoodle(doodle.id);
+      if (updatedDoodle && onLike) {
+        onLike(updatedDoodle);
+      }
+    } catch (error) {
+      console.error('Error liking doodle:', error);
+      toast({
+        title: "Error",
+        description: "Could not like this doodle. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -64,21 +83,36 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     setShowComments(!showComments);
   };
   
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (commentText.trim()) {
       setIsLoading(true);
-      const newComment = addComment(doodle.id, commentText.trim());
       
-      // Update local comments state to include the new comment
-      setComments(prevComments => [newComment, ...prevComments]);
-      
-      toast({
-        title: "Comment added",
-        description: "Your comment has been added to the doodle."
-      });
-      setCommentText('');
-      setIsLoading(false);
+      try {
+        const newComment = await addComment(doodle.id, commentText.trim());
+        
+        if (newComment) {
+          // Update local comments state to include the new comment
+          setComments(prevComments => [newComment, ...prevComments]);
+          
+          toast({
+            title: "Comment added",
+            description: "Your comment has been added to the doodle."
+          });
+          setCommentText('');
+        } else {
+          throw new Error('Failed to add comment');
+        }
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        toast({
+          title: "Error",
+          description: "Could not add your comment. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
   
@@ -209,7 +243,9 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
           </div>
           
           <div className="max-h-36 overflow-y-auto mb-3">
-            {comments.length > 0 ? (
+            {isLoading ? (
+              <div className="py-2 text-center text-sm text-gray-500">Loading comments...</div>
+            ) : comments.length > 0 ? (
               <div className="space-y-2">
                 {comments.map(comment => (
                   <div key={comment.id} className="flex gap-2 p-2 rounded-md bg-gray-50">

@@ -24,6 +24,7 @@ const Create = () => {
   const [stayOnPage, setStayOnPage] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [publishedDoodle, setPublishedDoodle] = useState<Doodle | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
   
   // Add dreamy dust particles
@@ -91,42 +92,60 @@ const Create = () => {
     }
   };
   
-  const handleSave = (canvas: HTMLCanvasElement) => {
+  const handleSave = async (canvas: HTMLCanvasElement) => {
+    // Set publishing state
+    setIsPublishing(true);
+    
     // Convert canvas to data URL
     const imageUrl = canvas.toDataURL('image/png');
     
-    // Save the doodle to local storage
+    // Save the doodle to Supabase
     const sessionId = getSessionId();
-    const newDoodle = createDoodle({
-      imageUrl,
-      prompt,
-      sessionId,
-    });
-    
-    // Show success message
-    toast({
-      title: "Doodle published!",
-      description: "Your doodle has been added to the feed.",
-      variant: "success",
-    });
-
-    // Set success message to display on page
-    if (stayOnPage) {
-      setSuccessMessage("Your doodle was published successfully!");
-      setPublishedDoodle(newDoodle);
-      
-      // Clear success message after 4 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 4000);
-    } else {
-      // Redirect to feed
-      navigate('/', { 
-        state: { 
-          newDoodle: newDoodle.id,
-          justCreated: true
-        } 
+    try {
+      const newDoodle = await createDoodle({
+        imageUrl,
+        prompt,
+        sessionId,
       });
+      
+      if (!newDoodle) {
+        throw new Error("Failed to create doodle");
+      }
+      
+      // Show success message
+      toast({
+        title: "Doodle published!",
+        description: "Your doodle has been added to the feed.",
+        variant: "success",
+      });
+
+      // Set success message to display on page
+      if (stayOnPage) {
+        setSuccessMessage("Your doodle was published successfully!");
+        setPublishedDoodle(newDoodle);
+        
+        // Clear success message after 4 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 4000);
+      } else {
+        // Redirect to feed
+        navigate('/', { 
+          state: { 
+            newDoodle: newDoodle.id,
+            justCreated: true
+          } 
+        });
+      }
+    } catch (error) {
+      console.error('Error publishing doodle:', error);
+      toast({
+        title: "Error publishing doodle",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPublishing(false);
     }
   };
 
