@@ -72,8 +72,8 @@ const Index = () => {
             </Button>
           </Link>
           
-          {/* Add the Running Human below the button */}
-          <div className="mt-4 overflow-hidden relative h-20">
+          {/* Running animation container with more height */}
+          <div className="mt-4 overflow-hidden relative h-24">
             <RunningHuman />
           </div>
         </div>

@@ -42,25 +42,32 @@
   color: #888;
 }
 
-/* Running human animation - now visible and positioned below Create Your Design button */
+/* Running human and puppy container */
 .running-human-container {
-  display: block; /* Show the container */
-  position: absolute;
-  left: -5%;
-  animation: run-across 20s linear infinite;
-  z-index: 5;
+  display: block;
   position: relative;
-  margin-top: 40px;
+  left: -5%;
+  animation: run-across 15s linear infinite;
+  z-index: 5;
+  margin-top: 20px;
+  width: 100px;
 }
 
+/* Human animation */
 .running-human {
   animation: run-bobbing 0.5s infinite ease-in-out;
+  position: relative;
 }
 
+/* Puppy animation */
 .running-puppy {
   animation: puppy-run 0.4s infinite alternate ease-in-out;
+  position: absolute;
+  left: -25px;
+  top: 35px;
 }
 
+/* Animation for running across the screen */
 @keyframes run-across {
   0% {
     left: -10%;
@@ -70,18 +77,20 @@
   }
 }
 
+/* Animation for bobbing up and down while running */
 @keyframes run-bobbing {
   0% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-3px) rotate(0deg);
+    transform: translateY(-3px);
   }
   100% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0);
   }
 }
 
+/* Animation for the puppy running */
 @keyframes puppy-run {
   0% {
     transform: translateY(0) scaleY(1);
