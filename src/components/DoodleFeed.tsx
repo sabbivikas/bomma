@@ -8,6 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from './ui/skeleton';
 
 interface DoodleFeedProps {
   highlightDoodleId?: string | null;
@@ -82,22 +83,33 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         loadedDoodles = await generateSampleDoodles();
       }
       
-      // Apply much stricter filtering to ensure only cartoon-style doodles are shown:
-      // 1. Must start with data:image (cartoon/drawing style)
-      // 2. Must have a valid prompt
-      // 3. Image URL must be of sufficient length (to avoid empty drawings)
-      // 4. Image URL must not be too large (to avoid photo-realistic images)
-      // 5. Filter out any suspicious images that contain "photo", "pic", or other keywords
-      const filteredDoodles = loadedDoodles.filter(doodle => 
-        doodle.imageUrl.startsWith('data:image') && 
-        doodle.prompt && 
-        doodle.prompt.trim() !== '' &&
-        doodle.imageUrl.length > 500 && // Ensure it's not empty
-        doodle.imageUrl.length < 80000 && // Filter out very large, likely photo-realistic images
-        !doodle.prompt.toLowerCase().includes('photo') &&
-        !doodle.prompt.toLowerCase().includes('realistic') &&
-        !doodle.prompt.toLowerCase().includes('landscape')
-      );
+      // Enhanced filtering to ensure we only show valid cartoon-style doodles:
+      const filteredDoodles = loadedDoodles.filter(doodle => {
+        // Ensure the image URL is valid and has content
+        const hasValidImage = doodle.imageUrl && 
+                             doodle.imageUrl.startsWith('data:image') && 
+                             doodle.imageUrl.length > 1000;
+        
+        // Check for valid prompt
+        const hasValidPrompt = doodle.prompt && 
+                              doodle.prompt.trim().length > 0;
+        
+        // Filter out photo-realistic or potentially empty images
+        const isAppropriateSize = doodle.imageUrl.length < 80000;
+        
+        // Exclude images with landscape/photo keywords
+        const noPhotoKeywords = !doodle.prompt?.toLowerCase().includes('photo') &&
+                               !doodle.prompt?.toLowerCase().includes('realistic') &&
+                               !doodle.prompt?.toLowerCase().includes('landscape') &&
+                               !doodle.prompt?.toLowerCase().includes('picture');
+        
+        // Check that the image is visually non-empty
+        // Data URLs with very few color variations tend to be empty or nearly empty
+        const imageBase64 = doodle.imageUrl.split(',')[1];
+        const hasComplexVisual = imageBase64 && imageBase64.length > 500;
+        
+        return hasValidImage && hasValidPrompt && isAppropriateSize && noPhotoKeywords && hasComplexVisual;
+      });
       
       setDoodles(filteredDoodles);
     } catch (error) {
