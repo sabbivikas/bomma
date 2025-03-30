@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
 import { getAllDoodles, generateSampleDoodles } from '@/utils/doodleService';
@@ -82,34 +83,42 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         loadedDoodles = await generateSampleDoodles();
       }
       
-      // Enhanced filtering to ensure we only show valid cartoon-style doodles:
-      const filteredDoodles = loadedDoodles.filter(doodle => {
+      // Enhanced filtering to ensure we only show valid submitted doodles:
+      const validDoodles = loadedDoodles.filter(doodle => {
+        // Ensure we have all required fields
+        if (!doodle.id || !doodle.imageUrl || !doodle.prompt) {
+          return false;
+        }
+        
         // Ensure the image URL is valid and has content
         const hasValidImage = doodle.imageUrl && 
                              doodle.imageUrl.startsWith('data:image') && 
                              doodle.imageUrl.length > 1000;
         
-        // Check for valid prompt
+        // Check for valid prompt - must have actual content
         const hasValidPrompt = doodle.prompt && 
                               doodle.prompt.trim().length > 0;
         
         // Avoid extremely large image data which might be corrupted
-        const isAppropriateSize = doodle.imageUrl && doodle.imageUrl.length < 500000;
+        const isAppropriateSize = doodle.imageUrl && 
+                                 doodle.imageUrl.length < 500000 && 
+                                 doodle.imageUrl.length > 500;
         
-        // Exclude images with landscape/photo keywords
-        const noPhotoKeywords = !doodle.prompt?.toLowerCase().includes('photo') &&
-                               !doodle.prompt?.toLowerCase().includes('realistic') &&
-                               !doodle.prompt?.toLowerCase().includes('landscape') &&
-                               !doodle.prompt?.toLowerCase().includes('picture');
+        // Exclude images with landscape/photo keywords that might not be cartoons
+        const isCartoonStyle = !doodle.prompt?.toLowerCase().includes('photo') &&
+                              !doodle.prompt?.toLowerCase().includes('realistic') &&
+                              !doodle.prompt?.toLowerCase().includes('landscape') &&
+                              !doodle.prompt?.toLowerCase().includes('picture');
         
         // Check that the base64 image isn't corrupted
-        const isValidBase64 = doodle.imageUrl?.split(',').length === 2;
+        const isValidBase64 = doodle.imageUrl?.includes(',') && 
+                             doodle.imageUrl?.split(',').length >= 2;
         
         return hasValidImage && hasValidPrompt && isAppropriateSize && 
-               noPhotoKeywords && isValidBase64;
+               isCartoonStyle && isValidBase64;
       });
       
-      setDoodles(filteredDoodles);
+      setDoodles(validDoodles);
     } catch (error) {
       console.error('Error loading doodles:', error);
       toast({
