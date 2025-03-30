@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
-import { getAllDoodles } from '@/utils/doodleService';
+import { getAllDoodles, generateSampleDoodles } from '@/utils/doodleService';
 import DoodleCard from './DoodleCard';
 import { Smile } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -18,7 +18,15 @@ const DoodleFeed: React.FC = () => {
   
   const loadDoodles = () => {
     setIsLoading(true);
-    const loadedDoodles = getAllDoodles();
+    
+    // First check if we have existing doodles
+    let loadedDoodles = getAllDoodles();
+    
+    // If there are no doodles or fewer than 3, generate sample doodles
+    if (loadedDoodles.length < 3) {
+      loadedDoodles = generateSampleDoodles();
+    }
+    
     setDoodles(loadedDoodles);
     setIsLoading(false);
   };
