@@ -36,7 +36,7 @@ const Index = () => {
         </div>
         
         <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
-          <h1 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-elegant mb-6 tracking-tight`}>
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-elegant mb-6 tracking-tight`}>
             Discover Wonderful Creations
           </h1>
           

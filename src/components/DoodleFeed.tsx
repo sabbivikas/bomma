@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Doodle } from '@/types/doodle';
-import { getAllDoodles, generateSampleDoodles } from '@/utils/doodleService';
+import { getAllDoodles } from '@/utils/doodleService';
 import DoodleCard from './DoodleCard';
 import { Smile } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,9 +12,6 @@ const DoodleFeed: React.FC = () => {
   const isMobile = useIsMobile();
   
   useEffect(() => {
-    // Generate sample doodles if needed
-    generateSampleDoodles();
-    
     // Load doodles
     loadDoodles();
   }, []);
