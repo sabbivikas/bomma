@@ -82,13 +82,17 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
         loadedDoodles = await generateSampleDoodles();
       }
       
-      // Filter out any non-cartoon doodles (those with URLs that don't start with data:image)
-      // This ensures we only show cartoon/drawing-style doodles
+      // Apply stricter filtering to ensure only cartoon-style doodles are shown:
+      // 1. Must start with data:image (cartoon/drawing style)
+      // 2. Must have a valid prompt
+      // 3. Image URL must be of sufficient length (to avoid empty drawings)
+      // 4. No photo-realistic images (generally have larger file sizes)
       const filteredDoodles = loadedDoodles.filter(doodle => 
         doodle.imageUrl.startsWith('data:image') && 
         doodle.prompt && 
         doodle.prompt.trim() !== '' &&
-        doodle.imageUrl.length > 100 // Filter out empty or very small images
+        doodle.imageUrl.length > 100 && // Filter out empty or very small images
+        doodle.imageUrl.length < 100000 // Filter out possibly photo-realistic images (usually larger)
       );
       
       setDoodles(filteredDoodles);
