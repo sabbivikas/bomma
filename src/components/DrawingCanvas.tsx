@@ -5,7 +5,7 @@ import {
   Pen, Eraser, Trash2, Download, ArrowRight, 
   Sparkles, RotateCcw, Wand2, Paintbrush, Palette, 
   FlipHorizontal, Maximize, Minimize, Square, Circle, 
-  Triangle, Line, Text, Layers, Droplet, ZoomIn, 
+  Triangle, Minus, Text, Layers, Droplet, ZoomIn, 
   ZoomOut, RotateCw
 } from 'lucide-react';
 import { Toggle } from "@/components/ui/toggle";
@@ -796,4 +796,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       return;
     }
     
-    // Get coordinates adjusted
+    //
