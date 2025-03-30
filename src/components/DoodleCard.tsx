@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Share2, MoreHorizontal, X } from "lucide-react";
-import { Doodle } from '@/types/doodle';
+import { Doodle, Comment } from '@/types/doodle';
 import { formatDistanceToNow } from 'date-fns';
-import { likeDoodle } from '@/utils/doodleService';
+import { likeDoodle, addComment, getCommentsForDoodle, getSessionId } from '@/utils/doodleService';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 
@@ -18,7 +18,18 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const timeAgo = formatDistanceToNow(new Date(doodle.createdAt), { addSuffix: true });
+  const sessionId = getSessionId();
+  
+  useEffect(() => {
+    if (showComments) {
+      // Load comments when comment section is opened
+      const doodleComments = getCommentsForDoodle(doodle.id);
+      setComments(doodleComments);
+    }
+  }, [showComments, doodle.id]);
   
   // Get initials from prompt for avatar
   const getInitials = () => {
@@ -43,12 +54,28 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (commentText.trim()) {
+      setIsLoading(true);
+      const newComment = addComment(doodle.id, commentText.trim());
+      
+      // Update local comments state to include the new comment
+      setComments(prevComments => [newComment, ...prevComments]);
+      
       toast({
         title: "Comment added",
         description: "Your comment has been added to the doodle."
       });
       setCommentText('');
+      setIsLoading(false);
     }
+  };
+  
+  const getCommentInitials = (comment: Comment) => {
+    const text = comment.text;
+    const words = text.split(' ');
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return text.substring(0, 2).toUpperCase();
   };
   
   const handleShare = async () => {
@@ -166,7 +193,28 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
           </div>
           
           <div className="max-h-36 overflow-y-auto mb-3">
-            <p className="text-xs text-gray-500 italic text-center py-2">No comments yet</p>
+            {comments.length > 0 ? (
+              <div className="space-y-2">
+                {comments.map(comment => (
+                  <div key={comment.id} className="flex gap-2 p-2 rounded-md bg-gray-50">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
+                        {getCommentInitials(comment)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-xs">{comment.text}</p>
+                      <p className="text-xs text-gray-500">
+                        {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                        {comment.sessionId === sessionId && " · You"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 italic text-center py-2">No comments yet</p>
+            )}
           </div>
           
           <form onSubmit={handleCommentSubmit} className="flex gap-2">
@@ -176,8 +224,15 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike }) => {
               className="flex-1 border border-gray-200 rounded px-3 py-2 text-sm"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
+              disabled={isLoading}
             />
-            <Button type="submit" variant="secondary" size="sm" className="px-3">
+            <Button 
+              type="submit" 
+              variant="secondary" 
+              size="sm" 
+              className="px-3"
+              disabled={!commentText.trim() || isLoading}
+            >
               Post
             </Button>
           </form>

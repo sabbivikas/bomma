@@ -1,9 +1,10 @@
 
-import { Doodle, DoodleCreateInput } from '@/types/doodle';
+import { Doodle, DoodleCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 
 // Key for storing doodles in local storage
 const DOODLES_STORAGE_KEY = 'make-something-wonderful-doodles';
+const COMMENTS_STORAGE_KEY = 'make-something-wonderful-comments';
 const SESSION_ID_KEY = 'make-something-wonderful-session-id';
 
 // Get session ID or generate a new one
@@ -88,6 +89,42 @@ export function deleteDoodle(id: string): boolean {
   localStorage.setItem(DOODLES_STORAGE_KEY, JSON.stringify(doodles));
   
   return true;
+}
+
+// Comments related functions
+export function getAllComments(): Comment[] {
+  const commentsJson = localStorage.getItem(COMMENTS_STORAGE_KEY);
+  let comments: Comment[] = [];
+  
+  if (commentsJson) {
+    comments = JSON.parse(commentsJson);
+  }
+  
+  return comments;
+}
+
+export function getCommentsForDoodle(doodleId: string): Comment[] {
+  const comments = getAllComments();
+  return comments.filter(comment => comment.doodleId === doodleId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function addComment(doodleId: string, text: string): Comment {
+  const comments = getAllComments();
+  const sessionId = getSessionId();
+  
+  const newComment: Comment = {
+    id: uuidv4(),
+    doodleId,
+    text,
+    createdAt: new Date().toISOString(),
+    sessionId
+  };
+  
+  comments.push(newComment);
+  localStorage.setItem(COMMENTS_STORAGE_KEY, JSON.stringify(comments));
+  
+  return newComment;
 }
 
 // Generate sample doodles
