@@ -10,7 +10,6 @@ import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 import OpeningSequence from '@/components/OpeningSequence';
 import { useIsMobile } from '@/hooks/use-mobile';
-import WritingHuman from '@/components/WritingHuman';
 
 const Index = () => {
   const [showOpening, setShowOpening] = useState(false);
@@ -127,8 +126,6 @@ const Index = () => {
             Discover{' '}
             <span className="wonderful-wrapper">
               W<span>o</span>nd<span>e</span>rful
-              {/* The human sits on top of the letter "n" */}
-              <WritingHuman className="absolute -top-10 -left-[70px] scale-75" />
             </span>{' '}
             Creations
           </h1>
