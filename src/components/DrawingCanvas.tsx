@@ -795,4 +795,3 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     // Handle panning with space key or middle mouse button
     if (event.nativeEvent instanceof MouseEvent && event.nativeEvent.button === 1) {
       setIsPanning(true);
-      return;
