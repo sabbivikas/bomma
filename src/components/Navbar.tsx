@@ -12,7 +12,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 flex justify-between items-center h-16">
         <Link to="/" className="flex items-center space-x-2">
           <div className="flex items-center">
-            <WritingHuman className="w-3 h-3 mr-2" />
+            <WritingHuman className="w-2 h-2 mr-2" />
             <span className="font-bold text-lg font-elegant">
               Make Something Wonderful
             </span>
