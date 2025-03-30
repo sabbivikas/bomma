@@ -22,37 +22,38 @@ const RunningHuman: React.FC = () => {
         {/* Head */}
         <circle cx="12" cy="6" r="2.5" fill="#222222" />
         
-        {/* Body */}
+        {/* Body - make it look more like running */}
         <path
           d="M12 8.5L12 14"
           stroke="#222222"
           strokeWidth="2"
           strokeLinecap="round"
+          strokeDasharray="0.5 0.5"
         />
         
-        {/* Arms */}
+        {/* Arms - running position */}
         <path
-          d="M12 10L15 7"
+          d="M12 10L16 7"
           stroke="#222222"
           strokeWidth="2"
           strokeLinecap="round"
         />
         <path
-          d="M12 10L9 13"
+          d="M12 10L8 12"
           stroke="#222222"
           strokeWidth="2"
           strokeLinecap="round"
         />
         
-        {/* Legs */}
+        {/* Legs - running position */}
         <path
-          d="M12 14L15 17"
+          d="M12 14L16 17"
           stroke="#222222"
           strokeWidth="2"
           strokeLinecap="round"
         />
         <path
-          d="M12 14L9 17"
+          d="M12 14L9 16"
           stroke="#222222"
           strokeWidth="2"
           strokeLinecap="round"
@@ -68,12 +69,12 @@ const RunningHuman: React.FC = () => {
         xmlns="http://www.w3.org/2000/svg"
         className="running-puppy"
       >
-        {/* Dog head - clearer and more visible */}
+        {/* Dog head */}
         <circle cx="16" cy="10" r="3" fill="#333333" />
         
-        {/* Dog ear */}
+        {/* Dog ear - make it flop with animation */}
         <path
-          d="M16 7L14.5 5"
+          d="M16 7L14 5"
           stroke="#333333"
           strokeWidth="2"
           strokeLinecap="round"
@@ -87,28 +88,26 @@ const RunningHuman: React.FC = () => {
           strokeLinecap="round"
         />
         
-        {/* Dog body - side profile, more visible */}
+        {/* Dog body - side profile */}
         <ellipse cx="11" cy="12" rx="5" ry="2.5" fill="#333333" />
         
-        {/* Dog front leg */}
+        {/* Dog legs - running position */}
         <path
-          d="M14 14L15 17"
+          d="M14 14L16 17"
+          stroke="#333333"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M8 14L6 17"
           stroke="#333333"
           strokeWidth="2"
           strokeLinecap="round"
         />
         
-        {/* Dog back leg */}
+        {/* Dog tail - wagging */}
         <path
-          d="M8 14L7 17"
-          stroke="#333333"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        
-        {/* Dog tail */}
-        <path
-          d="M6 11L4 10"
+          d="M6 11L4 9.5"
           stroke="#333333"
           strokeWidth="2"
           strokeLinecap="round"
