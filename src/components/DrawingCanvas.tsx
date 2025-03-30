@@ -401,7 +401,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
     
     if (symmetryMode === 'radial') {
-      // Radial symmetry (8-way)
+      // Radial symmetry (8-way)\
       const angles = [45, 90, 135, 180, 225, 270, 315];
       
       angles.forEach(angle => {
@@ -791,4 +791,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       clientY = event.touches[0].clientY;
     } else {
       // Fix: For mouse events, get client coordinates rather than offset
-      clientX = event.clientX;
+      clientX = event.
