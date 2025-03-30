@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -166,12 +165,12 @@ const Create = () => {
       <Cloud />
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-8 animate-pop-in">
-          <h1 className="text-4xl font-bold mb-3 sketchy-text inline-block font-funky">
+      <main className="flex-1 container mx-auto px-2 py-4 relative z-10">
+        <div className="mb-4 animate-pop-in">
+          <h1 className="text-3xl font-bold mb-2 sketchy-text inline-block font-funky">
             <FunkyText text={publishedDoodle ? "Your Published Doodle" : "Create Your Doodle"} />
           </h1>
-          <div className="sketchy-divider my-4"></div>
+          <div className="sketchy-divider mb-3"></div>
           <div className="flex items-center gap-2">
             <Lightbulb className="text-black animate-pulse-light" />
             <p className="text-muted-foreground">
@@ -183,13 +182,14 @@ const Create = () => {
         </div>
 
         {successMessage && (
-          <div className="bg-green-50 border-2 border-green-200 rounded-md p-4 mb-6 flex items-center animate-fade-in">
+          <div className="bg-green-50 border-2 border-green-200 rounded-md p-4 mb-4 flex items-center animate-fade-in">
             <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
             <p className="text-green-700">{successMessage}</p>
           </div>
         )}
         
-        <div className="max-w-3xl mx-auto">
+        {/* Change from max-w-3xl to max-w-5xl to allow more space for the canvas */}
+        <div className="max-w-5xl mx-auto">
           {publishedDoodle ? (
             <div className="flex flex-col items-center">
               <div className="w-full max-w-md animate-pop-in">
