@@ -40,3 +40,50 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Running human animation */
+.running-human-container {
+  position: absolute;
+  left: -5%;
+  animation: run-across 20s linear infinite;
+  z-index: 5;
+  position: relative;
+}
+
+.running-human {
+  animation: run-bobbing 0.5s infinite ease-in-out;
+}
+
+.running-puppy {
+  animation: puppy-run 0.4s infinite alternate ease-in-out;
+}
+
+@keyframes run-across {
+  0% {
+    left: -10%;
+  }
+  100% {
+    left: 110%;
+  }
+}
+
+@keyframes run-bobbing {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes puppy-run {
+  0% {
+    transform: translateY(0) scaleY(1);
+  }
+  100% {
+    transform: translateY(-2px) scaleY(0.95);
+  }
+}

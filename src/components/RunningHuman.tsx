@@ -57,7 +57,7 @@ const RunningHuman: React.FC = () => {
         />
       </svg>
 
-      {/* Puppy following the human - in side profile running position */}
+      {/* Puppy following the human - proper side profile facing right */}
       <svg
         width="40"
         height="30"
@@ -65,14 +65,14 @@ const RunningHuman: React.FC = () => {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="running-puppy"
-        style={{ position: 'absolute', left: '25px', top: '35px' }}
+        style={{ position: 'absolute', left: '-5px', top: '35px' }}
       >
-        {/* Dog head - side profile */}
-        <circle cx="8" cy="10" r="3" fill="#000000" />
+        {/* Dog head - side profile facing right */}
+        <circle cx="16" cy="10" r="3" fill="#000000" />
         
         {/* Dog ear */}
         <path
-          d="M8 7L9 5"
+          d="M16 7L15 5"
           stroke="#000000"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -80,19 +80,19 @@ const RunningHuman: React.FC = () => {
         
         {/* Dog snout */}
         <path
-          d="M5 10L3 10.5"
+          d="M19 10L21 10.5"
           stroke="#000000"
           strokeWidth="1.5"
           strokeLinecap="round"
         />
         
         {/* Dog body - side profile */}
-        <ellipse cx="13" cy="12" rx="5" ry="2.5" fill="#000000" />
+        <ellipse cx="11" cy="12" rx="5" ry="2.5" fill="#000000" />
         
         {/* Dog front leg */}
         <path
           className="dog-front-leg"
-          d="M10 14L9 17"
+          d="M14 14L15 17"
           stroke="#000000"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -101,7 +101,7 @@ const RunningHuman: React.FC = () => {
         {/* Dog back leg */}
         <path
           className="dog-back-leg"
-          d="M16 14L17 17"
+          d="M8 14L7 17"
           stroke="#000000"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -110,7 +110,7 @@ const RunningHuman: React.FC = () => {
         {/* Dog tail */}
         <path
           className="dog-tail"
-          d="M18 11L20 10"
+          d="M6 11L4 10"
           stroke="#000000"
           strokeWidth="1.5"
           strokeLinecap="round"
