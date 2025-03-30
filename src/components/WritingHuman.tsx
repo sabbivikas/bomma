@@ -105,6 +105,39 @@ const WritingHuman: React.FC<WritingHumanProps> = ({ className = '' }) => {
           strokeLinecap="round"
         />
       </svg>
+      
+      {/* Add CSS animations for the different actions */}
+      <style jsx>{`
+        .waving-hand {
+          animation: wave 1s infinite alternate;
+          transform-origin: 10px 8.5px;
+        }
+        
+        @keyframes wave {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(15deg); }
+        }
+        
+        .writing-hand {
+          animation: write 0.5s infinite alternate;
+          transform-origin: 10px 8.5px;
+        }
+        
+        @keyframes write {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(0.3px); }
+        }
+        
+        .thought-bubble {
+          opacity: 0.7;
+          animation: pulse 2s infinite alternate;
+        }
+        
+        @keyframes pulse {
+          0% { opacity: 0.5; transform: scale(0.95); }
+          100% { opacity: 0.9; transform: scale(1.05); }
+        }
+      `}</style>
     </div>
   );
 };
