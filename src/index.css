@@ -470,20 +470,17 @@
   transform-origin: 12px 14px;
 }
 
-.paw-front {
+.paw-front-left, .paw-front-right {
   animation: paw-swing 0.3s infinite alternate ease-in-out;
-  transform-origin: 10px 15px;
 }
 
-.paw-back {
-  animation: paw-swing 0.3s infinite alternate ease-in-out;
-  transform-origin: 14px 15px;
+.paw-front-right {
   animation-delay: 0.15s;
 }
 
 .tail-wag {
-  animation: tail-wag 0.3s infinite alternate ease-in-out;
-  transform-origin: 16px 12px;
+  animation: tail-up-down 0.3s infinite alternate ease-in-out;
+  transform-origin: 12px 16px;
 }
 
 @keyframes swing-forward {
@@ -513,11 +510,11 @@
   }
 }
 
-@keyframes tail-wag {
+@keyframes tail-up-down {
   0% {
-    transform: rotate(-10deg);
+    transform: scaleY(0.8);
   }
   100% {
-    transform: rotate(10deg);
+    transform: scaleY(1.2);
   }
 }

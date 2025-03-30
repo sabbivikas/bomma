@@ -57,7 +57,7 @@ const RunningHuman: React.FC = () => {
         />
       </svg>
 
-      {/* Puppy following the human */}
+      {/* Puppy following the human - facing forward now */}
       <svg
         width="40"
         height="30"
@@ -67,7 +67,7 @@ const RunningHuman: React.FC = () => {
         className="running-puppy"
         style={{ position: 'absolute', left: '25px', top: '35px' }}
       >
-        {/* Dog head */}
+        {/* Dog head - facing forward */}
         <circle cx="12" cy="8" r="3" fill="#000000" />
         
         {/* Dog ears */}
@@ -84,29 +84,29 @@ const RunningHuman: React.FC = () => {
           strokeLinecap="round"
         />
         
-        {/* Dog body */}
-        <ellipse cx="12" cy="13" rx="4" ry="3" fill="#000000" />
+        {/* Dog body - more oblong for forward-facing appearance */}
+        <ellipse cx="12" cy="13" rx="3" ry="2.5" fill="#000000" />
         
-        {/* Dog legs */}
+        {/* Dog front legs - side by side for forward motion */}
         <path
-          className="paw-front"
+          className="paw-front-left"
           d="M10 15L9 18"
           stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />
         <path
-          className="paw-back"
+          className="paw-front-right"
           d="M14 15L15 18"
           stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
         />
         
-        {/* Dog tail */}
+        {/* Dog tail - slightly showing from behind */}
         <path
           className="tail-wag"
-          d="M16 12L19 11"
+          d="M12 16L12 19"
           stroke="#000000"
           strokeWidth="2"
           strokeLinecap="round"
