@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -44,7 +43,7 @@
 
 /* Running human animation */
 .running-human-container {
-  position: relative;
+  position: absolute;
   left: -5%;
   animation: run-across 20s linear infinite;
   z-index: 5;
