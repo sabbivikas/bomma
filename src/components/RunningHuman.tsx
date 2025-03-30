@@ -9,7 +9,7 @@ const RunningHuman: React.FC = () => {
   const scale = isMobile ? 0.8 : 1;
   
   return (
-    <div className="running-human-container" style={{ transform: `scale(${scale})`, height: '80px' }}>
+    <div className="running-human-container" style={{ transform: `scale(${scale})` }}>
       {/* Human */}
       <svg
         width="60"
@@ -26,7 +26,7 @@ const RunningHuman: React.FC = () => {
         <path
           d="M12 8.5L12 14"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         
@@ -34,13 +34,13 @@ const RunningHuman: React.FC = () => {
         <path
           d="M12 10L18 7"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         <path
           d="M12 10L6 12"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         
@@ -48,13 +48,13 @@ const RunningHuman: React.FC = () => {
         <path
           d="M12 14L18 18"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         <path
           d="M12 14L7 17"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
       </svg>
@@ -75,7 +75,7 @@ const RunningHuman: React.FC = () => {
         <path
           d="M16 7L13 4"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         
@@ -83,7 +83,7 @@ const RunningHuman: React.FC = () => {
         <path
           d="M19 10L22 10"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         
@@ -94,13 +94,13 @@ const RunningHuman: React.FC = () => {
         <path
           d="M14 14L18 19"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         <path
           d="M8 14L4 19"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         
@@ -108,7 +108,7 @@ const RunningHuman: React.FC = () => {
         <path
           d="M6 11L2 9"
           stroke="#000000"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
       </svg>
