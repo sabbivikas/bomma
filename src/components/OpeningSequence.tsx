@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Cloud, Star, Palette, Brush, Sparkles } from 'lucide-react';
+import { Sun, Cloud, Star, Palette, Brush, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
 
 const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -184,30 +185,115 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
           A world of imagination awaits
         </motion.p>
 
-        {/* Enter button - in box as requested */}
+        {/* Creative Enter button */}
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ 
             opacity: stage >= 3 ? 1 : 0,
-            y: stage >= 3 ? 0 : 20,
-            scale: stage >= 3 ? 1 : 0.9
+            y: stage >= 3 ? 0 : 20
           }}
           transition={{ duration: 1, delay: 0.6 }}
           className="relative"
         >
+          {/* Canvas-like container with paint strokes */}
           <motion.div 
-            className="absolute inset-0 bg-white bg-opacity-90 rounded-lg shadow-lg"
+            className="relative w-48 h-48 mx-auto"
             animate={{ 
-              boxShadow: ["0px 10px 25px rgba(0,0,0,0.1)", "0px 5px 15px rgba(0,0,0,0.2)", "0px 10px 25px rgba(0,0,0,0.1)"]
+              rotate: [0, 2, 0, -2, 0]
             }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <Button 
-            onClick={handleEnterClick}
-            className="bg-black hover:bg-black/90 text-white px-12 py-6 rounded-lg text-xl font-elegant relative z-10"
+            transition={{ 
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut" 
+            }}
           >
-            Enter
-          </Button>
+            {/* Paint strokes around button */}
+            {[...Array(5)].map((_, i) => (
+              <motion.div 
+                key={`stroke-${i}`}
+                className="absolute rounded-full opacity-50"
+                style={{
+                  top: `${50 + (Math.cos(i * 72 * Math.PI / 180) * 35)}%`,
+                  left: `${50 + (Math.sin(i * 72 * Math.PI / 180) * 35)}%`,
+                  width: `${20 + Math.random() * 15}px`,
+                  height: `${10 + Math.random() * 10}px`,
+                  background: brushColors[Math.floor(Math.random() * brushColors.length)],
+                  transform: `rotate(${i * 72}deg)`
+                }}
+                initial={{ scale: 0 }}
+                animate={{ 
+                  scale: stage >= 4 ? [0.9, 1.1, 0.9] : 0,
+                }}
+                transition={{
+                  scale: { 
+                    delay: 0.1 * i,
+                    duration: 4 + i * 0.5,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut"
+                  }
+                }}
+              />
+            ))}
+
+            {/* The Enter button itself */}
+            <motion.button
+              onClick={handleEnterClick}
+              className="relative bg-transparent border border-black/10 rounded-full w-28 h-28 flex items-center justify-center overflow-hidden group"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {/* Animated gradient background */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-br from-pink-200/40 via-blue-200/40 to-purple-200/40"
+                animate={{ 
+                  rotate: [0, 360],
+                }}
+                transition={{ 
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear" 
+                }}
+              />
+              
+              {/* Inner circle with ripple effect */}
+              <motion.div 
+                className="relative w-24 h-24 rounded-full bg-white/90 flex flex-col items-center justify-center z-10 overflow-hidden"
+                whileHover={{
+                  boxShadow: "0px 0px 15px rgba(255,255,255,0.8)"
+                }}
+              >
+                {/* Ripple effect on hover */}
+                <div className="absolute inset-0 z-0 group-hover:z-10">
+                  <motion.div
+                    className="w-full h-full rounded-full bg-transparent"
+                    initial={{ scale: 0, opacity: 0.8, backgroundImage: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%)" }}
+                    whileHover={{ 
+                      scale: 2.5,
+                      opacity: 0,
+                      transition: { duration: 1.5, repeat: Infinity }
+                    }}
+                  />
+                </div>
+                
+                {/* Text and icon */}
+                <span className="font-elegant text-black text-lg relative z-10">Enter</span>
+                <motion.div
+                  className="mt-1 relative z-10"
+                  animate={{
+                    x: [0, 5, 0]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <ArrowRight className="h-4 w-4 text-black/70" />
+                </motion.div>
+              </motion.div>
+            </motion.button>
+          </motion.div>
         </motion.div>
       </div>
     </motion.div>
