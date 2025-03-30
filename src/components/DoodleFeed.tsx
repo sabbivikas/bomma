@@ -84,11 +84,14 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
       
       // Filter out any non-cartoon doodles (those with URLs that don't start with data:image)
       // This ensures we only show cartoon/drawing-style doodles
-      const cartoonDoodles = loadedDoodles.filter(doodle => 
-        doodle.imageUrl.startsWith('data:image')
+      const filteredDoodles = loadedDoodles.filter(doodle => 
+        doodle.imageUrl.startsWith('data:image') && 
+        doodle.prompt && 
+        doodle.prompt.trim() !== '' &&
+        doodle.imageUrl.length > 100 // Filter out empty or very small images
       );
       
-      setDoodles(cartoonDoodles);
+      setDoodles(filteredDoodles);
     } catch (error) {
       console.error('Error loading doodles:', error);
       toast({
