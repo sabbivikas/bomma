@@ -7,6 +7,7 @@ import {
   Paintbrush, Palette, Share
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -20,6 +21,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState([5]);
   const [isPublishing, setIsPublishing] = useState(false);
+  const isMobile = useIsMobile();
   
   // Simple canvas size
   const [canvasSize] = useState({ width: 800, height: 600 });
@@ -64,37 +66,62 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
   }, [color, width, tool]);
   
+  // Get coordinates from mouse or touch event
+  const getCoordinates = (event: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    
+    if ('touches' in event) {
+      // Touch event
+      return {
+        x: event.touches[0].clientX - rect.left,
+        y: event.touches[0].clientY - rect.top
+      };
+    } else {
+      // Mouse event
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+  };
+  
   // Start drawing
-  const startDrawing = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || !contextRef.current) return;
     
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    // Prevent scrolling on touch devices
+    if ('touches' in event) {
+      event.preventDefault();
+    }
+    
+    const coords = getCoordinates(event, canvas);
     
     contextRef.current.beginPath();
-    contextRef.current.moveTo(x, y);
-    lastPointRef.current = { x, y };
+    contextRef.current.moveTo(coords.x, coords.y);
+    lastPointRef.current = coords;
     
     setIsDrawing(true);
   };
   
   // Draw
-  const draw = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !contextRef.current || !lastPointRef.current) return;
+    
+    // Prevent scrolling on touch devices
+    if ('touches' in event) {
+      event.preventDefault();
+    }
     
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const coords = getCoordinates(event, canvas);
     
-    contextRef.current.lineTo(x, y);
+    contextRef.current.lineTo(coords.x, coords.y);
     contextRef.current.stroke();
     
-    lastPointRef.current = { x, y };
+    lastPointRef.current = coords;
   };
   
   // Stop drawing
@@ -139,6 +166,39 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     '#FF00FF', // Magenta
     '#00FFFF', // Cyan
   ];
+
+  // Responsive canvas size for mobile
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas || !contextRef.current) return;
+      
+      // Get the container width (parent element)
+      const container = canvas.parentElement;
+      if (!container) return;
+      
+      const containerWidth = container.clientWidth;
+      
+      // Calculate new dimensions while maintaining aspect ratio
+      const newWidth = Math.min(containerWidth, canvasSize.width);
+      const scaleFactor = newWidth / canvasSize.width;
+      const newHeight = canvasSize.height * scaleFactor;
+      
+      // Update canvas display size
+      canvas.style.width = `${newWidth}px`;
+      canvas.style.height = `${newHeight}px`;
+    };
+    
+    // Initial resize
+    handleResize();
+    
+    // Add resize event listener
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [canvasSize]);
 
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
@@ -240,6 +300,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
           className="cursor-crosshair"
         />
       </div>
