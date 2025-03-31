@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -12,7 +13,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === 'development' &&
-    componentTagger(),
+    componentTagger({
+      showAttribution: false, // This disables the "Edit with lovable" badge
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
