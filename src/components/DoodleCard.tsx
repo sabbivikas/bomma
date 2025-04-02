@@ -140,7 +140,11 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     try {
       // Create a much shorter URL with just the ID fragment
       const shortId = doodle.id.substring(0, 8); // Take just the first 8 characters of the ID
-      const shareUrl = `/d/${shortId}`; // Relative URL format - much shorter!
+      const shortPath = `/d/${shortId}`; // Relative URL path
+      
+      // Convert to absolute URL for sharing
+      const shareUrl = new URL(shortPath, window.location.origin).toString();
+      
       const shareTitle = doodle.prompt;
       const shareText = `Check out this amazing doodle: ${doodle.prompt}`;
       

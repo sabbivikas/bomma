@@ -53,7 +53,11 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     try {
       // Create a much shorter URL using just the ID fragment
       const shortId = story.id.substring(0, 8); // Take just the first 8 characters of the ID
-      const shareUrl = `/s/${shortId}`; // Relative URL format - much shorter!
+      const shortPath = `/s/${shortId}`; // Relative URL path
+      
+      // Convert to absolute URL for sharing
+      const shareUrl = new URL(shortPath, window.location.origin).toString();
+      
       const shareTitle = story.title;
       const shareText = `Check out this amazing ${story.isAnimation ? 'animation' : 'story'}: ${story.title}`;
       
