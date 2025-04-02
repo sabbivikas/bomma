@@ -7,7 +7,7 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { createStory, addFrameToStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { StoryFrame } from '@/types/doodle';
-import { Trash2, Plus, BookOpen, Eye } from 'lucide-react';
+import { Trash2, Plus, BookOpen, Eye, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -147,6 +147,11 @@ const StoryCreator: React.FC = () => {
     }
   };
 
+  // Check if we can create the story
+  const isTitleEmpty = title.trim() === '';
+  const hasNoFrames = frames.length === 0;
+  const canCreateStory = !isTitleEmpty && !hasNoFrames && !isCreatingStory;
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -158,12 +163,20 @@ const StoryCreator: React.FC = () => {
       
       <div className="space-y-4">
         <div className="grid gap-2">
-          <Label htmlFor="title">Story Title</Label>
+          <Label htmlFor="title" className="flex items-center gap-2">
+            Story Title
+            {isTitleEmpty && (
+              <span className="text-xs text-red-500 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" /> Required
+              </span>
+            )}
+          </Label>
           <Input 
             id="title" 
             value={title} 
             onChange={e => setTitle(e.target.value)} 
             placeholder="My Amazing Story"
+            className={isTitleEmpty ? "border-red-300 focus-visible:ring-red-300" : ""}
           />
         </div>
         
@@ -204,6 +217,11 @@ const StoryCreator: React.FC = () => {
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">
             {frames.length === 0 ? "Create your first frame" : "Add next frame"}
+            {hasNoFrames && isTitleEmpty && (
+              <span className="text-xs text-red-500 ml-2">
+                (You need at least one frame to create a story)
+              </span>
+            )}
           </h3>
           <DrawingCanvas onSave={handleSaveFrame} />
           
@@ -231,14 +249,29 @@ const StoryCreator: React.FC = () => {
               
               <Button
                 className="flex items-center gap-2"
-                disabled={frames.length === 0 || title.trim() === '' || isCreatingStory}
+                disabled={!canCreateStory}
                 onClick={handleCreateStory}
+                title={isTitleEmpty ? "Please enter a title" : hasNoFrames ? "Add at least one frame" : ""}
               >
                 <BookOpen className="h-4 w-4" />
                 Create Story
               </Button>
             </div>
           </div>
+          
+          {/* Validation message */}
+          {!canCreateStory && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700">
+              <span className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                To create your story, you need:
+              </span>
+              <ul className="list-disc ml-6 mt-1">
+                {isTitleEmpty && <li>A title for your story</li>}
+                {hasNoFrames && <li>At least one frame (drawing)</li>}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
