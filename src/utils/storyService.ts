@@ -415,7 +415,8 @@ export async function addCommentToStory(storyId: string, text: string): Promise<
     const newComment = {
       story_id: storyId,
       text,
-      session_id: sessionId
+      session_id: sessionId,
+      doodle_id: null // Add null doodle_id to satisfy TypeScript
     };
     
     const { data, error } = await supabase
