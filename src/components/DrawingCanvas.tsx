@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Download,
-  Paintbrush, Palette, Share
+  Paintbrush, Palette, Share, PlusSquare
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -151,6 +151,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       onSave(canvasRef.current);
     } catch (error) {
       console.error("Error publishing doodle:", error);
+    } finally {
       setIsPublishing(false);
     }
   };
@@ -244,12 +245,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           <Button
             size="sm"
             variant="success"
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white ml-2"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white ml-2 animate-pulse"
             onClick={handlePublish}
             disabled={isPublishing}
           >
-            <Share className="h-4 w-4" />
-            <span>{isPublishing ? "Publishing..." : "Publish to Feed"}</span>
+            <PlusSquare className="h-4 w-4" />
+            <span>{isPublishing ? "Publishing..." : "Publish to Frame"}</span>
           </Button>
         </div>
         
