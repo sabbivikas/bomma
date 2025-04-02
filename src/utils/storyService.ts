@@ -1,5 +1,5 @@
 
-import { Story, StoryCreateInput, StoryFrame, StoryFrameCreateInput } from '@/types/doodle';
+import { Story, StoryCreateInput, StoryFrame, StoryFrameCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/utils/doodleService';
@@ -350,6 +350,17 @@ export async function deleteStory(id: string): Promise<boolean> {
       return false;
     }
     
+    // Delete any comments associated with the story
+    const { error: commentsError } = await supabase
+      .from('comments')
+      .delete()
+      .eq('story_id', id) as { error: any };
+    
+    if (commentsError) {
+      console.error(`Error deleting comments for story ${id}:`, commentsError);
+      // Continue with deleting the story even if comment deletion fails
+    }
+    
     // Then delete the story
     const { error: storyError } = await supabase
       .from('stories')
@@ -365,5 +376,71 @@ export async function deleteStory(id: string): Promise<boolean> {
   } catch (err) {
     console.error(`Unexpected error in deleteStory for ${id}:`, err);
     return false;
+  }
+}
+
+// Get comments for a story
+export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('story_id', storyId)
+      .order('created_at', { ascending: false }) as { data: any[], error: any };
+    
+    if (error) {
+      console.error('Error fetching comments:', error);
+      return [];
+    }
+    
+    // Convert the data to match our Comment type
+    return data.map(item => ({
+      id: item.id,
+      doodleId: item.doodle_id,
+      storyId: item.story_id,
+      text: item.text,
+      createdAt: item.created_at,
+      sessionId: item.session_id
+    }));
+  } catch (err) {
+    console.error(`Unexpected error in getCommentsForStory for ${storyId}:`, err);
+    return [];
+  }
+}
+
+// Add a comment to a story
+export async function addCommentToStory(storyId: string, text: string): Promise<Comment | null> {
+  try {
+    const sessionId = getSessionId();
+    
+    const newComment = {
+      story_id: storyId,
+      text,
+      session_id: sessionId
+    };
+    
+    const { data, error } = await supabase
+      .from('comments')
+      .insert(newComment)
+      .select()
+      .single() as { data: any, error: any };
+    
+    if (error) {
+      console.error('Error adding comment:', error);
+      return null;
+    }
+    
+    // Convert to our Comment type
+    return {
+      id: data.id,
+      doodleId: data.doodle_id,
+      storyId: data.story_id,
+      text: data.text,
+      createdAt: data.created_at,
+      sessionId: data.session_id
+    };
+  } catch (err) {
+    console.error(`Unexpected error in addCommentToStory for ${storyId}:`, err);
+    return null;
   }
 }

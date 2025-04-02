@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Story } from '@/types/doodle';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Film, BookOpen } from 'lucide-react';
+import { Heart, Film, BookOpen, MessageCircle } from 'lucide-react';
 import { likeStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
@@ -86,15 +86,29 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
           {formatDistanceToNow(new Date(story.createdAt), { addSuffix: true })}
         </div>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={handleLike}
-        >
-          <Heart className={story.likes > 0 ? "fill-red-500 text-red-500" : ""} size={16} />
-          <span>{story.likes}</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 px-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/stories/${story.id}?comments=open`);
+            }}
+          >
+            <MessageCircle size={16} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 px-2"
+            onClick={handleLike}
+          >
+            <Heart className={story.likes > 0 ? "fill-red-500 text-red-500" : ""} size={16} />
+            <span>{story.likes}</span>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
