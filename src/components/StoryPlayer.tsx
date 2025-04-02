@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Story } from '@/types/doodle';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, Rewind } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Button } from './ui/button';
+import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Progress } from './ui/progress';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StoryPlayerProps {
   story: Story;
@@ -15,159 +15,142 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const isMobile = useIsMobile();
   
   const currentFrame = story.frames[currentFrameIndex];
   const totalFrames = story.frames.length;
   
-  // Auto-play effect
+  // Reset player when story changes
   useEffect(() => {
-    if (!isPlaying || !currentFrame) return;
+    setCurrentFrameIndex(0);
+    setProgress(0);
+    setIsPlaying(autoPlay);
+  }, [story.id, autoPlay]);
+  
+  // Handle auto-play and frame transitions
+  useEffect(() => {
+    if (!isPlaying || story.frames.length === 0) return;
     
-    const frameDuration = currentFrame.duration / playbackSpeed;
-    let animationFrameId: number;
+    const frameDuration = currentFrame?.duration || 3000;
     let startTime: number;
+    let animationFrameId: number;
     
-    const animate = (timestamp: number) => {
+    const updateProgress = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       
       const elapsed = timestamp - startTime;
-      const newProgress = Math.min(elapsed / frameDuration * 100, 100);
+      const newProgress = Math.min(100, (elapsed / frameDuration) * 100);
+      
       setProgress(newProgress);
       
-      if (elapsed < frameDuration) {
-        animationFrameId = requestAnimationFrame(animate);
+      if (newProgress < 100) {
+        animationFrameId = requestAnimationFrame(updateProgress);
       } else {
-        // Move to the next frame
-        if (currentFrameIndex < totalFrames - 1) {
-          setCurrentFrameIndex(prev => prev + 1);
-          setProgress(0);
-        } else {
-          // End of animation
-          setIsPlaying(false);
-          setProgress(100);
-        }
+        // Move to next frame
+        setCurrentFrameIndex(prevIndex => {
+          const nextIndex = (prevIndex + 1) % totalFrames;
+          
+          // If we're at the end and it's not an animation, stop playing
+          if (nextIndex === 0 && !story.isAnimation) {
+            setIsPlaying(false);
+            return prevIndex;
+          }
+          
+          return nextIndex;
+        });
+        
+        setProgress(0);
       }
     };
     
-    animationFrameId = requestAnimationFrame(animate);
+    animationFrameId = requestAnimationFrame(updateProgress);
     
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isPlaying, currentFrameIndex, currentFrame, totalFrames, playbackSpeed]);
+  }, [isPlaying, currentFrameIndex, story.frames, currentFrame, totalFrames, story.isAnimation]);
   
-  const handlePlay = () => {
-    if (currentFrameIndex === totalFrames - 1 && progress === 100) {
-      // If at the end, restart from beginning
-      setCurrentFrameIndex(0);
-      setProgress(0);
-    }
-    setIsPlaying(true);
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying);
   };
   
-  const handlePause = () => {
+  const goToNextFrame = () => {
     setIsPlaying(false);
-  };
-  
-  const handlePrevious = () => {
-    setIsPlaying(false);
-    setCurrentFrameIndex(prev => Math.max(0, prev - 1));
     setProgress(0);
+    setCurrentFrameIndex(prevIndex => (prevIndex + 1) % totalFrames);
   };
   
-  const handleNext = () => {
+  const goToPreviousFrame = () => {
     setIsPlaying(false);
-    setCurrentFrameIndex(prev => Math.min(totalFrames - 1, prev + 1));
     setProgress(0);
+    setCurrentFrameIndex(prevIndex => (prevIndex - 1 + totalFrames) % totalFrames);
   };
   
-  const handleRestart = () => {
-    setIsPlaying(false);
-    setCurrentFrameIndex(0);
-    setProgress(0);
-  };
-  
-  const handleSpeedChange = (value: number[]) => {
-    setPlaybackSpeed(value[0]);
-  };
-  
-  if (!story || story.frames.length === 0) {
+  // If no frames, show placeholder
+  if (story.frames.length === 0) {
     return (
-      <div className="w-full h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-        <p className="text-gray-500">No frames to display</p>
+      <div className="bg-gray-100 border rounded-md flex items-center justify-center h-64">
+        <p className="text-gray-500">No frames in this story yet</p>
       </div>
     );
   }
-  
+
   return (
-    <Card className="overflow-hidden">
-      <div className="aspect-square bg-black relative overflow-hidden">
-        {currentFrame && (
-          <img 
-            src={currentFrame.imageUrl} 
-            alt={`Frame ${currentFrameIndex + 1}`}
-            className="object-contain w-full h-full"
-          />
-        )}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
-          <div className="flex justify-between text-white text-sm mb-2">
-            <span>Frame {currentFrameIndex + 1}/{totalFrames}</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className="w-full bg-gray-300 h-1 rounded-full overflow-hidden">
-            <div 
-              className="bg-white h-full transition-all duration-100"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+    <div className="bg-white border rounded-md overflow-hidden shadow-sm">
+      {/* Display current frame */}
+      <div className="relative bg-gray-100 flex items-center justify-center">
+        <img 
+          src={currentFrame.imageUrl} 
+          alt={`Frame ${currentFrameIndex + 1} of "${story.title}"`}
+          className="max-w-full max-h-[500px] object-contain"
+        />
+        
+        {/* Frame counter overlay */}
+        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+          {currentFrameIndex + 1} / {totalFrames}
         </div>
       </div>
       
-      <div className="p-4 space-y-4">
+      {/* Controls */}
+      <div className="p-4">
+        <Progress value={progress} className="mb-2" />
+        
         <div className="flex justify-between items-center">
-          <div className="space-x-2">
-            <Button variant="outline" size="icon" onClick={handleRestart}>
-              <Rewind className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handlePrevious}>
+          <div className="flex space-x-1">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={goToPreviousFrame}
+              disabled={totalFrames <= 1}
+            >
               <SkipBack className="h-4 w-4" />
             </Button>
-            {isPlaying ? (
-              <Button variant="outline" size="icon" onClick={handlePause}>
-                <Pause className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button variant="outline" size="icon" onClick={handlePlay}>
-                <Play className="h-4 w-4" />
-              </Button>
-            )}
-            <Button variant="outline" size="icon" onClick={handleNext}>
+            
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={togglePlayPause}
+              disabled={totalFrames <= 1}
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={goToNextFrame}
+              disabled={totalFrames <= 1}
+            >
               <SkipForward className="h-4 w-4" />
             </Button>
           </div>
           
-          <div className="flex items-center space-x-2 w-32">
-            <span className="text-xs">Speed: {playbackSpeed}x</span>
-            <Slider
-              value={[playbackSpeed]}
-              onValueChange={handleSpeedChange}
-              min={0.5}
-              max={2}
-              step={0.5}
-              className="w-24"
-            />
+          <div className="text-sm text-gray-500">
+            {story.isAnimation ? 'Animation' : 'Story'}
           </div>
         </div>
-        
-        <div>
-          <h3 className="font-medium">{story.title}</h3>
-          <p className="text-sm text-gray-500">
-            {story.isAnimation ? "Animation" : "Story"} with {totalFrames} frames
-          </p>
-        </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,16 @@ const StoryCreator: React.FC = () => {
   const [isAddingFrame, setIsAddingFrame] = useState(false);
   const navigate = useNavigate();
 
+  // Ref for scrolling to the bottom of the frames list
+  const framesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when new frame is added
+  React.useEffect(() => {
+    if (frames.length > 0) {
+      framesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [frames.length]);
+
   const handleSaveFrame = (canvas: HTMLCanvasElement) => {
     setIsAddingFrame(true);
     
@@ -31,7 +41,7 @@ const StoryCreator: React.FC = () => {
         storyId: '',
         imageUrl,
         order: frames.length,
-        duration: 3000, // Default 3 seconds for story frames
+        duration: 3000, // Default 3 seconds per frame for stories
         createdAt: new Date().toISOString()
       };
       
@@ -71,8 +81,8 @@ const StoryCreator: React.FC = () => {
     
     if (frames.length === 0) {
       toast({
-        title: "No frames added",
-        description: "Please add at least one frame to create a story",
+        title: "Frames required",
+        description: "Please add at least one frame to your story",
         variant: "destructive",
       });
       return;
@@ -100,7 +110,7 @@ const StoryCreator: React.FC = () => {
         await addFrameToStory(newStory.id, {
           imageUrl: frame.imageUrl,
           order: i,
-          duration: frame.duration
+          duration: 3000 // Default 3 seconds per frame for stories
         });
       }
       
@@ -130,7 +140,7 @@ const StoryCreator: React.FC = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Create Story</h2>
         <p className="text-gray-600">
-          Create a sequence of doodles to tell your story
+          Draw frames to create a visual story or comic
         </p>
       </div>
       
@@ -141,7 +151,7 @@ const StoryCreator: React.FC = () => {
             id="title" 
             value={title} 
             onChange={e => setTitle(e.target.value)} 
-            placeholder="My Story Adventure"
+            placeholder="My Amazing Story"
           />
         </div>
         
@@ -149,7 +159,7 @@ const StoryCreator: React.FC = () => {
         {frames.length > 0 && (
           <div className="mt-6">
             <h3 className="text-lg font-medium mb-2">Story Frames ({frames.length})</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-md">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-md">
               {frames.map((frame, index) => (
                 <div key={index} className="relative group">
                   <div className="aspect-square bg-white border rounded-md overflow-hidden">
@@ -174,13 +184,14 @@ const StoryCreator: React.FC = () => {
                   </div>
                 </div>
               ))}
+              <div ref={framesEndRef} />
             </div>
           </div>
         )}
         
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">
-            {frames.length === 0 ? "Draw your first frame" : "Add next frame"}
+            {frames.length === 0 ? "Create your first frame" : "Add next frame"}
           </h3>
           <DrawingCanvas onSave={handleSaveFrame} />
           

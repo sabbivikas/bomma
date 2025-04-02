@@ -68,6 +68,68 @@ export type Database = {
         }
         Relationships: []
       }
+      stories: {
+        Row: {
+          created_at: string
+          id: string
+          is_animation: boolean
+          likes: number
+          session_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_animation?: boolean
+          likes?: number
+          session_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_animation?: boolean
+          likes?: number
+          session_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      story_frames: {
+        Row: {
+          created_at: string
+          duration: number
+          id: string
+          image_url: string
+          order: number
+          story_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number
+          id?: string
+          image_url: string
+          order: number
+          story_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          id?: string
+          image_url?: string
+          order?: number
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_frames_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
