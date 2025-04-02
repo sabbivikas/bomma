@@ -138,9 +138,9 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     e.stopPropagation(); // Prevent navigation when sharing
     
     try {
-      // Create a simplified shareable URL with just the ID
-      const shareId = doodle.id.substring(0, 8); // Take just the first 8 characters of the ID
-      const shareUrl = `${window.location.origin}/d/${shareId}`;
+      // Create a much shorter URL with just the ID fragment
+      const shortId = doodle.id.substring(0, 8); // Take just the first 8 characters of the ID
+      const shareUrl = `/d/${shortId}`; // Relative URL format - much shorter!
       const shareTitle = doodle.prompt;
       const shareText = `Check out this amazing doodle: ${doodle.prompt}`;
       

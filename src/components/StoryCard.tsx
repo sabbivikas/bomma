@@ -51,9 +51,9 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     e.stopPropagation(); // Prevent navigation when sharing
     
     try {
-      // Create a simplified shareable URL with just the ID
-      const shareId = story.id.substring(0, 8); // Take just the first 8 characters of the ID
-      const shareUrl = `${window.location.origin}/s/${shareId}`;
+      // Create a much shorter URL using just the ID fragment
+      const shortId = story.id.substring(0, 8); // Take just the first 8 characters of the ID
+      const shareUrl = `/s/${shortId}`; // Relative URL format - much shorter!
       const shareTitle = story.title;
       const shareText = `Check out this amazing ${story.isAnimation ? 'animation' : 'story'}: ${story.title}`;
       

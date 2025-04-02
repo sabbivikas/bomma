@@ -39,7 +39,6 @@ const App = () => (
 
 // Component to handle short URL redirects
 function ShortUrlRedirect({ type }: { type: 'story' | 'doodle' }) {
-  const params = new URLSearchParams(window.location.search);
   const shortId = window.location.pathname.split('/')[2]; // Extract shortId from URL
   
   // In a real implementation, we would look up the full ID from a database
