@@ -134,6 +134,18 @@ const StoryCreator: React.FC = () => {
       setIsCreatingStory(false);
     }
   };
+  
+  // Clear all frames
+  const handleClearAllFrames = () => {
+    if (frames.length > 0) {
+      setFrames([]);
+      toast({
+        title: "All frames cleared",
+        description: "All frames have been removed from your story",
+        variant: "default",
+      });
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -206,19 +218,20 @@ const StoryCreator: React.FC = () => {
             </Button>
             
             <div className="space-x-4">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                disabled={isAddingFrame}
-                onClick={() => setFrames([])}
-              >
-                <Trash2 className="h-4 w-4" />
-                Clear All Frames
-              </Button>
+              {frames.length > 0 && (
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={handleClearAllFrames}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear All Frames
+                </Button>
+              )}
               
               <Button
                 className="flex items-center gap-2"
-                disabled={frames.length === 0 || isCreatingStory}
+                disabled={frames.length === 0 || title.trim() === '' || isCreatingStory}
                 onClick={handleCreateStory}
               >
                 <BookOpen className="h-4 w-4" />

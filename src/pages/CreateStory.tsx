@@ -16,7 +16,7 @@ const CreateStory = () => {
       
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
+      <main className="flex-1 container mx-auto px-4 py-8 relative z-10 pb-24">
         <StoryCreator />
       </main>
     </div>
