@@ -133,14 +133,30 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     return username.substring(0, 2).toUpperCase();
   };
   
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when sharing
+    
     try {
       // Create a shareable URL with the doodle ID
       const shareUrl = `${window.location.origin}/doodles/${doodle.id}`;
       const shareTitle = doodle.prompt;
       const shareText = `Check out this amazing doodle: ${doodle.prompt}`;
       
-      // If Web Share API is available
+      // Always first try to use clipboard API as it has better browser support
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied",
+          description: "The link has been copied to your clipboard",
+          variant: "success"
+        });
+        return; // Exit after successful clipboard copy
+      } catch (clipboardError) {
+        console.error('Failed to copy to clipboard:', clipboardError);
+        // Continue to try Web Share API if clipboard fails
+      }
+      
+      // If Web Share API is available, try it as fallback
       if (navigator.share) {
         try {
           await navigator.share({
@@ -150,41 +166,28 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
           });
           toast({
             title: "Shared successfully",
-            description: "The doodle was shared successfully"
+            description: "The doodle was shared successfully",
+            variant: "success"
           });
-        } catch (error) {
+        } catch (shareError) {
           // Only show error if it's not a user cancellation
-          if (error instanceof Error && error.name !== 'AbortError') {
-            console.error('Error sharing:', error);
-            toast({
-              title: "Sharing failed",
-              description: "Could not share the doodle",
-              variant: "destructive"
-            });
+          if (shareError instanceof Error && shareError.name !== 'AbortError') {
+            throw shareError; // Re-throw for the outer catch block
           }
         }
       } else {
-        // Fallback for browsers without Web Share API
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied",
-            description: "The link has been copied to your clipboard"
-          });
-        } catch (error) {
-          console.error('Failed to copy:', error);
-          toast({
-            title: "Copy failed",
-            description: "Could not copy link to clipboard. Try again.",
-            variant: "destructive"
-          });
-        }
+        // If neither worked, show a message with the URL
+        toast({
+          title: "Copy this link",
+          description: shareUrl,
+          variant: "default"
+        });
       }
     } catch (error) {
       console.error('Share error:', error);
       toast({
-        title: "Error",
-        description: "Something went wrong while sharing",
+        title: "Sharing failed",
+        description: "Could not share this doodle. Try copying the URL manually.",
         variant: "destructive"
       });
     }

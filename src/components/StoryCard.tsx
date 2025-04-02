@@ -56,7 +56,21 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
       const shareTitle = story.title;
       const shareText = `Check out this amazing ${story.isAnimation ? 'animation' : 'story'}: ${story.title}`;
       
-      // If Web Share API is available
+      // Always first try to use clipboard API as it has better browser support
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied",
+          description: "The link has been copied to your clipboard",
+          variant: "success"
+        });
+        return; // Exit after successful clipboard copy
+      } catch (clipboardError) {
+        console.error('Failed to copy to clipboard:', clipboardError);
+        // Continue to try Web Share API if clipboard fails
+      }
+      
+      // If Web Share API is available, try it as fallback
       if (navigator.share) {
         try {
           await navigator.share({
@@ -66,41 +80,28 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
           });
           toast({
             title: "Shared successfully",
-            description: `The ${story.isAnimation ? 'animation' : 'story'} was shared successfully`
+            description: `The ${story.isAnimation ? 'animation' : 'story'} was shared successfully`,
+            variant: "success"
           });
-        } catch (error) {
+        } catch (shareError) {
           // Only show error if it's not a user cancellation
-          if (error instanceof Error && error.name !== 'AbortError') {
-            console.error('Error sharing:', error);
-            toast({
-              title: "Sharing failed",
-              description: "Could not share the content",
-              variant: "destructive"
-            });
+          if (shareError instanceof Error && shareError.name !== 'AbortError') {
+            throw shareError; // Re-throw for the outer catch block
           }
         }
       } else {
-        // Fallback for browsers without Web Share API
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied",
-            description: "The link has been copied to your clipboard"
-          });
-        } catch (error) {
-          console.error('Failed to copy:', error);
-          toast({
-            title: "Copy failed",
-            description: "Could not copy link to clipboard. Try again.",
-            variant: "destructive"
-          });
-        }
+        // If neither worked, show a message with the URL
+        toast({
+          title: "Copy this link",
+          description: shareUrl,
+          variant: "default"
+        });
       }
     } catch (error) {
       console.error('Share error:', error);
       toast({
-        title: "Error",
-        description: "Something went wrong while sharing",
+        title: "Sharing failed",
+        description: "Could not share this story. Try copying the URL manually.",
         variant: "destructive"
       });
     }
@@ -156,6 +157,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
             size="sm"
             className="flex items-center gap-1 px-2"
             onClick={handleCommentClick}
+            aria-label="Comment on story"
           >
             <MessageCircle size={16} />
           </Button>
@@ -165,6 +167,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
             size="sm"
             className="flex items-center gap-1 px-2"
             onClick={handleLike}
+            aria-label="Like story"
           >
             <Heart className={story.likes > 0 ? "fill-red-500 text-red-500" : ""} size={16} />
             <span>{story.likes}</span>
