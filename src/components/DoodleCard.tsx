@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,28 +134,58 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
   };
   
   const handleShare = async () => {
-    // If Web Share API is available
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: doodle.prompt,
-          text: `Check out this amazing doodle: ${doodle.prompt}`,
-          url: window.location.href
-        });
-        toast({
-          title: "Shared successfully",
-          description: "The doodle was shared successfully"
-        });
-      } catch (error) {
-        // User probably canceled the share operation
-        console.log('Share canceled');
+    try {
+      // Create a shareable URL with the doodle ID
+      const shareUrl = `${window.location.origin}/doodles/${doodle.id}`;
+      const shareTitle = doodle.prompt;
+      const shareText = `Check out this amazing doodle: ${doodle.prompt}`;
+      
+      // If Web Share API is available
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          toast({
+            title: "Shared successfully",
+            description: "The doodle was shared successfully"
+          });
+        } catch (error) {
+          // Only show error if it's not a user cancellation
+          if (error instanceof Error && error.name !== 'AbortError') {
+            console.error('Error sharing:', error);
+            toast({
+              title: "Sharing failed",
+              description: "Could not share the doodle",
+              variant: "destructive"
+            });
+          }
+        }
+      } else {
+        // Fallback for browsers without Web Share API
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: "Link copied",
+            description: "The link has been copied to your clipboard"
+          });
+        } catch (error) {
+          console.error('Failed to copy:', error);
+          toast({
+            title: "Copy failed",
+            description: "Could not copy link to clipboard. Try again.",
+            variant: "destructive"
+          });
+        }
       }
-    } else {
-      // Fallback for browsers that don't support the Web Share API
-      navigator.clipboard.writeText(window.location.href);
+    } catch (error) {
+      console.error('Share error:', error);
       toast({
-        title: "Link copied",
-        description: "The link has been copied to your clipboard"
+        title: "Error",
+        description: "Something went wrong while sharing",
+        variant: "destructive"
       });
     }
   };
@@ -231,8 +260,9 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
         <Button
           variant="ghost"
           size="sm"
-          className="p-0 hover:bg-transparent"
+          className="p-0 hover:bg-transparent hover:text-black"
           onClick={handleShare}
+          aria-label="Share doodle"
         >
           <Share2 size={18} strokeWidth={2} />
         </Button>

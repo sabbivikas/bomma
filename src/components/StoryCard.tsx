@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Story } from '@/types/doodle';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Film, BookOpen, MessageCircle } from 'lucide-react';
+import { Heart, Film, BookOpen, MessageCircle, Share2 } from 'lucide-react';
 import { likeStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
@@ -45,6 +45,65 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/stories/${story.id}?comments=open`);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when sharing
+    
+    try {
+      // Create a shareable URL with the story ID
+      const shareUrl = `${window.location.origin}/stories/${story.id}`;
+      const shareTitle = story.title;
+      const shareText = `Check out this amazing ${story.isAnimation ? 'animation' : 'story'}: ${story.title}`;
+      
+      // If Web Share API is available
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          toast({
+            title: "Shared successfully",
+            description: `The ${story.isAnimation ? 'animation' : 'story'} was shared successfully`
+          });
+        } catch (error) {
+          // Only show error if it's not a user cancellation
+          if (error instanceof Error && error.name !== 'AbortError') {
+            console.error('Error sharing:', error);
+            toast({
+              title: "Sharing failed",
+              description: "Could not share the content",
+              variant: "destructive"
+            });
+          }
+        }
+      } else {
+        // Fallback for browsers without Web Share API
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: "Link copied",
+            description: "The link has been copied to your clipboard"
+          });
+        } catch (error) {
+          console.error('Failed to copy:', error);
+          toast({
+            title: "Copy failed",
+            description: "Could not copy link to clipboard. Try again.",
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong while sharing",
+        variant: "destructive"
+      });
+    }
   };
   
   // Get the first frame as the thumbnail
@@ -109,6 +168,16 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
           >
             <Heart className={story.likes > 0 ? "fill-red-500 text-red-500" : ""} size={16} />
             <span>{story.likes}</span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 px-2"
+            onClick={handleShare}
+            aria-label="Share story"
+          >
+            <Share2 size={16} />
           </Button>
         </div>
       </CardFooter>
