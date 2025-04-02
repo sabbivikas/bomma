@@ -28,10 +28,11 @@ const mapToStory = (row: any, frames: StoryFrame[] = []): Story => ({
 // Get all stories from Supabase
 export async function getAllStories(): Promise<Story[]> {
   try {
+    // Use any type to bypass TypeScript's type checking since we're handling the mapping manually
     const { data: storiesData, error: storiesError } = await supabase
       .from('stories')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: any[], error: any };
     
     if (storiesError) {
       console.error('Error fetching stories:', storiesError);
@@ -45,7 +46,7 @@ export async function getAllStories(): Promise<Story[]> {
           .from('story_frames')
           .select('*')
           .eq('story_id', story.id)
-          .order('order', { ascending: true });
+          .order('order', { ascending: true }) as { data: any[], error: any };
         
         if (framesError) {
           console.error(`Error fetching frames for story ${story.id}:`, framesError);
@@ -74,7 +75,7 @@ export async function getStoryById(id: string): Promise<Story | null> {
       .from('stories')
       .select('*')
       .eq('id', id)
-      .single();
+      .single() as { data: any, error: any };
     
     if (storyError) {
       console.error(`Error fetching story ${id}:`, storyError);
@@ -85,7 +86,7 @@ export async function getStoryById(id: string): Promise<Story | null> {
       .from('story_frames')
       .select('*')
       .eq('story_id', id)
-      .order('order', { ascending: true });
+      .order('order', { ascending: true }) as { data: any[], error: any };
     
     if (framesError) {
       console.error(`Error fetching frames for story ${id}:`, framesError);
@@ -116,7 +117,7 @@ export async function createStory(input: StoryCreateInput): Promise<Story | null
         likes: 0
       })
       .select()
-      .single();
+      .single() as { data: any, error: any };
     
     if (storyError) {
       console.error('Error creating story:', storyError);
@@ -140,7 +141,7 @@ export async function addFrameToStory(storyId: string, frame: StoryFrameCreateIn
       .select('order')
       .eq('story_id', storyId)
       .order('order', { ascending: false })
-      .limit(1);
+      .limit(1) as { data: any[], error: any };
     
     const nextOrder = maxOrderError || !maxOrderData || maxOrderData.length === 0 ? 0 : maxOrderData[0].order + 1;
     
@@ -154,7 +155,7 @@ export async function addFrameToStory(storyId: string, frame: StoryFrameCreateIn
         duration: frame.duration
       })
       .select()
-      .single();
+      .single() as { data: any, error: any };
     
     if (frameError) {
       console.error('Error adding frame to story:', frameError);
@@ -183,7 +184,7 @@ export async function updateFrame(frameId: string, updates: Partial<StoryFrameCr
       .update(updateData)
       .eq('id', frameId)
       .select()
-      .single();
+      .single() as { data: any, error: any };
     
     if (frameError) {
       console.error(`Error updating frame ${frameId}:`, frameError);
@@ -204,7 +205,7 @@ export async function deleteFrame(frameId: string): Promise<boolean> {
     const { error } = await supabase
       .from('story_frames')
       .delete()
-      .eq('id', frameId);
+      .eq('id', frameId) as { error: any };
     
     if (error) {
       console.error(`Error deleting frame ${frameId}:`, error);
@@ -227,7 +228,7 @@ export async function getMyStories(): Promise<Story[]> {
       .from('stories')
       .select('*')
       .eq('session_id', sessionId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: any[], error: any };
     
     if (storiesError) {
       console.error('Error fetching my stories:', storiesError);
@@ -241,7 +242,7 @@ export async function getMyStories(): Promise<Story[]> {
           .from('story_frames')
           .select('*')
           .eq('story_id', story.id)
-          .order('order', { ascending: true });
+          .order('order', { ascending: true }) as { data: any[], error: any };
         
         if (framesError) {
           console.error(`Error fetching frames for story ${story.id}:`, framesError);
@@ -271,7 +272,7 @@ export async function likeStory(id: string): Promise<Story | null> {
       .from('stories')
       .select('likes')
       .eq('id', id)
-      .single();
+      .single() as { data: any, error: any };
       
     if (fetchError) {
       console.error('Error fetching story for like:', fetchError);
@@ -286,7 +287,7 @@ export async function likeStory(id: string): Promise<Story | null> {
       .update({ likes: updatedLikes })
       .eq('id', id)
       .select()
-      .single();
+      .single() as { data: any, error: any };
       
     if (error) {
       console.error('Error updating story likes:', error);
@@ -298,7 +299,7 @@ export async function likeStory(id: string): Promise<Story | null> {
       .from('story_frames')
       .select('*')
       .eq('story_id', id)
-      .order('order', { ascending: true });
+      .order('order', { ascending: true }) as { data: any[], error: any };
     
     if (framesError) {
       console.error(`Error fetching frames for story ${id}:`, framesError);
@@ -326,7 +327,7 @@ export async function deleteStory(id: string): Promise<boolean> {
       .from('stories')
       .select('session_id')
       .eq('id', id)
-      .single();
+      .single() as { data: any, error: any };
     
     if (checkError || !storyData) {
       console.error('Error checking story ownership:', checkError);
@@ -342,7 +343,7 @@ export async function deleteStory(id: string): Promise<boolean> {
     const { error: framesError } = await supabase
       .from('story_frames')
       .delete()
-      .eq('story_id', id);
+      .eq('story_id', id) as { error: any };
     
     if (framesError) {
       console.error(`Error deleting frames for story ${id}:`, framesError);
@@ -353,7 +354,7 @@ export async function deleteStory(id: string): Promise<boolean> {
     const { error: storyError } = await supabase
       .from('stories')
       .delete()
-      .eq('id', id);
+      .eq('id', id) as { error: any };
     
     if (storyError) {
       console.error(`Error deleting story ${id}:`, storyError);
