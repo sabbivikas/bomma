@@ -12,23 +12,26 @@ export type Database = {
       comments: {
         Row: {
           created_at: string
-          doodle_id: string
+          doodle_id: string | null
           id: string
           session_id: string
+          story_id: string | null
           text: string
         }
         Insert: {
           created_at?: string
-          doodle_id: string
+          doodle_id?: string | null
           id?: string
           session_id: string
+          story_id?: string | null
           text: string
         }
         Update: {
           created_at?: string
-          doodle_id?: string
+          doodle_id?: string | null
           id?: string
           session_id?: string
+          story_id?: string | null
           text?: string
         }
         Relationships: [
@@ -37,6 +40,13 @@ export type Database = {
             columns: ["doodle_id"]
             isOneToOne: false
             referencedRelation: "doodles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
             referencedColumns: ["id"]
           },
         ]

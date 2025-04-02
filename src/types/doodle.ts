@@ -10,7 +10,8 @@ export interface Doodle {
 
 export interface Comment {
   id: string;
-  doodleId: string;
+  doodleId?: string;
+  storyId?: string;
   text: string;
   createdAt: string;
   sessionId: string; // To track which "user" created it

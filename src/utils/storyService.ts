@@ -1,4 +1,3 @@
-
 import { Story, StoryCreateInput, StoryFrame, StoryFrameCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -433,8 +432,8 @@ export async function addCommentToStory(storyId: string, text: string): Promise<
     // Convert to our Comment type
     return {
       id: data.id,
-      doodleId: data.doodle_id,
       storyId: data.story_id,
+      doodleId: data.doodle_id,
       text: data.text,
       createdAt: data.created_at,
       sessionId: data.session_id

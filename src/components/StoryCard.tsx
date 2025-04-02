@@ -42,6 +42,11 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     navigate(`/stories/${story.id}`);
   };
   
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/stories/${story.id}?comments=open`);
+  };
+  
   // Get the first frame as the thumbnail
   const thumbnailFrame = story.frames[0];
   
@@ -91,10 +96,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
             variant="ghost"
             size="sm"
             className="flex items-center gap-1 px-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/stories/${story.id}?comments=open`);
-            }}
+            onClick={handleCommentClick}
           >
             <MessageCircle size={16} />
           </Button>
