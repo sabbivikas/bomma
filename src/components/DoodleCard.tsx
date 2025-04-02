@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,8 +138,9 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     e.stopPropagation(); // Prevent navigation when sharing
     
     try {
-      // Create a shareable URL with the doodle ID
-      const shareUrl = `${window.location.origin}/doodles/${doodle.id}`;
+      // Create a simplified shareable URL with just the ID
+      const shareId = doodle.id.substring(0, 8); // Take just the first 8 characters of the ID
+      const shareUrl = `${window.location.origin}/d/${shareId}`;
       const shareTitle = doodle.prompt;
       const shareText = `Check out this amazing doodle: ${doodle.prompt}`;
       
@@ -147,7 +149,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied",
-          description: "The link has been copied to your clipboard",
+          description: "Short link copied to clipboard",
           variant: "success"
         });
         return; // Exit after successful clipboard copy

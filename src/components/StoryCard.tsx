@@ -51,8 +51,9 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     e.stopPropagation(); // Prevent navigation when sharing
     
     try {
-      // Create a shareable URL with the story ID
-      const shareUrl = `${window.location.origin}/stories/${story.id}`;
+      // Create a simplified shareable URL with just the ID
+      const shareId = story.id.substring(0, 8); // Take just the first 8 characters of the ID
+      const shareUrl = `${window.location.origin}/s/${shareId}`;
       const shareTitle = story.title;
       const shareText = `Check out this amazing ${story.isAnimation ? 'animation' : 'story'}: ${story.title}`;
       
@@ -61,7 +62,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied",
-          description: "The link has been copied to your clipboard",
+          description: "Short link copied to clipboard",
           variant: "success"
         });
         return; // Exit after successful clipboard copy
