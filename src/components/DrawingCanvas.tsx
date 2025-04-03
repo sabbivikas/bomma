@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -16,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTheme } from '@/contexts/ThemeContext';
-import { visualThemes, seasonalThemes } from '@/utils/themeConfig';
+import { visualThemes, seasonalThemes, getThemeConfig } from '@/utils/themeConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DrawingCanvasProps {
@@ -93,158 +92,298 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       context.strokeStyle = color;
       context.lineWidth = width[0];
       
-      // Fill with white background
-      context.fillStyle = 'white';
-      context.fillRect(0, 0, canvas.width, canvas.height);
+      // Apply theme background instead of plain white
+      applyThemeBackground(context, canvas.width, canvas.height);
       
       contextRef.current = context;
     }
   }, []);
-  
-  // Update tool properties
+
+  // Apply theme to canvas when theme changes
   useEffect(() => {
-    if (!contextRef.current) return;
+    if (!canvasRef.current || !contextRef.current) return;
     
-    contextRef.current.strokeStyle = tool === 'eraser' ? 
-      'white' : 
-      color;
-    contextRef.current.lineWidth = width[0];
+    // Need to preserve the current drawing when changing theme
+    const canvas = canvasRef.current;
+    const context = contextRef.current;
     
-  }, [color, width, tool]);
-  
-  // Render text and shape elements
-  useEffect(() => {
-    if (!contextRef.current || !canvasRef.current) return;
+    // Create a temporary canvas to store the current drawing
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempContext = tempCanvas.getContext('2d');
     
-    // Only redraw when necessary
-    if (tool === 'text' || tool === 'rectangle' || tool === 'circle' || currentTextElement || currentShape) {
-      // Create a temporary canvas to avoid flickering
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = canvasRef.current.width;
-      tempCanvas.height = canvasRef.current.height;
-      const tempContext = tempCanvas.getContext('2d');
+    if (tempContext) {
+      // Copy current canvas content to temp canvas
+      tempContext.drawImage(canvas, 0, 0);
       
-      if (tempContext && contextRef.current) {
-        // Copy the current canvas to temp
-        tempContext.drawImage(canvasRef.current, 0, 0);
+      // Apply new theme background
+      applyThemeBackground(context, canvas.width, canvas.height);
+      
+      // Restore the drawing on top of the new background
+      context.drawImage(tempCanvas, 0, 0);
+    }
+  }, [theme.visualTheme, theme.seasonalTheme]);
+
+  // Function to apply theme background to canvas
+  const applyThemeBackground = (context: CanvasRenderingContext2D, width: number, height: number) => {
+    const visualThemeConfig = getThemeConfig(theme.visualTheme);
+    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
+    
+    // Start with a white background as base
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, width, height);
+    
+    if (visualThemeConfig) {
+      // Apply visual theme background
+      if (visualThemeConfig.id === 'ghibli') {
+        // Ghibli theme - soft pastel gradient
+        const gradient = context.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#E6F0FD');
+        gradient.addColorStop(0.5, '#D3ECFD');
+        gradient.addColorStop(1, '#FCE8E6');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, width, height);
+      } else if (visualThemeConfig.id === 'darkFantasy') {
+        // Dark fantasy theme
+        const gradient = context.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#1A1B26');
+        gradient.addColorStop(0.5, '#292A37');
+        gradient.addColorStop(1, '#3A3C4E');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, width, height);
+      } else if (visualThemeConfig.id === 'vintage') {
+        // Vintage theme
+        const gradient = context.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#F3E7D3');
+        gradient.addColorStop(0.5, '#EBD9B4');
+        gradient.addColorStop(1, '#D9C9A3');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, width, height);
+      } else if (visualThemeConfig.id === 'comic') {
+        // Comic book theme
+        const gradient = context.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#FFF8DC');
+        gradient.addColorStop(0.5, '#FFFACD');
+        gradient.addColorStop(1, '#FAFAD2');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, width, height);
         
-        // Draw all shape elements
-        shapeElements.forEach((element) => {
-          tempContext.strokeStyle = element.color;
-          tempContext.fillStyle = element.color;
-          
-          if (element.type === 'rectangle') {
-            if (element.fill) {
-              tempContext.fillRect(element.x, element.y, element.width, element.height);
-            } else {
-              tempContext.strokeRect(element.x, element.y, element.width, element.height);
-            }
-          } else if (element.type === 'circle') {
-            tempContext.beginPath();
-            // Use ellipse to create circles based on width/height
-            const radiusX = Math.abs(element.width) / 2;
-            const radiusY = Math.abs(element.height) / 2;
-            const centerX = element.x + element.width / 2;
-            const centerY = element.y + element.height / 2;
-            
-            tempContext.ellipse(
-              centerX, 
-              centerY, 
-              radiusX, 
-              radiusY, 
-              0, 
-              0, 
-              2 * Math.PI
-            );
-            
-            if (element.fill) {
-              tempContext.fill();
-            } else {
-              tempContext.stroke();
-            }
-          }
-        });
-        
-        // Draw current shape being created
-        if (currentShape && lastPointRef.current) {
-          tempContext.strokeStyle = currentShape.color;
-          tempContext.fillStyle = currentShape.color;
-          
-          if (currentShape.type === 'rectangle') {
-            if (fill) {
-              tempContext.fillRect(
-                currentShape.x, 
-                currentShape.y, 
-                currentShape.width, 
-                currentShape.height
-              );
-            } else {
-              tempContext.strokeRect(
-                currentShape.x, 
-                currentShape.y, 
-                currentShape.width, 
-                currentShape.height
-              );
-            }
-          } else if (currentShape.type === 'circle') {
-            tempContext.beginPath();
-            
-            // Use ellipse to create circles based on width/height
-            const radiusX = Math.abs(currentShape.width) / 2;
-            const radiusY = Math.abs(currentShape.height) / 2;
-            const centerX = currentShape.x + currentShape.width / 2;
-            const centerY = currentShape.y + currentShape.height / 2;
-            
-            tempContext.ellipse(
-              centerX, 
-              centerY, 
-              radiusX, 
-              radiusY, 
-              0, 
-              0, 
-              2 * Math.PI
-            );
-            
-            if (fill) {
-              tempContext.fill();
-            } else {
-              tempContext.stroke();
-            }
+        // Add comic dots pattern
+        context.fillStyle = 'rgba(0,0,0,0.05)';
+        const dotSize = 5;
+        const spacing = 20;
+        for (let x = 0; x < width; x += spacing) {
+          for (let y = 0; y < height; y += spacing) {
+            context.beginPath();
+            context.arc(x, y, dotSize/2, 0, Math.PI * 2);
+            context.fill();
           }
         }
-        
-        // Draw all text elements
-        textElements.forEach((element, i) => {
-          tempContext.font = `${element.size}px ${element.fontFamily}`;
-          tempContext.fillStyle = element.color;
-          tempContext.fillText(element.text, element.x, element.y);
-          
-          // Draw selection rectangle for selected text
-          if (i === selectedTextIndex) {
-            const metrics = tempContext.measureText(element.text);
-            const height = element.size;
-            
-            tempContext.strokeStyle = '#007bff';
-            tempContext.lineWidth = 1;
-            tempContext.setLineDash([3, 3]);
-            tempContext.strokeRect(
-              element.x - 4, 
-              element.y - height, 
-              metrics.width + 8, 
-              height + 8
-            );
-            tempContext.setLineDash([]);
-          }
-        });
-        
-        // Update the main canvas
-        contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        contextRef.current.drawImage(tempCanvas, 0, 0);
+      } else if (visualThemeConfig.id === 'default') {
+        // Default theme - soft blue gradient
+        const gradient = context.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#E0F7FA');
+        gradient.addColorStop(0.5, '#B3E5FC');
+        gradient.addColorStop(1, '#D1C4E9');
+        context.fillStyle = gradient;
+        context.globalAlpha = 0.3; // Make it subtle
+        context.fillRect(0, 0, width, height);
+        context.globalAlpha = 1.0;
       }
     }
-  }, [textElements, selectedTextIndex, tool, shapeElements, currentShape, fill]);
+    
+    // Apply seasonal overlays if applicable
+    if (seasonalThemeConfig && seasonalThemeConfig.id !== 'none') {
+      context.globalAlpha = 0.15; // Make it subtle
+      
+      if (seasonalThemeConfig.id === 'spring') {
+        // Spring - add some flowers or petals
+        context.fillStyle = '#f8bbce';
+        for (let i = 0; i < 15; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const size = 5 + Math.random() * 15;
+          drawFlower(context, x, y, size);
+        }
+      } else if (seasonalThemeConfig.id === 'summer') {
+        // Summer - add sun rays
+        const centerX = width / 2;
+        const centerY = height / 4;
+        const radius = Math.min(width, height) / 3;
+        
+        context.fillStyle = '#FFEB3B';
+        context.beginPath();
+        context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        context.fill();
+        
+        // Draw rays
+        context.strokeStyle = '#FFEB3B';
+        context.lineWidth = 10;
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          context.beginPath();
+          context.moveTo(
+            centerX + Math.cos(angle) * radius,
+            centerY + Math.sin(angle) * radius
+          );
+          context.lineTo(
+            centerX + Math.cos(angle) * (radius + 50),
+            centerY + Math.sin(angle) * (radius + 50)
+          );
+          context.stroke();
+        }
+      } else if (seasonalThemeConfig.id === 'autumn') {
+        // Autumn - add leaves
+        const leafColors = ['#D2691E', '#8B4513', '#A0522D', '#CD853F'];
+        for (let i = 0; i < 20; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const size = 5 + Math.random() * 15;
+          const colorIndex = Math.floor(Math.random() * leafColors.length);
+          
+          context.fillStyle = leafColors[colorIndex];
+          drawLeaf(context, x, y, size);
+        }
+      } else if (seasonalThemeConfig.id === 'winter') {
+        // Winter - add snowflakes
+        context.fillStyle = 'white';
+        for (let i = 0; i < 30; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const size = 2 + Math.random() * 5;
+          drawSnowflake(context, x, y, size);
+        }
+      } else if (seasonalThemeConfig.id === 'halloween') {
+        // Halloween theme
+        context.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        context.fillRect(0, 0, width, height);
+        
+        // Add spooky elements
+        const spookyColors = ['#FF6D00', '#6A1B9A', '#4A148C'];
+        for (let i = 0; i < 15; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const size = 10 + Math.random() * 20;
+          const colorIndex = Math.floor(Math.random() * spookyColors.length);
+          
+          context.fillStyle = spookyColors[colorIndex];
+          if (Math.random() > 0.5) {
+            // Draw spider web
+            drawSpiderWeb(context, x, y, size);
+          } else {
+            // Draw bat
+            drawBat(context, x, y, size);
+          }
+        }
+      } else if (seasonalThemeConfig.id === 'christmas') {
+        // Christmas theme
+        for (let i = 0; i < 20; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const size = 5 + Math.random() * 15;
+          
+          if (Math.random() > 0.5) {
+            // Draw snowflake
+            context.fillStyle = 'white';
+            drawSnowflake(context, x, y, size);
+          } else {
+            // Draw simple ornament
+            context.fillStyle = Math.random() > 0.5 ? '#C8102E' : '#228B22';
+            drawOrnament(context, x, y, size);
+          }
+        }
+      }
+      
+      context.globalAlpha = 1.0;
+    }
+  };
   
-  // Get coordinates from mouse or touch event
+  // Helper functions to draw seasonal elements
+  const drawFlower = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    const numPetals = 5;
+    for (let i = 0; i < numPetals; i++) {
+      const angle = (i / numPetals) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.ellipse(
+        x + Math.cos(angle) * size/2, 
+        y + Math.sin(angle) * size/2,
+        size/2, size/4,
+        angle, 0, Math.PI * 2
+      );
+      ctx.fill();
+    }
+    
+    // Draw center
+    ctx.fillStyle = '#FFF59D';
+    ctx.beginPath();
+    ctx.arc(x, y, size/3, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  
+  const drawLeaf = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    ctx.beginPath();
+    ctx.ellipse(x, y, size, size/2, Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  
+  const drawSnowflake = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    // Simple snowflake (just a dot for performance)
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  
+  const drawSpiderWeb = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    // Simple spider web
+    const numLines = 6;
+    for (let i = 0; i < numLines; i++) {
+      const angle = (i / numLines) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(
+        x + Math.cos(angle) * size,
+        y + Math.sin(angle) * size
+      );
+      ctx.stroke();
+    }
+    
+    // Add concentric circles
+    for (let r = size/3; r <= size; r += size/3) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  };
+  
+  const drawBat = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    // Simple bat
+    ctx.beginPath();
+    ctx.ellipse(x, y, size/3, size/2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Wings
+    ctx.beginPath();
+    ctx.ellipse(x - size/2, y, size/2, size/4, Math.PI/4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.ellipse(x + size/2, y, size/2, size/4, -Math.PI/4, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  
+  const drawOrnament = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Ornament top
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.rect(x - size/5, y - size - size/4, size/2.5, size/4);
+    ctx.fill();
+  };
+
   const getCoordinates = (event: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
     
@@ -553,6 +692,40 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     };
   }, [canvasSize]);
 
+  // Theme preview component
+  const ThemePreview = () => {
+    const visualThemeConfig = getThemeConfig(theme.visualTheme);
+    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
+    
+    // Create a mini-preview canvas to show theme
+    const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+    
+    useEffect(() => {
+      const canvas = previewCanvasRef.current;
+      if (!canvas) return;
+      
+      canvas.width = 300;
+      canvas.height = 100;
+      
+      const context = canvas.getContext('2d');
+      if (context) {
+        applyThemeBackground(context, canvas.width, canvas.height);
+      }
+    }, [theme.visualTheme, theme.seasonalTheme]);
+    
+    return (
+      <div className="mt-4 p-1 rounded-lg border overflow-hidden">
+        <canvas 
+          ref={previewCanvasRef} 
+          width="300" 
+          height="100" 
+          className="w-full h-[100px] rounded-lg"
+        />
+        <p className="text-center text-sm mt-1">This is how your frame background will look</p>
+      </div>
+    );
+  };
+  
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
       {prompt && (
@@ -673,184 +846,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
             </div>
             
-            {/* Theme Preview */}
-            <div className="mt-4 p-3 rounded-lg border" style={{
-              background: visualThemes.find(vt => vt.id === theme.visualTheme)?.backgroundStyle || ''
-            }}>
-              <p className="text-center text-sm">This is how your frame background will look</p>
-            </div>
+            {/* Theme Preview - replacing static div with dynamic canvas */}
+            <ThemePreview />
           </div>
         )}
         
-        {/* Text options - only show when text tool is selected */}
-        {tool === 'text' && selectedTextIndex !== null && (
-          <div className="flex flex-wrap gap-2 justify-center mt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={handleEditText}
-            >
-              <span>Edit Text</span>
-            </Button>
-            
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-2 text-red-500"
-              onClick={handleRemoveText}
-            >
-              <span>Remove Text</span>
-            </Button>
-          </div>
-        )}
-        
-        {/* Shape fill option */}
-        {(tool === 'rectangle' || tool === 'circle') && (
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              size="sm"
-              variant={fill ? "default" : "outline"}
-              onClick={() => setFill(true)}
-              className="w-20"
-            >
-              Fill
-            </Button>
-            <Button
-              size="sm"
-              variant={!fill ? "default" : "outline"}
-              onClick={() => setFill(false)}
-              className="w-20"
-            >
-              Outline
-            </Button>
-          </div>
-        )}
-        
-        <div className="space-y-4">
-          {(tool === 'pen' || tool === 'eraser') && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Paintbrush className="h-4 w-4" />
-                  Brush Width
-                </label>
-                <span className="text-sm text-gray-500">{width[0]}px</span>
-              </div>
-              <Slider
-                value={width}
-                onValueChange={setWidth}
-                min={1}
-                max={20}
-                step={1}
-              />
-            </div>
-          )}
-          
-          {tool === 'text' && !selectedTextIndex && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Type className="h-4 w-4" />
-                  Font Size
-                </label>
-                <span className="text-sm text-gray-500">{textSize[0]}px</span>
-              </div>
-              <Slider
-                value={textSize}
-                onValueChange={setTextSize}
-                min={8}
-                max={72}
-                step={1}
-              />
-            </div>
-          )}
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Color
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {colorOptions.map((colorOption) => (
-                <button
-                  key={colorOption}
-                  className={cn(
-                    "w-8 h-8 rounded-full border-2",
-                    color === colorOption ? "border-black" : "border-gray-200"
-                  )}
-                  style={{ backgroundColor: colorOption }}
-                  onClick={() => setColor(colorOption)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white touch-none">
-        <canvas
-          ref={canvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-          className={cn(
-            "cursor-crosshair",
-            tool === 'text' && "cursor-text",
-            (tool === 'rectangle' || tool === 'circle') && "cursor-crosshair"
-          )}
-        />
-      </div>
-      
-      {/* Text Input Dialog */}
-      <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Text</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="text">Enter Text</Label>
-              <Textarea
-                id="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Enter your text here..."
-                className="min-h-20"
-                autoFocus
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="font-family">Font</Label>
-              <select
-                id="font-family"
-                value={textFont}
-                onChange={(e) => setTextFont(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              >
-                {fontOptions.map((font) => (
-                  <option key={font} value={font} style={{ fontFamily: font }}>
-                    {font}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddText}>Add Text</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default DrawingCanvas;
+        {/* Text options
