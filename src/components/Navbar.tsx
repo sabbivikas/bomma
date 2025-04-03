@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FunkyText from './FunkyText';
-import { GalleryHorizontalEnd, Palette, BookOpenCheck, Film } from 'lucide-react';
+import { GalleryHorizontalEnd, Palette, BookOpenCheck } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
