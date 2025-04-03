@@ -47,9 +47,9 @@ const ThemedBackground: React.FC<ThemedBackgroundProps> = ({ children }) => {
         <GhibliAnimations />
       )}
       
-      {/* Show clouds only for light themes */}
-      {(theme.visualTheme === 'default' || theme.visualTheme === 'ghibli' || 
-        theme.visualTheme === 'minimal' || theme.visualTheme === 'spring') && (
+      {/* Show clouds only for light themes - fixed the type comparison error */}
+      {['default', 'ghibli', 'minimal'].includes(theme.visualTheme) || 
+        theme.seasonalTheme === 'spring' && (
         <Cloud />
       )}
       
@@ -66,7 +66,8 @@ const ThemedBackground: React.FC<ThemedBackgroundProps> = ({ children }) => {
 const AutumnElements = () => (
   <div className="autumn-elements">
     {/* Falling leaves animation would be here */}
-    <style jsx>{`
+    <style>
+      {`
       @keyframes fall {
         0% { transform: translateY(-10vh) rotate(0deg); }
         100% { transform: translateY(100vh) rotate(360deg); }
@@ -81,7 +82,8 @@ const AutumnElements = () => (
         border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
         animation: fall linear forwards;
       }
-    `}</style>
+      `}
+    </style>
     
     {Array.from({ length: 20 }).map((_, i) => (
       <div 
@@ -101,7 +103,8 @@ const AutumnElements = () => (
 const WinterElements = () => (
   <div className="winter-elements">
     {/* Snowflakes animation would be here */}
-    <style jsx>{`
+    <style>
+      {`
       @keyframes snow-fall {
         0% { transform: translateY(-10vh) translateX(0); }
         50% { transform: translateY(50vh) translateX(20px); }
@@ -117,7 +120,8 @@ const WinterElements = () => (
         opacity: 0.8;
         animation: snow-fall linear infinite;
       }
-    `}</style>
+      `}
+    </style>
     
     {Array.from({ length: 30 }).map((_, i) => (
       <div 
@@ -138,7 +142,8 @@ const WinterElements = () => (
 const SpringElements = () => (
   <div className="spring-elements">
     {/* Floating petals animation would be here */}
-    <style jsx>{`
+    <style>
+      {`
       @keyframes float-petal {
         0% { transform: translateY(0) translateX(0) rotate(0deg); }
         33% { transform: translateY(-30px) translateX(20px) rotate(120deg); }
@@ -155,7 +160,8 @@ const SpringElements = () => (
         opacity: 0.7;
         animation: float-petal ease-in-out infinite;
       }
-    `}</style>
+      `}
+    </style>
     
     {Array.from({ length: 15 }).map((_, i) => (
       <div 
@@ -178,7 +184,8 @@ const SummerElements = () => (
     {/* Sun rays and heat waves */}
     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-64 bg-gradient-to-b from-yellow-200 to-transparent opacity-20"></div>
     
-    <style jsx>{`
+    <style>
+      {`
       @keyframes shimmer {
         0% { opacity: 0.1; }
         50% { opacity: 0.3; }
@@ -198,7 +205,8 @@ const SummerElements = () => (
         );
         animation: shimmer 3s infinite;
       }
-    `}</style>
+      `}
+    </style>
     
     {Array.from({ length: 5 }).map((_, i) => (
       <div 
@@ -216,7 +224,8 @@ const SummerElements = () => (
 const HalloweenElements = () => (
   <div className="halloween-elements">
     {/* Bats and spooky elements */}
-    <style jsx>{`
+    <style>
+      {`
       @keyframes fly {
         0% { transform: translateY(0) translateX(0) scale(1); }
         25% { transform: translateY(-40px) translateX(20px) scale(1.1); }
@@ -253,7 +262,8 @@ const HalloweenElements = () => (
         right: -5px;
         transform: rotate(20deg);
       }
-    `}</style>
+      `}
+    </style>
     
     {Array.from({ length: 8 }).map((_, i) => (
       <div 
@@ -273,7 +283,8 @@ const HalloweenElements = () => (
 const ChristmasElements = () => (
   <div className="christmas-elements">
     {/* Falling snow and decorative elements */}
-    <style jsx>{`
+    <style>
+      {`
       @keyframes snow-fall {
         0% { transform: translateY(-10vh) translateX(0); }
         50% { transform: translateY(50vh) translateX(20px); }
@@ -289,7 +300,8 @@ const ChristmasElements = () => (
         opacity: 0.8;
         animation: snow-fall linear infinite;
       }
-    `}</style>
+      `}
+    </style>
     
     {Array.from({ length: 30 }).map((_, i) => (
       <div 
