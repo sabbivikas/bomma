@@ -23,6 +23,15 @@ export interface Comment {
 export type DoodleCreateInput = Omit<Doodle, 'id' | 'createdAt' | 'likes' | 'reported' | 'reportCount' | 'moderationStatus'>;
 
 // New interfaces for stories and animations
+export interface Frame {
+  id: string;
+  storyId: string;
+  imageUrl: string;
+  order: number;
+  duration: number; // Duration in milliseconds
+  createdAt: string;
+}
+
 export interface StoryFrame {
   id: string;
   storyId: string;
@@ -35,7 +44,7 @@ export interface StoryFrame {
 export interface Story {
   id: string;
   title: string;
-  frames: StoryFrame[];
+  frames: Frame[];
   createdAt: string;
   sessionId: string;
   likes: number;
@@ -45,8 +54,13 @@ export interface Story {
   moderationStatus?: 'pending' | 'approved' | 'rejected'; // Status of moderation
 }
 
-export type StoryCreateInput = Omit<Story, 'id' | 'createdAt' | 'frames' | 'likes' | 'reported' | 'reportCount' | 'moderationStatus'>;
-export type StoryFrameCreateInput = Omit<StoryFrame, 'id' | 'createdAt' | 'storyId'>;
+export type StoryCreateInput = {
+  title: string;
+  sessionId: string;
+  isAnimation: boolean;
+};
+
+export type FrameCreateInput = Omit<Frame, 'id' | 'createdAt' | 'storyId'>;
 
 // New interface for content reports
 export interface ContentReport {

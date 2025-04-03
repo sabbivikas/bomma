@@ -1,4 +1,5 @@
-import { Story, StoryCreateInput, Frame, Comment } from '@/types/doodle';
+
+import { Story, StoryCreateInput, Frame, FrameCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,7 +25,7 @@ export function getSessionId(): string {
 export async function getAllStories(): Promise<Story[]> {
   const { data, error } = await supabase
     .from('stories')
-    .select('*')
+    .select('*, story_frames(*)')
     .eq('moderation_status', 'approved') // Only show approved content
     .order('created_at', { ascending: false });
   
@@ -38,7 +39,14 @@ export async function getAllStories(): Promise<Story[]> {
     id: item.id,
     title: item.title,
     isAnimation: item.is_animation,
-    frames: item.frames as Frame[],
+    frames: (item.story_frames || []).map((frame: any) => ({
+      id: frame.id,
+      storyId: frame.story_id,
+      imageUrl: frame.image_url,
+      order: frame.order,
+      duration: frame.duration,
+      createdAt: frame.created_at
+    })),
     sessionId: item.session_id,
     createdAt: item.created_at,
     likes: item.likes,
@@ -51,7 +59,7 @@ export async function getAllStories(): Promise<Story[]> {
 // Add a new story to Supabase
 export async function createStory(input: StoryCreateInput): Promise<Story | null> {
   // Additional validation before saving to database
-  if (!input.title || input.title.trim().length < 3 || !input.frames || input.frames.length === 0) {
+  if (!input.title || input.title.trim().length < 3) {
     console.error('Invalid story data - missing required fields or content');
     return null;
   }
@@ -59,7 +67,6 @@ export async function createStory(input: StoryCreateInput): Promise<Story | null
   const newStory = {
     title: input.title,
     is_animation: input.isAnimation,
-    frames: input.frames,
     session_id: input.sessionId,
     likes: 0
   };
@@ -83,7 +90,7 @@ export async function createStory(input: StoryCreateInput): Promise<Story | null
     id: data.id,
     title: data.title,
     isAnimation: data.is_animation,
-    frames: data.frames as Frame[],
+    frames: [], // New story has no frames yet
     sessionId: data.session_id,
     createdAt: data.created_at,
     likes: data.likes,
@@ -93,12 +100,44 @@ export async function createStory(input: StoryCreateInput): Promise<Story | null
   };
 }
 
+// Add a frame to a story
+export async function addFrameToStory(storyId: string, frameData: FrameCreateInput): Promise<Frame | null> {
+  // Prepare the frame data
+  const newFrame = {
+    story_id: storyId,
+    image_url: frameData.imageUrl,
+    order: frameData.order,
+    duration: frameData.duration
+  };
+  
+  const { data, error } = await supabase
+    .from('story_frames')
+    .insert(newFrame)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error adding frame to story:', error);
+    return null;
+  }
+  
+  // Convert to our Frame type
+  return {
+    id: data.id,
+    storyId: data.story_id,
+    imageUrl: data.image_url,
+    order: data.order,
+    duration: data.duration,
+    createdAt: data.created_at
+  };
+}
+
 // Like a story
 export async function likeStory(id: string): Promise<Story | null> {
   // First get the current story to increment likes
   const { data: currentStory, error: fetchError } = await supabase
     .from('stories')
-    .select('likes')
+    .select('*, story_frames(*)')
     .eq('id', id)
     .single();
     
@@ -114,7 +153,7 @@ export async function likeStory(id: string): Promise<Story | null> {
     .from('stories')
     .update({ likes: updatedLikes })
     .eq('id', id)
-    .select()
+    .select('*, story_frames(*)')
     .single();
     
   if (error) {
@@ -127,7 +166,14 @@ export async function likeStory(id: string): Promise<Story | null> {
     id: data.id,
     title: data.title,
     isAnimation: data.is_animation,
-    frames: data.frames as Frame[],
+    frames: (data.story_frames || []).map((frame: any) => ({
+      id: frame.id,
+      storyId: frame.story_id,
+      imageUrl: frame.image_url,
+      order: frame.order,
+      duration: frame.duration,
+      createdAt: frame.created_at
+    })),
     sessionId: data.session_id,
     createdAt: data.created_at,
     likes: data.likes,
@@ -143,7 +189,7 @@ export async function getMyStories(): Promise<Story[]> {
   
   const { data, error } = await supabase
     .from('stories')
-    .select('*')
+    .select('*, story_frames(*)')
     .eq('session_id', sessionId)
     .order('created_at', { ascending: false });
   
@@ -157,13 +203,20 @@ export async function getMyStories(): Promise<Story[]> {
     id: item.id,
     title: item.title,
     isAnimation: item.is_animation,
-    frames: item.frames as Frame[],
+    frames: (item.story_frames || []).map((frame: any) => ({
+      id: frame.id,
+      storyId: frame.story_id,
+      imageUrl: frame.image_url,
+      order: frame.order,
+      duration: frame.duration,
+      createdAt: frame.created_at
+    })),
     sessionId: item.session_id,
     createdAt: item.created_at,
     likes: item.likes,
-    reported: (data as any).reported || false,
-    reportCount: (data as any).report_count || 0,
-    moderationStatus: (data as any).moderation_status || 'approved'
+    reported: item.reported || false,
+    reportCount: item.report_count || 0,
+    moderationStatus: (item.moderation_status as any) || 'approved'
   }));
 }
 
@@ -206,7 +259,7 @@ export async function deleteStory(id: string): Promise<boolean> {
 export async function getStoryById(id: string): Promise<Story | null> {
   const { data, error } = await supabase
     .from('stories')
-    .select('*')
+    .select('*, story_frames(*)')
     .eq('id', id)
     .single();
   
@@ -224,7 +277,14 @@ export async function getStoryById(id: string): Promise<Story | null> {
     id: data.id,
     title: data.title,
     isAnimation: data.is_animation,
-    frames: data.frames as Frame[],
+    frames: (data.story_frames || []).map((frame: any) => ({
+      id: frame.id,
+      storyId: frame.story_id,
+      imageUrl: frame.image_url,
+      order: frame.order,
+      duration: frame.duration,
+      createdAt: frame.created_at
+    })),
     sessionId: data.session_id,
     createdAt: data.created_at,
     likes: data.likes,
@@ -238,7 +298,7 @@ export async function getStoryById(id: string): Promise<Story | null> {
 // Get comments for a story
 export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
   const { data, error } = await supabase
-    .from('story_comments')
+    .from('comments')
     .select('*')
     .eq('story_id', storyId)
     .order('created_at', { ascending: false });
@@ -256,4 +316,49 @@ export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
     createdAt: item.created_at,
     sessionId: item.session_id
   }));
+}
+
+// Add comment to a story
+export async function addCommentToStory(storyId: string, commentText: string): Promise<Comment | null> {
+  const sessionId = getSessionId();
+  
+  const newComment = {
+    story_id: storyId,
+    text: commentText,
+    session_id: sessionId
+  };
+  
+  const { data, error } = await supabase
+    .from('comments')
+    .insert(newComment)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error adding comment:', error);
+    return null;
+  }
+  
+  return {
+    id: data.id,
+    storyId: data.story_id,
+    text: data.text,
+    createdAt: data.created_at,
+    sessionId: data.session_id
+  };
+}
+
+// Get comment count for a story
+export async function getCommentCountForStory(storyId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('story_id', storyId);
+    
+  if (error) {
+    console.error('Error getting comment count:', error);
+    return 0;
+  }
+  
+  return count || 0;
 }
