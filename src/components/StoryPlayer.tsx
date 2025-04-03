@@ -148,8 +148,8 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
           className="max-w-full max-h-[500px] object-contain relative z-10"
         />
         
-        {/* Frame counter overlay */}
-        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-20">
+        {/* Improved frame counter overlay */}
+        <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full z-20 backdrop-blur-sm font-medium transition-opacity duration-300 shadow-md">
           {currentFrameIndex + 1} / {totalFrames}
         </div>
       </div>
