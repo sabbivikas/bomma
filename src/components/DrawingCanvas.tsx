@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -72,10 +71,13 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   // Simple canvas size
   const [canvasSize] = useState({ width: 800, height: 600 });
   
+  // Track canvas scale and offset for coordinate mapping
+  const [canvasScale, setCanvasScale] = useState(1);
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const lastPointRef = useRef<{ x: number, y: number } | null>(null);
-  
-  // Initialize canvas
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -385,22 +387,28 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     ctx.fill();
   };
 
+  // Improved function to get precise coordinates for both mouse and touch events
   const getCoordinates = (event: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     
-    if ('touches' in event) {
+    if ('touches' in event && event.touches.length > 0) {
       // Touch event
       return {
-        x: event.touches[0].clientX - rect.left,
-        y: event.touches[0].clientY - rect.top
+        x: (event.touches[0].clientX - rect.left) * scaleX,
+        y: (event.touches[0].clientY - rect.top) * scaleY
       };
-    } else {
+    } else if ('clientX' in event) {
       // Mouse event
       return {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
       };
     }
+    
+    // Fallback (should never happen)
+    return { x: 0, y: 0 };
   };
   
   // Start drawing, text placement, or shape creation
@@ -639,7 +647,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
 
-  // Responsive canvas size for mobile
+  // Update canvas sizing and touch handling for mobile
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
@@ -659,6 +667,13 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       // Update canvas display size
       canvas.style.width = `${newWidth}px`;
       canvas.style.height = `${newHeight}px`;
+      
+      // Store the scale factor for coordinate calculations
+      setCanvasScale(canvas.width / newWidth);
+      
+      // Update offset
+      const rect = canvas.getBoundingClientRect();
+      setCanvasOffset({ x: rect.left, y: rect.top });
     };
     
     // Initial resize
@@ -826,239 +841,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
               
               {/* Seasonal Theme Selector */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Seasonal Theme</Label>
-                <Select 
-                  value={theme.seasonalTheme}
-                  onValueChange={(value) => setSeasonalTheme(value as any)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a seasonal theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasonalThemes.map((seasonalTheme) => (
-                      <SelectItem key={seasonalTheme.id} value={seasonalTheme.id}>
-                        {seasonalTheme.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">Seasonal theme adds thematic elements to your story</p>
-              </div>
-            </div>
-            
-            {/* Theme Preview */}
-            <ThemePreview />
-          </div>
-        )}
-        
-        {/* Drawing Canvas */}
-        <div className="relative w-full bg-gray-100 border border-gray-200 rounded-lg overflow-hidden">
-          <canvas
-            ref={canvasRef}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-            className="w-full touch-none"
-          />
-          
-          {/* Line width slider */}
-          {(tool === 'pen' || tool === 'eraser') && (
-            <div className="mt-4 px-4 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">
-                  {tool === 'pen' ? 'Pen Width' : 'Eraser Size'}
-                </Label>
-                <span className="text-xs text-gray-500">{width[0]}px</span>
-              </div>
-              <Slider
-                value={width}
-                onValueChange={setWidth}
-                min={1}
-                max={20}
-                step={1}
-              />
-            </div>
-          )}
-          
-          {/* Color picker for pen */}
-          {tool === 'pen' && (
-            <div className="mt-2 px-4 pb-4">
-              <Label className="text-sm font-medium mb-2 block">Color</Label>
-              <div className="flex flex-wrap gap-2">
-                {colorOptions.map((c) => (
-                  <button
-                    key={c}
-                    className={cn(
-                      "w-8 h-8 rounded-full border-2",
-                      color === c ? "border-gray-900" : "border-gray-200"
-                    )}
-                    style={{ backgroundColor: c }}
-                    onClick={() => setColor(c)}
-                    aria-label={`Select ${c} color`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Fill option for shapes */}
-          {(tool === 'rectangle' || tool === 'circle') && (
-            <div className="mt-2 px-4 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">Options</Label>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant={fill ? "default" : "outline"}
-                    onClick={() => setFill(true)}
-                  >
-                    Fill
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={!fill ? "default" : "outline"}
-                    onClick={() => setFill(false)}
-                  >
-                    Outline
-                  </Button>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  {colorOptions.slice(0, 4).map((c) => (
-                    <button
-                      key={c}
-                      className={cn(
-                        "w-6 h-6 rounded-full border-2",
-                        color === c ? "border-gray-900" : "border-gray-200"
-                      )}
-                      style={{ backgroundColor: c }}
-                      onClick={() => setColor(c)}
-                      aria-label={`Select ${c} color`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Text options */}
-          {tool === 'text' && (
-            <div className="mt-2 px-4 pb-4">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">Text Options</Label>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs">Font</Label>
-                  <Select 
-                    value={textFont}
-                    onValueChange={setTextFont}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fontOptions.map((font) => (
-                        <SelectItem key={font} value={font}>
-                          {font}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Size</Label>
-                    <span className="text-xs text-gray-500">{textSize[0]}px</span>
-                  </div>
-                  <Slider
-                    value={textSize}
-                    onValueChange={setTextSize}
-                    min={8}
-                    max={48}
-                    step={1}
-                  />
-                </div>
-              </div>
-              <div className="mt-3">
-                <Label className="text-xs mb-1 block">Color</Label>
-                <div className="flex flex-wrap gap-2">
-                  {colorOptions.map((c) => (
-                    <button
-                      key={c}
-                      className={cn(
-                        "w-6 h-6 rounded-full border-2",
-                        color === c ? "border-gray-900" : "border-gray-200"
-                      )}
-                      style={{ backgroundColor: c }}
-                      onClick={() => setColor(c)}
-                      aria-label={`Select ${c} color`}
-                    />
-                  ))}
-                </div>
-              </div>
-              
-              {selectedTextIndex !== null && (
-                <div className="mt-3 flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="default" 
-                    onClick={handleEditText}
-                  >
-                    Edit Text
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="destructive" 
-                    onClick={handleRemoveText}
-                  >
-                    Remove Text
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Text Dialog */}
-      <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Text</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="text">Text Content</Label>
-              <Textarea
-                id="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                rows={3}
-                placeholder="Enter your text here"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setTextDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleAddText}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default DrawingCanvas;
+              <div className="
