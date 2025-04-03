@@ -637,27 +637,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       setSelectedTextIndex(null);
     }
   };
-  
-  // Color options
-  const colorOptions = [
-    '#000000', // Black
-    '#FFFFFF', // White
-    '#FF0000', // Red
-    '#00FF00', // Green
-    '#0000FF', // Blue
-    '#FFFF00', // Yellow
-    '#FF00FF', // Magenta
-    '#00FFFF', // Cyan
-  ];
-  
-  // Font options
-  const fontOptions = [
-    'Arial',
-    'Times New Roman',
-    'Courier New',
-    'Georgia',
-    'Comic Sans MS',
-  ];
 
   // Responsive canvas size for mobile
   useEffect(() => {
@@ -725,6 +704,27 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       </div>
     );
   };
+  
+  // Color options
+  const colorOptions = [
+    '#000000', // Black
+    '#FFFFFF', // White
+    '#FF0000', // Red
+    '#00FF00', // Green
+    '#0000FF', // Blue
+    '#FFFF00', // Yellow
+    '#FF00FF', // Magenta
+    '#00FFFF', // Cyan
+  ];
+  
+  // Font options
+  const fontOptions = [
+    'Arial',
+    'Times New Roman',
+    'Courier New',
+    'Georgia',
+    'Comic Sans MS',
+  ];
   
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
