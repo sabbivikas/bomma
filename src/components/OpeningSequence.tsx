@@ -171,15 +171,9 @@ const OpeningSequence: React.FC<{ onComplete: () => void }> = ({ onComplete }) =
             textShadow: "2px 2px 4px rgba(0,0,0,0.1)"
           }}
         >
-          Make Something{' '}
+          Bomma
           <span className="relative inline-block">
-            W<span className="relative">o</span>nd<span className="relative">e</span>
-            <span className="relative">
-              r
-              {/* The human sits on top of the letter "n" */}
-              <WritingHuman className="absolute -top-10 -left-2" />
-            </span>
-            ful
+            <WritingHuman className="absolute -top-10 -left-2" />
           </span>
         </motion.h1>
         

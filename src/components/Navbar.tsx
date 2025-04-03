@@ -14,7 +14,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <Palette className="h-6 w-6 text-[#6C2DC7]" />
-          <FunkyText text="bomma" className="font-bold text-lg" />
+          <FunkyText text="Bomma" className="font-bold text-lg" />
         </Link>
 
         <nav className="flex items-center gap-3">
