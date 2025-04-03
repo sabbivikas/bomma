@@ -1,11 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { getSessionId } from '@/utils/doodleService';
+import { supabase } from '@/integrations/supabase/client';
 
-// List of admin session IDs (in a real application, this would be in a database or API)
+// List of authorized admin session IDs (in a real app, this would be in the database)
+// For this demo, we're hardcoding some admin IDs
 const ADMIN_SESSION_IDS = [
-  // Add the admin's session ID here - we'll use the current user's session ID for demo
-  // In a real app, this would be stored securely in the database with proper authentication
+  "adminuser1234",  // Example admin ID
+  "superadmin5678"  // Another example admin ID
+  // Add your actual admin session IDs here
 ];
 
 export function useAdminAuth() {
@@ -17,21 +20,11 @@ export function useAdminAuth() {
       try {
         const sessionId = getSessionId();
         
-        // For demo purposes, we'll make the current user an admin when they visit the page
-        // In a real app, this would check against a secured database of admin users
-        // This is ONLY for demonstration - in production use a proper auth system
-        if (sessionId) {
-          // Check if this session ID is in our admin list
-          // OR add it to the list for demo purposes (remove this in production!)
-          const isAdminUser = ADMIN_SESSION_IDS.includes(sessionId);
-          
-          // For demo purposes only - make current user an admin if they're not already
-          if (!isAdminUser && !ADMIN_SESSION_IDS.includes(sessionId)) {
-            ADMIN_SESSION_IDS.push(sessionId);
-          }
-          
+        if (sessionId && ADMIN_SESSION_IDS.includes(sessionId)) {
+          // User is in the admin list
           setIsAdmin(true);
         } else {
+          // User is not an admin
           setIsAdmin(false);
         }
       } catch (error) {
