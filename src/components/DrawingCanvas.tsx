@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Download,
-  Paintbrush, Palette, Share, PlusSquare, Type
+  Paintbrush, Palette, Share, PlusSquare, Type,
+  Square, Circle as CircleIcon
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -29,14 +31,25 @@ interface TextElement {
   isDragging: boolean;
 }
 
+interface ShapeElement {
+  type: 'rectangle' | 'circle';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  fill: boolean;
+}
+
 const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [tool, setTool] = useState<'pen' | 'eraser' | 'text'>('pen');
+  const [tool, setTool] = useState<'pen' | 'eraser' | 'text' | 'rectangle' | 'circle'>('pen');
   const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState([5]);
   const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
+  const [fill, setFill] = useState(false);
   
   // Text tool states
   const [textElements, setTextElements] = useState<TextElement[]>([]);
@@ -46,6 +59,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [textSize, setTextSize] = useState([18]);
   const [textFont, setTextFont] = useState('Arial');
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
+  
+  // Shape tool states
+  const [shapeElements, setShapeElements] = useState<ShapeElement[]>([]);
+  const [currentShape, setCurrentShape] = useState<ShapeElement | null>(null);
   
   // Simple canvas size
   const [canvasSize] = useState({ width: 800, height: 600 });
@@ -90,12 +107,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
   }, [color, width, tool]);
   
-  // Render text elements
+  // Render text and shape elements
   useEffect(() => {
     if (!contextRef.current || !canvasRef.current) return;
     
-    // Only redraw text when in text mode or after adding/moving text
-    if (tool === 'text' || currentTextElement) {
+    // Only redraw when necessary
+    if (tool === 'text' || tool === 'rectangle' || tool === 'circle' || currentTextElement || currentShape) {
       // Create a temporary canvas to avoid flickering
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvasRef.current.width;
@@ -105,6 +122,91 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       if (tempContext && contextRef.current) {
         // Copy the current canvas to temp
         tempContext.drawImage(canvasRef.current, 0, 0);
+        
+        // Draw all shape elements
+        shapeElements.forEach((element) => {
+          tempContext.strokeStyle = element.color;
+          tempContext.fillStyle = element.color;
+          
+          if (element.type === 'rectangle') {
+            if (element.fill) {
+              tempContext.fillRect(element.x, element.y, element.width, element.height);
+            } else {
+              tempContext.strokeRect(element.x, element.y, element.width, element.height);
+            }
+          } else if (element.type === 'circle') {
+            tempContext.beginPath();
+            // Use ellipse to create circles based on width/height
+            const radiusX = Math.abs(element.width) / 2;
+            const radiusY = Math.abs(element.height) / 2;
+            const centerX = element.x + element.width / 2;
+            const centerY = element.y + element.height / 2;
+            
+            tempContext.ellipse(
+              centerX, 
+              centerY, 
+              radiusX, 
+              radiusY, 
+              0, 
+              0, 
+              2 * Math.PI
+            );
+            
+            if (element.fill) {
+              tempContext.fill();
+            } else {
+              tempContext.stroke();
+            }
+          }
+        });
+        
+        // Draw current shape being created
+        if (currentShape && lastPointRef.current) {
+          tempContext.strokeStyle = currentShape.color;
+          tempContext.fillStyle = currentShape.color;
+          
+          if (currentShape.type === 'rectangle') {
+            if (fill) {
+              tempContext.fillRect(
+                currentShape.x, 
+                currentShape.y, 
+                currentShape.width, 
+                currentShape.height
+              );
+            } else {
+              tempContext.strokeRect(
+                currentShape.x, 
+                currentShape.y, 
+                currentShape.width, 
+                currentShape.height
+              );
+            }
+          } else if (currentShape.type === 'circle') {
+            tempContext.beginPath();
+            
+            // Use ellipse to create circles based on width/height
+            const radiusX = Math.abs(currentShape.width) / 2;
+            const radiusY = Math.abs(currentShape.height) / 2;
+            const centerX = currentShape.x + currentShape.width / 2;
+            const centerY = currentShape.y + currentShape.height / 2;
+            
+            tempContext.ellipse(
+              centerX, 
+              centerY, 
+              radiusX, 
+              radiusY, 
+              0, 
+              0, 
+              2 * Math.PI
+            );
+            
+            if (fill) {
+              tempContext.fill();
+            } else {
+              tempContext.stroke();
+            }
+          }
+        }
         
         // Draw all text elements
         textElements.forEach((element, i) => {
@@ -135,7 +237,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         contextRef.current.drawImage(tempCanvas, 0, 0);
       }
     }
-  }, [textElements, selectedTextIndex, tool]);
+  }, [textElements, selectedTextIndex, tool, shapeElements, currentShape, fill]);
   
   // Get coordinates from mouse or touch event
   const getCoordinates = (event: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
@@ -156,7 +258,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
   
-  // Start drawing or text placement
+  // Start drawing, text placement, or shape creation
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || !contextRef.current) return;
@@ -211,6 +313,20 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         });
         setTextDialogOpen(true);
       }
+    } else if (tool === 'rectangle' || tool === 'circle') {
+      // Start creating a shape
+      setCurrentShape({
+        type: tool,
+        x: coords.x,
+        y: coords.y,
+        width: 0,
+        height: 0,
+        color: color,
+        fill: fill
+      });
+      
+      lastPointRef.current = coords;
+      setIsDrawing(true);
     } else {
       // Drawing with pen or eraser
       contextRef.current.beginPath();
@@ -221,7 +337,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
   
-  // Draw or move text
+  // Draw, move text, or resize shape
   const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     // Prevent scrolling on touch devices
     if ('touches' in event) {
@@ -250,6 +366,14 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       }));
       
       lastPointRef.current = coords;
+    } else if ((tool === 'rectangle' || tool === 'circle') && isDrawing && currentShape && lastPointRef.current) {
+      // Update shape dimensions
+      setCurrentShape({
+        ...currentShape,
+        width: coords.x - currentShape.x,
+        height: coords.y - currentShape.y
+      });
+      
     } else if (isDrawing && contextRef.current && lastPointRef.current) {
       // Draw with pen or eraser
       contextRef.current.lineTo(coords.x, coords.y);
@@ -259,11 +383,20 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
   
-  // Stop drawing or text placement
+  // Stop drawing, text placement, or shape creation
   const stopDrawing = () => {
     // End drawing
     if (contextRef.current) {
       contextRef.current.closePath();
+    }
+    
+    // Finalize shape if one is being created
+    if (currentShape) {
+      setShapeElements(prev => [...prev, {
+        ...currentShape,
+        fill: fill
+      }]);
+      setCurrentShape(null);
     }
     
     // Reset dragging state for text
@@ -306,8 +439,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     contextRef.current.fillStyle = 'white';
     contextRef.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     
-    // Clear text elements
+    // Clear text and shape elements
     setTextElements([]);
+    setShapeElements([]);
     setSelectedTextIndex(null);
   };
   
@@ -425,41 +559,35 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       <div className="flex flex-col w-full gap-4 mb-4">
         <div className="flex flex-wrap gap-2 justify-center">
-          <Button
-            size="sm"
-            variant={tool === 'pen' ? 'default' : 'outline'}
-            className="flex items-center gap-2"
-            onClick={() => {
-              setTool('pen');
-              setSelectedTextIndex(null);
-            }}
-          >
-            <Pen className="h-4 w-4" />
-            <span>Pen</span>
-          </Button>
-          
-          <Button
-            size="sm"
-            variant={tool === 'eraser' ? 'default' : 'outline'}
-            className="flex items-center gap-2"
-            onClick={() => {
-              setTool('eraser');
-              setSelectedTextIndex(null);
-            }}
-          >
-            <Eraser className="h-4 w-4" />
-            <span>Eraser</span>
-          </Button>
-          
-          <Button
-            size="sm"
-            variant={tool === 'text' ? 'default' : 'outline'}
-            className="flex items-center gap-2"
-            onClick={() => setTool('text')}
-          >
-            <Type className="h-4 w-4" />
-            <span>Text</span>
-          </Button>
+          <ToggleGroup type="single" value={tool} onValueChange={(value) => {
+            if (value) setTool(value as typeof tool);
+            setSelectedTextIndex(null);
+          }}>
+            <ToggleGroupItem value="pen" aria-label="Pen tool">
+              <Pen className="h-4 w-4 mr-2" />
+              Pen
+            </ToggleGroupItem>
+            
+            <ToggleGroupItem value="eraser" aria-label="Eraser tool">
+              <Eraser className="h-4 w-4 mr-2" />
+              Eraser
+            </ToggleGroupItem>
+            
+            <ToggleGroupItem value="text" aria-label="Text tool">
+              <Type className="h-4 w-4 mr-2" />
+              Text
+            </ToggleGroupItem>
+            
+            <ToggleGroupItem value="rectangle" aria-label="Rectangle tool">
+              <Square className="h-4 w-4 mr-2" />
+              Rectangle
+            </ToggleGroupItem>
+            
+            <ToggleGroupItem value="circle" aria-label="Circle tool">
+              <CircleIcon className="h-4 w-4 mr-2" />
+              Circle
+            </ToggleGroupItem>
+          </ToggleGroup>
           
           <Button
             size="sm"
@@ -502,6 +630,28 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               onClick={handleRemoveText}
             >
               <span>Remove Text</span>
+            </Button>
+          </div>
+        )}
+        
+        {/* Shape fill option */}
+        {(tool === 'rectangle' || tool === 'circle') && (
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              size="sm"
+              variant={fill ? "default" : "outline"}
+              onClick={() => setFill(true)}
+              className="w-20"
+            >
+              Fill
+            </Button>
+            <Button
+              size="sm"
+              variant={!fill ? "default" : "outline"}
+              onClick={() => setFill(false)}
+              className="w-20"
+            >
+              Outline
             </Button>
           </div>
         )}
@@ -579,7 +729,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           onTouchEnd={stopDrawing}
           className={cn(
             "cursor-crosshair",
-            tool === 'text' && "cursor-text"
+            tool === 'text' && "cursor-text",
+            (tool === 'rectangle' || tool === 'circle') && "cursor-crosshair"
           )}
         />
       </div>
