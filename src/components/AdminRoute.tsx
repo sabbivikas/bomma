@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,17 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { isAdmin, isLoading } = useAdminAuth();
   const { toast } = useToast();
   
+  // Use useEffect to show toast message when not admin
+  useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      toast({
+        title: "Unauthorized Access",
+        description: "You don't have permission to access this area",
+        variant: "destructive",
+      });
+    }
+  }, [isLoading, isAdmin, toast]);
+  
   // Show loading state while checking admin status
   if (isLoading) {
     return (
@@ -21,15 +32,8 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     );
   }
 
-  // If not an admin, redirect to home page with a toast message
+  // If not an admin, redirect to home page
   if (!isAdmin) {
-    // Show unauthorized access message
-    toast({
-      title: "Unauthorized Access",
-      description: "You don't have permission to access this area",
-      variant: "destructive",
-    });
-    
     return <Navigate to="/" replace />;
   }
 
