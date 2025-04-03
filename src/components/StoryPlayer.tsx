@@ -17,6 +17,7 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
+  const [showControls, setShowControls] = useState(true);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
   
@@ -32,11 +33,17 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
     setCurrentFrameIndex(0);
     setProgress(0);
     setIsPlaying(autoPlay);
+    setShowControls(true);
   }, [story.id, autoPlay]);
   
   // Handle auto-play and frame transitions
   useEffect(() => {
     if (!isPlaying || story.frames.length === 0) return;
+    
+    // Hide controls when playing for cleaner animation experience
+    if (story.isAnimation) {
+      setShowControls(false);
+    }
     
     const frameDuration = currentFrame?.duration || 3000;
     let startTime: number;
@@ -60,6 +67,7 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
           // If we're at the end and it's not an animation, stop playing
           if (nextIndex === 0 && !story.isAnimation) {
             setIsPlaying(false);
+            setShowControls(true);
             return prevIndex;
           }
           
@@ -78,18 +86,26 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   }, [isPlaying, currentFrameIndex, story.frames, currentFrame, totalFrames, story.isAnimation]);
   
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    const newIsPlaying = !isPlaying;
+    setIsPlaying(newIsPlaying);
+    
+    // Show controls when paused, hide when playing for animations
+    if (story.isAnimation) {
+      setShowControls(!newIsPlaying);
+    }
   };
   
   const goToNextFrame = () => {
     setIsPlaying(false);
     setProgress(0);
+    setShowControls(true);
     setCurrentFrameIndex(prevIndex => (prevIndex + 1) % totalFrames);
   };
   
   const goToPreviousFrame = () => {
     setIsPlaying(false);
     setProgress(0);
+    setShowControls(true);
     setCurrentFrameIndex(prevIndex => (prevIndex - 1 + totalFrames) % totalFrames);
   };
   
@@ -105,6 +121,13 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
     return style;
   };
   
+  // Handle container click to toggle controls visibility
+  const handleContainerClick = () => {
+    if (story.isAnimation) {
+      setShowControls(!showControls);
+    }
+  };
+  
   // If no frames, show placeholder
   if (story.frames.length === 0) {
     return (
@@ -117,7 +140,10 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   return (
     <div className="bg-white border rounded-md overflow-hidden shadow-sm">
       {/* Display current frame */}
-      <div className={`relative flex items-center justify-center ${getThemeBackgroundStyle()}`}>
+      <div 
+        className={`relative flex items-center justify-center ${getThemeBackgroundStyle()} cursor-pointer`}
+        onClick={handleContainerClick}
+      >
         {/* Seasonal overlay if applicable */}
         {seasonalThemeConfig && seasonalThemeConfig.id !== 'none' && (
           <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
@@ -148,14 +174,16 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
           className="max-w-full max-h-[500px] object-contain relative z-10"
         />
         
-        {/* Improved frame counter overlay */}
-        <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full z-20 backdrop-blur-sm font-medium transition-opacity duration-300 shadow-md">
-          {currentFrameIndex + 1} / {totalFrames}
-        </div>
+        {/* Only show frame counter when not playing animations or when controls are visible */}
+        {showControls && (
+          <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full z-20 backdrop-blur-sm font-medium transition-opacity duration-300 shadow-md">
+            {currentFrameIndex + 1} / {totalFrames}
+          </div>
+        )}
       </div>
       
-      {/* Controls */}
-      <div className="p-4">
+      {/* Controls - hide during animation playback for cleaner experience */}
+      <div className={`p-4 transition-opacity duration-300 ${(!showControls && story.isAnimation) ? 'opacity-0' : 'opacity-100'}`}>
         <Progress value={progress} className="mb-2" />
         
         <div className="flex justify-between items-center">
