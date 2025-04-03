@@ -72,7 +72,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [canvasSize] = useState({ width: 800, height: 600 });
   
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const lastPointRef = useRef<{ x: number, y: number } | null>(null);\
+  const lastPointRef = useRef<{ x: number, y: number } | null>(null);
   
   // Initialize canvas
   useEffect(() => {
@@ -846,9 +846,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
             </div>
             
-            {/* Theme Preview - replacing static div with dynamic canvas */}
+            {/* Theme Preview */}
             <ThemePreview />
           </div>
         )}
         
-        {/* Drawing Canvas
+        {/* Drawing Canvas */}
+        <div className="
