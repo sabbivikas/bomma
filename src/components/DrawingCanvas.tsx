@@ -18,6 +18,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTheme } from '@/contexts/ThemeContext';
 import { visualThemes, seasonalThemes, getThemeConfig } from '@/utils/themeConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox"; // Added missing import
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
