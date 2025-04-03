@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import ThemedBackground from '@/components/ThemedBackground';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StoryCard from '@/components/StoryCard';
@@ -9,8 +11,6 @@ import { Story } from '@/types/doodle';
 import { Film, BookOpen, RefreshCw, Paintbrush, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import Cloud from '@/components/Cloud';
-import GhibliAnimations from '@/components/GhibliAnimations';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Stories = () => {
@@ -85,22 +85,24 @@ const Stories = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Stories & Animations</h1>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="animate-pulse">
-                <Skeleton className="h-64 w-full" />
-              </div>
-            ))}
-          </div>
-        </main>
-      </div>
+      <ThemedBackground>
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 container mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold">Stories & Animations</h1>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="animate-pulse">
+                  <Skeleton className="h-64 w-full" />
+                </div>
+              ))}
+            </div>
+          </main>
+        </div>
+      </ThemedBackground>
     );
   }
 
@@ -147,81 +149,77 @@ const Stories = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#E0F7FA] via-[#B3E5FC] to-[#D1C4E9] opacity-70 z-0"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.8),transparent_70%)] z-0"></div>
-      <GhibliAnimations />
-      <Cloud />
-      
-      <Navbar />
-      
-      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h1 className="text-2xl font-bold">Stories & Animations</h1>
+    <ThemedBackground>
+      <div className="min-h-screen flex flex-col relative">
+        <Navbar />
+        
+        <main className="flex-1 container mx-auto px-4 py-8 relative z-10 pb-24">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 className="text-2xl font-bold">Stories & Animations</h1>
+            
+            <div className="flex mt-4 sm:mt-0 space-x-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={loadStories}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
+              
+              <Button 
+                className="flex items-center gap-2"
+                onClick={() => navigate('/create')}
+              >
+                <Plus className="h-4 w-4" />
+                Create New
+              </Button>
+            </div>
+          </div>
           
-          <div className="flex mt-4 sm:mt-0 space-x-2">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList>
+              <TabsTrigger value="all" className="flex items-center gap-2">
+                <Paintbrush className="h-4 w-4" />
+                All Stories
+              </TabsTrigger>
+              <TabsTrigger value="my" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                My Stories
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="mt-6">
+              {renderStoryList(stories)}
+            </TabsContent>
+            
+            <TabsContent value="my" className="mt-6">
+              {renderStoryList(myStories)}
+            </TabsContent>
+          </Tabs>
+          
+          {/* Create new buttons */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={loadStories}
+              onClick={handleCreateStory}
+              className="flex items-center gap-2 py-6 px-8"
             >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
+              <BookOpen className="h-5 w-5" />
+              Create New Story
             </Button>
             
             <Button 
-              className="flex items-center gap-2"
-              onClick={() => navigate('/create')}
+              onClick={handleCreateAnimation}
+              className="flex items-center gap-2 py-6 px-8"
+              variant="outline"
             >
-              <Plus className="h-4 w-4" />
-              Create New
+              <Film className="h-5 w-5" />
+              Create New Animation
             </Button>
           </div>
-        </div>
-        
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList>
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <Paintbrush className="h-4 w-4" />
-              All Stories
-            </TabsTrigger>
-            <TabsTrigger value="my" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              My Stories
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="mt-6">
-            {renderStoryList(stories)}
-          </TabsContent>
-          
-          <TabsContent value="my" className="mt-6">
-            {renderStoryList(myStories)}
-          </TabsContent>
-        </Tabs>
-        
-        {/* Create new buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-          <Button 
-            onClick={handleCreateStory}
-            className="flex items-center gap-2 py-6 px-8"
-          >
-            <BookOpen className="h-5 w-5" />
-            Create New Story
-          </Button>
-          
-          <Button 
-            onClick={handleCreateAnimation}
-            className="flex items-center gap-2 py-6 px-8"
-            variant="outline"
-          >
-            <Film className="h-5 w-5" />
-            Create New Animation
-          </Button>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </ThemedBackground>
   );
 };
 

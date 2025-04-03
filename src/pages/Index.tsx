@@ -1,13 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import DoodleFeed from '@/components/DoodleFeed';
 import { Button } from '@/components/ui/button';
-import { Pen } from 'lucide-react';
+import ThemeSelector from '@/components/ThemeSelector';
+import ThemePreview from '@/components/ThemePreview';
+import ThemedBackground from '@/components/ThemedBackground';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getSeasonalGreeting } from '@/utils/themeHelpers';
+import { Pen, Palette } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Cloud from '@/components/Cloud';
-import GhibliAnimations from '@/components/GhibliAnimations';
-import OpeningSequence from '@/components/OpeningSequence';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
@@ -15,6 +18,9 @@ const Index = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [newDoodleId, setNewDoodleId] = useState<string | null>(null);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const { theme } = useTheme();
+  const seasonalGreeting = getSeasonalGreeting(theme);
   
   useEffect(() => {
     // Update the page title when this component mounts
@@ -104,120 +110,122 @@ const Index = () => {
     };
   }, [isMobile]);
 
-  const handleOpeningComplete = () => {
-    // Save to localStorage that user has seen opening
-    localStorage.setItem('hasSeenOpening', 'true');
-    setShowOpening(false);
+  const toggleThemeSelector = () => {
+    setShowThemeSelector(!showThemeSelector);
   };
 
-  if (showOpening) {
-    return <OpeningSequence onComplete={handleOpeningComplete} />;
-  }
-  
   return (
-    <div className="min-h-screen flex flex-col relative index-page-container overflow-hidden">
-      {/* Enhanced background gradient for Ghibli effect - stronger opacity */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#E0F7FA] via-[#B3E5FC] to-[#D1C4E9] opacity-80 z-0"></div>
-      
-      {/* Light rays - more pronounced */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.9),transparent_70%)] z-0"></div>
-      
-      {/* The background ghibli elements - higher z-index */}
-      <GhibliAnimations />
-      
-      {/* More visible clouds */}
-      <Cloud />
-      <Navbar />
-      
-      <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
-        <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
-          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight ghibli-shine relative`}>
-            Discover{' '}
-            <span className="wonderful-wrapper">
-              W<span>o</span>nd<span>e</span>rful
-            </span>{' '}
-            Creations
-          </h1>
-          
-          <div className="h-px bg-gray-200 my-6 w-24 mx-auto" />
-          
-          <p className={`${isMobile ? 'text-sm px-4' : 'text-lg px-8'} mb-8 font-elegant text-gray-600 max-w-lg mx-auto`}>
-            Create your own worlds and characters, then share them with our community.
-          </p>
-          
-          <Link to="/create" className="inline-block">
-            <Button className="bg-black hover:bg-black/80 text-white font-elegant px-8 py-3 rounded-full ghibli-button relative overflow-hidden">
-              <span className="relative z-10 flex items-center">
-                <Pen className="h-4 w-4 mr-2" />
-                Create Your Design
-              </span>
+    <ThemedBackground>
+      <div className="min-h-screen flex flex-col relative index-page-container overflow-hidden">
+        <Navbar />
+        
+        <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
+          {/* Theme switcher button */}
+          <div className="absolute top-4 right-4 z-20">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full"
+              onClick={toggleThemeSelector}
+            >
+              <Palette className="h-4 w-4 mr-2" />
+              Themes
             </Button>
-          </Link>
-        </div>
-        
-        <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>
-          <DoodleFeed highlightDoodleId={newDoodleId} />
-        </div>
-      </main>
+          </div>
+          
+          {/* Theme selector */}
+          {showThemeSelector && (
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-auto">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <h2 className="font-bold">Theme Settings</h2>
+                  <Button variant="ghost" size="sm" onClick={toggleThemeSelector}>
+                    Close
+                  </Button>
+                </div>
+                
+                <div className="p-4">
+                  <ThemePreview className="mb-6" />
+                  <ThemeSelector />
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className={`mb-8 ${isMobile ? 'py-4' : 'py-12'} text-center max-w-3xl mx-auto`}>
+            {/* Show seasonal greeting if available */}
+            {seasonalGreeting && (
+              <div className="mb-4 py-2 px-4 rounded-full bg-white/30 backdrop-blur-sm inline-block animate-fade-in">
+                {seasonalGreeting}
+              </div>
+            )}
+            
+            <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-elegant mb-6 tracking-tight ghibli-shine relative`}>
+              Discover{' '}
+              <span className="wonderful-wrapper">
+                W<span>o</span>nd<span>e</span>rful
+              </span>{' '}
+              Creations
+            </h1>
+            
+            <div className="h-px bg-gray-200 my-6 w-24 mx-auto" />
+            
+            <p className={`${isMobile ? 'text-sm px-4' : 'text-lg px-8'} mb-8 font-elegant text-gray-600 max-w-lg mx-auto`}>
+              Create your own worlds and characters, then share them with our community.
+            </p>
+            
+            <Link to="/create" className="inline-block">
+              <Button className="bg-black hover:bg-black/80 text-white font-elegant px-8 py-3 rounded-full ghibli-button relative overflow-hidden">
+                <span className="relative z-10 flex items-center">
+                  <Pen className="h-4 w-4 mr-2" />
+                  Create Your Design
+                </span>
+              </Button>
+            </Link>
+          </div>
+          
+          <div className={`${isMobile ? 'mt-12' : 'mt-16'} max-w-6xl mx-auto`}>
+            <DoodleFeed highlightDoodleId={newDoodleId} />
+          </div>
+        </main>
 
-      {/* Enhanced CSS for dreamy effects */}
-      <style>
-        {`
-        .ghibli-button::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -60%;
-          width: 20%;
-          height: 200%;
-          background: rgba(255, 255, 255, 0.3);
-          transform: rotate(30deg);
-          animation: button-shine 6s ease-in-out infinite;
-        }
-        
-        @keyframes button-shine {
-          0% { transform: rotate(30deg) translateX(-300%); }
-          30%, 100% { transform: rotate(30deg) translateX(400%); }
-        }
-        
-        .ghibli-sparkle {
-          position: absolute;
-          background-color: white;
-          border-radius: 50%;
-          box-shadow: 0 0 10px 2px white;
-          animation: sparkle-float 8s ease-in-out infinite;
-          z-index: 5;
-        }
-        
-        @keyframes sparkle-float {
-          0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
-          50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
-        }
-
-        /* Additional Ghibli-style animations */
-        .floating-light {
-          position: absolute;
-          width: 15px;
-          height: 15px;
-          background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
-          border-radius: 50%;
-          pointer-events: none;
-        }
-
-        @keyframes float-around {
-          0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(20px, -30px); }
-          50% { transform: translate(40px, 0); }
-          75% { transform: translate(20px, 30px); }
-        }
-        `}
-      </style>
-
-      {/* Add floating light particles */}
-      <div className="absolute top-1/4 left-1/4 floating-light" style={{ animation: 'float-around 20s infinite ease-in-out', opacity: 0.7 }}></div>
-      <div className="absolute top-1/3 right-1/4 floating-light" style={{ animation: 'float-around 25s infinite ease-in-out 2s', opacity: 0.6 }}></div>
-      <div className="absolute bottom-1/4 left-1/3 floating-light" style={{ animation: 'float-around 30s infinite ease-in-out 5s', opacity: 0.5 }}></div>
-    </div>
+        {/* Enhanced CSS for dreamy effects */}
+        <style>
+          {`
+          .ghibli-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+            animation: button-shine 6s ease-in-out infinite;
+          }
+          
+          @keyframes button-shine {
+            0% { transform: rotate(30deg) translateX(-300%); }
+            30%, 100% { transform: rotate(30deg) translateX(400%); }
+          }
+          
+          .ghibli-sparkle {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px white;
+            animation: sparkle-float 8s ease-in-out infinite;
+            z-index: 5;
+          }
+          
+          @keyframes sparkle-float {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
+          }
+          `}
+        </style>
+      </div>
+    </ThemedBackground>
   );
 };
 
