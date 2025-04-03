@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import ThemedBackground from '@/components/ThemedBackground';
@@ -18,26 +18,26 @@ const Stories = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
+  // Set page title
   useEffect(() => {
-    // Update the page title when this component mounts
     document.title = "Bomma | Stories";
-    
-    // Restore the original title when component unmounts
     return () => {
       document.title = "Bomma";
     };
   }, []);
 
-  useEffect(() => {
-    loadStories();
-  }, []);
-
-  const loadStories = async () => {
-    setIsLoading(true);
+  // Memoized load stories function
+  const loadStories = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     
     try {
       // Load all stories
@@ -47,6 +47,13 @@ const Stories = () => {
       // Load my stories
       const myStoriesData = await getMyStories();
       setMyStories(myStoriesData);
+
+      if (isRefresh) {
+        toast({
+          title: "Stories refreshed",
+          description: "The latest stories have been loaded",
+        });
+      }
     } catch (error) {
       console.error('Error loading stories:', error);
       toast({
@@ -56,10 +63,28 @@ const Stories = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [toast]);
   
-  const handleStoryLiked = (updatedStory: Story) => {
+  // Initial load
+  useEffect(() => {
+    loadStories();
+  }, [loadStories]);
+
+  // Listen for story published events
+  useEffect(() => {
+    const handleStoryPublished = () => {
+      loadStories(true);
+    };
+    
+    window.addEventListener('story-published', handleStoryPublished);
+    return () => {
+      window.removeEventListener('story-published', handleStoryPublished);
+    };
+  }, [loadStories]);
+  
+  const handleStoryLiked = useCallback((updatedStory: Story) => {
     // Update the story in both lists
     setStories(prevStories => 
       prevStories.map(story => 
@@ -72,15 +97,19 @@ const Stories = () => {
         story.id === updatedStory.id ? updatedStory : story
       )
     );
-  };
+  }, []);
   
-  const handleCreateStory = () => {
+  const handleCreateStory = useCallback(() => {
     navigate('/create-story');
-  };
+  }, [navigate]);
   
-  const handleCreateAnimation = () => {
+  const handleCreateAnimation = useCallback(() => {
     navigate('/create-animation');
-  };
+  }, [navigate]);
+
+  const handleRefresh = useCallback(() => {
+    loadStories(true);
+  }, [loadStories]);
 
   // Render loading state
   if (isLoading) {
@@ -113,7 +142,7 @@ const Stories = () => {
           <Paintbrush className="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <p className="text-xl font-medium">No stories yet</p>
           <p className="text-gray-500 mt-2">Create your first story or animation and share it with the world!</p>
-          <div className="flex gap-4 justify-center mt-4">
+          <div className="flex flex-wrap gap-4 justify-center mt-4">
             <Button 
               variant="secondary" 
               className="flex items-center gap-2"
@@ -161,10 +190,11 @@ const Stories = () => {
               <Button 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={loadStories}
+                onClick={handleRefresh}
+                disabled={isRefreshing}
               >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </Button>
               
               <Button 
@@ -178,12 +208,12 @@ const Stories = () => {
           </div>
           
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList>
-              <TabsTrigger value="all" className="flex items-center gap-2">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="all" className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <Paintbrush className="h-4 w-4" />
                 All Stories
               </TabsTrigger>
-              <TabsTrigger value="my" className="flex items-center gap-2">
+              <TabsTrigger value="my" className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <BookOpen className="h-4 w-4" />
                 My Stories
               </TabsTrigger>
@@ -198,11 +228,11 @@ const Stories = () => {
             </TabsContent>
           </Tabs>
           
-          {/* Create new buttons */}
+          {/* Create new buttons - optimized for mobile */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               onClick={handleCreateStory}
-              className="flex items-center gap-2 py-6 px-8"
+              className="flex items-center gap-2 py-6 px-8 w-full sm:w-auto"
             >
               <BookOpen className="h-5 w-5" />
               Create New Story
@@ -210,7 +240,7 @@ const Stories = () => {
             
             <Button 
               onClick={handleCreateAnimation}
-              className="flex items-center gap-2 py-6 px-8"
+              className="flex items-center gap-2 py-6 px-8 w-full sm:w-auto"
               variant="outline"
             >
               <Film className="h-5 w-5" />

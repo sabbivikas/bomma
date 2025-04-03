@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Story } from '@/types/doodle';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Film, BookOpen, MessageCircle, Share2, MoreHorizontal, Flag } from 'lucide-react';
-import { likeStory, getCommentsForStory } from '@/utils/storyService';
+import { likeStory, getCommentCountForStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,15 +22,19 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
   const isMyStory = story.sessionId === getSessionId();
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [isLoadingComments, setIsLoadingComments] = useState(true);
   
   // Fetch comment count when component mounts
   useEffect(() => {
     const fetchCommentCount = async () => {
+      setIsLoadingComments(true);
       try {
-        const comments = await getCommentsForStory(story.id);
-        setCommentCount(comments.length);
+        const count = await getCommentCountForStory(story.id);
+        setCommentCount(count);
       } catch (error) {
         console.error('Error fetching comment count:', error);
+      } finally {
+        setIsLoadingComments(false);
       }
     };
     
@@ -63,7 +67,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     e.stopPropagation();
     navigate(`/stories/${story.id}?comments=open`);
   };
-
+  
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation when sharing
     
@@ -128,7 +132,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
       });
     }
   };
-  
+
   const handleReportStory = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation
     setShowReportDialog(true);
@@ -209,7 +213,8 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
             aria-label="Comment on story"
           >
             <MessageCircle size={16} />
-            {commentCount > 0 && <span>{commentCount}</span>}
+            {!isLoadingComments && commentCount > 0 && <span>{commentCount}</span>}
+            {isLoadingComments && <span className="w-3 h-3 rounded-full bg-gray-200 animate-pulse"></span>}
           </Button>
 
           <Button
@@ -248,4 +253,4 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
   );
 };
 
-export default StoryCard;
+export default React.memo(StoryCard);

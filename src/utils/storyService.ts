@@ -1,4 +1,3 @@
-
 import { Story, StoryCreateInput, Frame, FrameCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
