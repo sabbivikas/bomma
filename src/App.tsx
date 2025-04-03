@@ -14,6 +14,8 @@ import CreateAnimation from "./pages/CreateAnimation";
 import ViewStory from "./pages/ViewStory";
 import AdminModeration from "./pages/AdminModeration";
 import AdminRoute from "./components/AdminRoute";
+import GameCreator from "./pages/GameCreator";
+import GamePlayerPage from "./pages/GamePlayerPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/stories" element={<Stories />} />
             <Route path="/create-story" element={<CreateStory />} />
             <Route path="/create-animation" element={<CreateAnimation />} />
+            <Route path="/create-game" element={<GameCreator />} />
+            <Route path="/game-player" element={<GamePlayerPage />} />
             <Route path="/stories/:id" element={<ViewStory />} />
             {/* Protected admin route */}
             <Route path="/admin/moderation" element={
