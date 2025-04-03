@@ -17,7 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTheme } from '@/contexts/ThemeContext';
 import { visualThemes, seasonalThemes, getThemeConfig } from '@/utils/themeConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox"; // Added missing import
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -591,7 +591,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       setIsDrawing(true);
     }
   };
-  
+
   // Add text to canvas
   const handleAddText = () => {
     if (!currentTextElement || !textInput.trim()) {
@@ -834,4 +834,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </ToggleGroupItem>
             
             <ToggleGroupItem value="text" aria-label="Text tool">
-              <Type className="h-4 w-4 mr-2
+              <Type className="h-4 w-4 mr-2" />
