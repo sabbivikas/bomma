@@ -55,15 +55,26 @@ export async function reportContent(
     const table = contentType === 'doodle' ? 'doodles' : 'stories';
     
     // Use direct update with reported flag and increment report count
+    // Fix the type issue by separating the RPC call and using its result
+    const { data: incrementResult, error: incrementError } = await supabase.rpc(
+      'increment_report_count', 
+      { 
+        row_id: contentId,
+        table_name: table
+      }
+    );
+    
+    if (incrementError) {
+      console.error(`Error incrementing report count:`, incrementError);
+      // Continue anyway since the report was created
+    }
+    
+    const newReportCount = incrementResult || 0;
+    
+    // Update the reported flag
     const { data: updatedContent, error: flagError } = await supabase
       .from(table)
-      .update({ 
-        reported: true,
-        report_count: supabase.rpc('increment_report_count', { 
-          row_id: contentId,
-          table_name: table
-        })
-      })
+      .update({ reported: true })
       .eq('id', contentId)
       .select('report_count');
     
@@ -73,7 +84,8 @@ export async function reportContent(
     }
     
     // If the report count exceeds threshold, auto-hide content by changing moderation status
-    if (updatedContent && updatedContent.length > 0 && updatedContent[0].report_count >= AUTO_HIDE_THRESHOLD) {
+    if (newReportCount >= AUTO_HIDE_THRESHOLD || 
+       (updatedContent && updatedContent.length > 0 && updatedContent[0].report_count >= AUTO_HIDE_THRESHOLD)) {
       const { error: hideError } = await supabase
         .from(table)
         .update({ 
@@ -84,7 +96,7 @@ export async function reportContent(
       if (hideError) {
         console.error(`Error auto-hiding ${contentType}:`, hideError);
       } else {
-        console.log(`Content ${contentId} auto-hidden due to ${updatedContent[0].report_count} reports`);
+        console.log(`Content ${contentId} auto-hidden due to reaching ${AUTO_HIDE_THRESHOLD} reports`);
       }
     }
     
