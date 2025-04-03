@@ -839,4 +839,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Seasonal Theme</Label>
+                <Label className="text-sm font-medium">Seasonal Theme</Label
