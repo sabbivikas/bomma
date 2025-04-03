@@ -1,4 +1,3 @@
-
 import { Doodle, DoodleCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +25,7 @@ export async function getAllDoodles(): Promise<Doodle[]> {
   const { data, error } = await supabase
     .from('doodles')
     .select('*')
+    .eq('moderation_status', 'approved') // Only show approved content
     .order('created_at', { ascending: false });
   
   if (error) {
@@ -40,7 +40,10 @@ export async function getAllDoodles(): Promise<Doodle[]> {
     prompt: item.prompt,
     sessionId: item.session_id,
     createdAt: item.created_at,
-    likes: item.likes
+    likes: item.likes,
+    reported: item.reported,
+    reportCount: item.report_count,
+    moderationStatus: item.moderation_status
   }));
 }
 
@@ -80,7 +83,10 @@ export async function createDoodle(input: DoodleCreateInput): Promise<Doodle | n
     prompt: data.prompt,
     sessionId: data.session_id,
     createdAt: data.created_at,
-    likes: data.likes
+    likes: data.likes,
+    reported: data.reported,
+    reportCount: data.report_count,
+    moderationStatus: data.moderation_status
   };
 }
 
@@ -120,7 +126,10 @@ export async function likeDoodle(id: string): Promise<Doodle | null> {
     prompt: data.prompt,
     sessionId: data.session_id,
     createdAt: data.created_at,
-    likes: data.likes
+    likes: data.likes,
+    reported: data.reported,
+    reportCount: data.report_count,
+    moderationStatus: data.moderation_status
   };
 }
 
@@ -146,7 +155,10 @@ export async function getMyDoodles(): Promise<Doodle[]> {
     prompt: item.prompt,
     sessionId: item.session_id,
     createdAt: item.created_at,
-    likes: item.likes
+    likes: item.likes,
+    reported: item.reported,
+    reportCount: item.report_count,
+    moderationStatus: item.moderation_status
   }));
 }
 

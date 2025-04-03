@@ -1,14 +1,15 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Story } from '@/types/doodle';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Film, BookOpen, MessageCircle, Share2 } from 'lucide-react';
+import { Heart, Film, BookOpen, MessageCircle, Share2, MoreHorizontal, Flag } from 'lucide-react';
 import { likeStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import ReportContent from './ReportContent';
 
 interface StoryCardProps {
   story: Story;
@@ -19,6 +20,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMyStory = story.sessionId === getSessionId();
+  const [showReportDialog, setShowReportDialog] = useState(false);
   
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -112,6 +114,11 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     }
   };
   
+  const handleReportStory = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
+    setShowReportDialog(true);
+  };
+  
   // Get the first frame as the thumbnail
   const thumbnailFrame = story.frames[0];
   
@@ -148,6 +155,28 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
           <h3 className="font-medium text-white truncate">
             {story.title}
           </h3>
+        </div>
+        
+        {/* Add dropdown menu for more actions */}
+        <div className="absolute top-2 left-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-white/80">
+                <MoreHorizontal size={14} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleShare(e);}}>
+                <Share2 className="mr-2 h-4 w-4" />
+                <span>Share</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleReportStory} className="text-red-600">
+                <Flag className="mr-2 h-4 w-4" />
+                <span>Report content</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       
@@ -189,6 +218,16 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
           </Button>
         </div>
       </CardFooter>
+      
+      {/* Report Dialog */}
+      {showReportDialog && (
+        <ReportContent
+          contentId={story.id}
+          contentType="story"
+          isOpen={showReportDialog}
+          onClose={() => setShowReportDialog(false)}
+        />
+      )}
     </Card>
   );
 };

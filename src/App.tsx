@@ -11,6 +11,7 @@ import Stories from "./pages/Stories";
 import CreateStory from "./pages/CreateStory";
 import CreateAnimation from "./pages/CreateAnimation";
 import ViewStory from "./pages/ViewStory";
+import AdminModeration from "./pages/AdminModeration";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/create-story" element={<CreateStory />} />
           <Route path="/create-animation" element={<CreateAnimation />} />
           <Route path="/stories/:id" element={<ViewStory />} />
+          <Route path="/admin/moderation" element={<AdminModeration />} />
           {/* Short URL routes */}
           <Route path="/s/:shortId" element={<ShortUrlRedirect type="story" />} />
           <Route path="/d/:shortId" element={<ShortUrlRedirect type="doodle" />} />

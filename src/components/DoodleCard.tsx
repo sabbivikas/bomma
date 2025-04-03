@@ -1,14 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, MoreHorizontal, X } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert } from "lucide-react";
 import { Doodle, Comment } from '@/types/doodle';
 import { formatDistanceToNow } from 'date-fns';
 import { likeDoodle, addComment, getCommentsForDoodle, getSessionId } from '@/utils/doodleService';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { getUsernameForSession } from '@/utils/usernameGenerator';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import ReportContent from './ReportContent';
 
 interface DoodleCardProps {
   doodle: Doodle;
@@ -199,6 +200,13 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     }
   };
 
+  // Add new state for report dialog
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  
+  const handleReportDoodle = () => {
+    setShowReportDialog(true);
+  };
+  
   return (
     <Card 
       ref={cardRef}
@@ -219,9 +227,25 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
           <p className="font-medium text-sm">{getDoodleUsername()}</p>
           <p className="text-xs text-gray-500">{timeAgo}</p>
         </div>
-        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
-          <MoreHorizontal size={15} />
-        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+              <MoreHorizontal size={15} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
+              <span>Share</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleReportDoodle} className="text-red-600">
+              <Flag className="mr-2 h-4 w-4" />
+              <span>Report content</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       {/* Image Content */}
@@ -339,6 +363,16 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
             </Button>
           </form>
         </div>
+      )}
+      
+      {/* Report Dialog */}
+      {showReportDialog && (
+        <ReportContent
+          contentId={doodle.id}
+          contentType="doodle"
+          isOpen={showReportDialog}
+          onClose={() => setShowReportDialog(false)}
+        />
       )}
     </Card>
   );
