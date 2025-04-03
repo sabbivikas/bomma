@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/utils/doodleService';
 import { ContentReport } from '@/types/doodle';
@@ -153,4 +152,24 @@ export async function updateContentModerationStatus(
     console.error('Error in updateContentModerationStatus:', error);
     return false;
   }
+}
+
+// Get moderation guide - new function to explain the moderation process
+export function getModerationGuide(): { steps: string[], statuses: Record<string, string> } {
+  return {
+    steps: [
+      "Review reports in the 'Pending' tab",
+      "Mark content as 'Under Review' if it requires further investigation",
+      "View the reported content to determine if it violates community guidelines",
+      "Approve content that doesn't violate guidelines or reject content that does",
+      "All actions are recorded and affect content visibility on the platform"
+    ],
+    statuses: {
+      "pending": "New reports that haven't been reviewed yet",
+      "reviewed": "Reports that have been seen but require further investigation",
+      "resolved": "Reports that have been addressed with a final decision",
+      "approved": "Content that has been reviewed and allowed to remain on the platform",
+      "rejected": "Content that has been removed from public view due to violations"
+    }
+  };
 }

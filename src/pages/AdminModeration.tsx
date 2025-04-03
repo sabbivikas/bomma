@@ -3,17 +3,41 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ContentReport } from '@/types/doodle';
-import { getReports, updateReportStatus, updateContentModerationStatus } from '@/utils/moderationService';
+import { 
+  getReports, 
+  updateReportStatus, 
+  updateContentModerationStatus,
+  getModerationGuide 
+} from '@/utils/moderationService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
-import { ShieldAlert, CheckCircle, Clock, AlertTriangle, Eye, Trash2, Check, X } from 'lucide-react';
+import { 
+  ShieldAlert, 
+  CheckCircle, 
+  Clock, 
+  AlertTriangle, 
+  Eye, 
+  Trash2, 
+  Check, 
+  X,
+  HelpCircle
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const AdminModeration: React.FC = () => {
   const [reports, setReports] = useState<ContentReport[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'reviewed' | 'resolved'>('pending');
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const moderationGuide = getModerationGuide();
 
   useEffect(() => {
     // Update the page title when this component mounts
@@ -169,9 +193,62 @@ const AdminModeration: React.FC = () => {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <ShieldAlert className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold">Content Moderation</h1>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="h-8 w-8 text-red-500" />
+              <h1 className="text-2xl font-bold">Content Moderation</h1>
+            </div>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4" />
+                  How to Moderate
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Moderation Guide</DialogTitle>
+                  <DialogDescription>
+                    Follow these steps to effectively moderate content
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="mt-4">
+                  <h3 className="font-medium mb-2">Moderation Steps:</h3>
+                  <ol className="list-decimal pl-5 space-y-2 mb-4">
+                    {moderationGuide.steps.map((step, index) => (
+                      <li key={index} className="text-gray-700">{step}</li>
+                    ))}
+                  </ol>
+                  
+                  <h3 className="font-medium mb-2 mt-4">Report Statuses:</h3>
+                  <div className="space-y-2">
+                    {Object.entries(moderationGuide.statuses).map(([status, description]) => (
+                      <div key={status} className="flex items-start gap-2">
+                        <div className="rounded-full w-2 h-2 mt-2 bg-gray-400 flex-shrink-0" 
+                             style={{ backgroundColor: 
+                              status === 'pending' ? '#FCD34D' : 
+                              status === 'reviewed' ? '#60A5FA' : 
+                              status === 'resolved' ? '#34D399' :
+                              status === 'approved' ? '#34D399' :
+                              status === 'rejected' ? '#F87171' : '#9CA3AF'
+                             }} />
+                        <div>
+                          <span className="font-medium capitalize">{status}</span>: {description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 p-3 bg-blue-50 rounded-md border border-blue-100">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> Rejected content will not be completely deleted from the database but will no longer appear in public feeds or searches.
+                    </p>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <p className="text-gray-600 mb-6">

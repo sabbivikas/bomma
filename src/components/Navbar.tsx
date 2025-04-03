@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FunkyText from './FunkyText';
-import { GalleryHorizontalEnd, Palette, BookOpenCheck } from 'lucide-react';
+import { GalleryHorizontalEnd, Palette, BookOpenCheck, ShieldAlert } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
@@ -43,6 +43,16 @@ const Navbar = () => {
             }`}
           >
             {isMobile ? <Palette className="h-5 w-5" /> : 'Create'}
+          </Link>
+
+          {/* New Moderation Link */}
+          <Link
+            to="/admin/moderation"
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              pathname === '/admin/moderation' ? 'bg-red-100 text-red-900' : 'text-red-600 hover:text-red-900 hover:bg-red-50'
+            }`}
+          >
+            {isMobile ? <ShieldAlert className="h-5 w-5" /> : 'Moderation'}
           </Link>
         </nav>
       </div>
