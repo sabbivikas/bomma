@@ -851,4 +851,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </div>
         )}
         
-        {/* Text options
+        {/* Drawing Canvas
