@@ -12,6 +12,7 @@ import CreateStory from "./pages/CreateStory";
 import CreateAnimation from "./pages/CreateAnimation";
 import ViewStory from "./pages/ViewStory";
 import AdminModeration from "./pages/AdminModeration";
+import AdminRoute from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,12 @@ const App = () => (
           <Route path="/create-story" element={<CreateStory />} />
           <Route path="/create-animation" element={<CreateAnimation />} />
           <Route path="/stories/:id" element={<ViewStory />} />
-          <Route path="/admin/moderation" element={<AdminModeration />} />
+          {/* Protected admin route */}
+          <Route path="/admin/moderation" element={
+            <AdminRoute>
+              <AdminModeration />
+            </AdminRoute>
+          } />
           {/* Short URL routes */}
           <Route path="/s/:shortId" element={<ShortUrlRedirect type="story" />} />
           <Route path="/d/:shortId" element={<ShortUrlRedirect type="doodle" />} />

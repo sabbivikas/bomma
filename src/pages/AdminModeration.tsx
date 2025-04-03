@@ -11,6 +11,7 @@ import {
 } from '@/utils/moderationService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
+import ContentViewer from '@/components/ContentViewer';
 import { 
   ShieldAlert, 
   CheckCircle, 
@@ -36,6 +37,8 @@ const AdminModeration: React.FC = () => {
   const [reports, setReports] = useState<ContentReport[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'reviewed' | 'resolved'>('pending');
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<ContentReport | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { toast } = useToast();
   const moderationGuide = getModerationGuide();
 
@@ -70,11 +73,9 @@ const AdminModeration: React.FC = () => {
     }
   };
 
-  const handleReviewReport = (reportId: string) => {
-    toast({
-      title: "Feature coming soon",
-      description: "The full moderation review interface is under development",
-    });
+  const handleViewContent = (report: ContentReport) => {
+    setSelectedReport(report);
+    setIsViewerOpen(true);
   };
   
   const handleMarkAsReviewed = async (report: ContentReport) => {
@@ -276,6 +277,19 @@ const AdminModeration: React.FC = () => {
           </Tabs>
         </div>
       </main>
+
+      {/* Content Viewer Dialog */}
+      <ContentViewer
+        report={selectedReport}
+        isOpen={isViewerOpen}
+        onClose={() => {
+          setIsViewerOpen(false);
+          setSelectedReport(null);
+        }}
+        onStatusChange={(reportId, status) => {
+          loadReports();
+        }}
+      />
     </div>
   );
 
@@ -318,26 +332,46 @@ const AdminModeration: React.FC = () => {
             </div>
             
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" size="sm" onClick={() => handleReviewReport(report.id)}>
-                <Eye className="mr-2 h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleViewContent(report)}
+                className="flex items-center gap-1"
+              >
+                <Eye className="h-4 w-4" />
                 View Content
               </Button>
               
               {report.status === 'pending' && (
-                <Button variant="secondary" size="sm" onClick={() => handleMarkAsReviewed(report)}>
-                  <AlertTriangle className="mr-2 h-4 w-4" />
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={() => handleMarkAsReviewed(report)}
+                  className="flex items-center gap-1"
+                >
+                  <AlertTriangle className="h-4 w-4" />
                   Mark as Reviewed
                 </Button>
               )}
               
               {report.status === 'reviewed' && (
                 <>
-                  <Button variant="destructive" size="sm" onClick={() => handleRejectContent(report)}>
-                    <X className="mr-2 h-4 w-4" />
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => handleRejectContent(report)}
+                    className="flex items-center gap-1"
+                  >
+                    <X className="h-4 w-4" />
                     Reject Content
                   </Button>
-                  <Button variant="default" size="sm" onClick={() => handleApproveContent(report)}>
-                    <Check className="mr-2 h-4 w-4" />
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => handleApproveContent(report)}
+                    className="flex items-center gap-1"
+                  >
+                    <Check className="h-4 w-4" />
                     Approve Content
                   </Button>
                 </>
