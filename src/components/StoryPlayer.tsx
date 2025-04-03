@@ -5,6 +5,8 @@ import { Button } from './ui/button';
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getThemeConfig } from '@/utils/themeConfig';
 
 interface StoryPlayerProps {
   story: Story;
@@ -16,6 +18,10 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  
+  // Get theme configuration
+  const visualThemeConfig = getThemeConfig(theme.visualTheme);
   
   const currentFrame = story.frames[currentFrameIndex];
   const totalFrames = story.frames.length;
@@ -86,6 +92,11 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
     setCurrentFrameIndex(prevIndex => (prevIndex - 1 + totalFrames) % totalFrames);
   };
   
+  // Generate theme-based background style
+  const getThemeBackgroundStyle = () => {
+    return visualThemeConfig?.backgroundStyle || 'bg-gray-100';
+  };
+  
   // If no frames, show placeholder
   if (story.frames.length === 0) {
     return (
@@ -98,7 +109,7 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   return (
     <div className="bg-white border rounded-md overflow-hidden shadow-sm">
       {/* Display current frame */}
-      <div className="relative bg-gray-100 flex items-center justify-center">
+      <div className={`relative flex items-center justify-center ${getThemeBackgroundStyle()}`}>
         <img 
           src={currentFrame.imageUrl} 
           alt={`Frame ${currentFrameIndex + 1} of "${story.title}"`}

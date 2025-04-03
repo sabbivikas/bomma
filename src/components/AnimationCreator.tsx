@@ -11,6 +11,8 @@ import { StoryFrame } from '@/types/doodle';
 import { Trash2, Plus, Film, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getThemeConfig } from '@/utils/themeConfig';
 
 const AnimationCreator: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -18,7 +20,12 @@ const AnimationCreator: React.FC = () => {
   const [currentFrameDuration, setCurrentFrameDuration] = useState([1000]); // Default 1 second
   const [isCreatingStory, setIsCreatingStory] = useState(false);
   const [isAddingFrame, setIsAddingFrame] = useState(false);
+  const { theme } = useTheme();
   const navigate = useNavigate();
+
+  // Get theme configuration
+  const visualThemeConfig = getThemeConfig(theme.visualTheme);
+  const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
 
   // Ref for scrolling to the bottom of the frames list
   const framesEndRef = useRef<HTMLDivElement>(null);
@@ -137,6 +144,12 @@ const AnimationCreator: React.FC = () => {
     }
   };
 
+  // Generate theme-based background style for frames
+  const getThemeBackgroundStyle = () => {
+    let style = visualThemeConfig?.backgroundStyle || '';
+    return style;
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -182,7 +195,7 @@ const AnimationCreator: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-md">
               {frames.map((frame, index) => (
                 <div key={index} className="relative group">
-                  <div className="aspect-square bg-white border rounded-md overflow-hidden">
+                  <div className={`aspect-square border rounded-md overflow-hidden ${getThemeBackgroundStyle()}`}>
                     <img 
                       src={frame.imageUrl} 
                       alt={`Frame ${index + 1}`} 
