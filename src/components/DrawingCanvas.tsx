@@ -5,7 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Download,
   Paintbrush, Palette, Share, PlusSquare, Type,
-  Square, Circle as CircleIcon
+  Square, Circle as CircleIcon, Sparkles
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,6 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useTheme } from '@/contexts/ThemeContext';
+import { visualThemes, seasonalThemes } from '@/utils/themeConfig';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -50,6 +53,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
   const [fill, setFill] = useState(false);
+  const { theme, setVisualTheme, setSeasonalTheme } = useTheme();
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
   
   // Text tool states
   const [textElements, setTextElements] = useState<TextElement[]>([]);
@@ -601,6 +606,16 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           
           <Button
             size="sm"
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setShowThemeSelector(!showThemeSelector)}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Themes</span>
+          </Button>
+          
+          <Button
+            size="sm"
             variant="success"
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white ml-2 animate-pulse"
             onClick={handlePublish}
@@ -610,6 +625,62 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             <span>{isPublishing ? "Publishing..." : "Publish to Frame"}</span>
           </Button>
         </div>
+        
+        {/* Theme Selector */}
+        {showThemeSelector && (
+          <div className="mt-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Visual Theme Selector */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Visual Theme</Label>
+                <Select 
+                  value={theme.visualTheme}
+                  onValueChange={(value) => setVisualTheme(value as any)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a visual theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {visualThemes.map((visualTheme) => (
+                      <SelectItem key={visualTheme.id} value={visualTheme.id}>
+                        {visualTheme.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">Visual theme affects the background style of your story frames</p>
+              </div>
+              
+              {/* Seasonal Theme Selector */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Seasonal Theme</Label>
+                <Select 
+                  value={theme.seasonalTheme}
+                  onValueChange={(value) => setSeasonalTheme(value as any)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a seasonal theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasonalThemes.map((seasonalTheme) => (
+                      <SelectItem key={seasonalTheme.id} value={seasonalTheme.id}>
+                        {seasonalTheme.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">Seasonal theme adds thematic elements to your story</p>
+              </div>
+            </div>
+            
+            {/* Theme Preview */}
+            <div className="mt-4 p-3 rounded-lg border" style={{
+              background: visualThemes.find(vt => vt.id === theme.visualTheme)?.backgroundStyle || ''
+            }}>
+              <p className="text-center text-sm">This is how your frame background will look</p>
+            </div>
+          </div>
+        )}
         
         {/* Text options - only show when text tool is selected */}
         {tool === 'text' && selectedTextIndex !== null && (

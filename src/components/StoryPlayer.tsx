@@ -22,6 +22,7 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   
   // Get theme configuration
   const visualThemeConfig = getThemeConfig(theme.visualTheme);
+  const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
   
   const currentFrame = story.frames[currentFrameIndex];
   const totalFrames = story.frames.length;
@@ -94,7 +95,14 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   
   // Generate theme-based background style
   const getThemeBackgroundStyle = () => {
-    return visualThemeConfig?.backgroundStyle || 'bg-gray-100';
+    let style = visualThemeConfig?.backgroundStyle || 'bg-gray-100';
+    
+    // Add seasonal overlays if applicable
+    if (seasonalThemeConfig && seasonalThemeConfig.id !== 'none') {
+      return `${style} bg-blend-overlay relative`;
+    }
+    
+    return style;
   };
   
   // If no frames, show placeholder
@@ -110,14 +118,38 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
     <div className="bg-white border rounded-md overflow-hidden shadow-sm">
       {/* Display current frame */}
       <div className={`relative flex items-center justify-center ${getThemeBackgroundStyle()}`}>
+        {/* Seasonal overlay if applicable */}
+        {seasonalThemeConfig && seasonalThemeConfig.id !== 'none' && (
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+            {seasonalThemeConfig.id === 'autumn' && (
+              <div className="absolute inset-0 bg-orange-100 bg-[url('/themes/autumn-leaves.svg')] bg-repeat opacity-30"></div>
+            )}
+            {seasonalThemeConfig.id === 'winter' && (
+              <div className="absolute inset-0 bg-blue-50 bg-[url('/themes/snowflakes.svg')] bg-repeat opacity-30"></div>
+            )}
+            {seasonalThemeConfig.id === 'spring' && (
+              <div className="absolute inset-0 bg-green-50 bg-[url('/themes/flowers.svg')] bg-repeat opacity-30"></div>
+            )}
+            {seasonalThemeConfig.id === 'summer' && (
+              <div className="absolute inset-0 bg-yellow-50 bg-[url('/themes/sun.svg')] bg-repeat opacity-30"></div>
+            )}
+            {seasonalThemeConfig.id === 'halloween' && (
+              <div className="absolute inset-0 bg-purple-900 bg-[url('/themes/pumpkin.svg')] bg-repeat opacity-30"></div>
+            )}
+            {seasonalThemeConfig.id === 'christmas' && (
+              <div className="absolute inset-0 bg-red-100 bg-[url('/themes/snowflake.svg')] bg-repeat opacity-30"></div>
+            )}
+          </div>
+        )}
+        
         <img 
           src={currentFrame.imageUrl} 
           alt={`Frame ${currentFrameIndex + 1} of "${story.title}"`}
-          className="max-w-full max-h-[500px] object-contain"
+          className="max-w-full max-h-[500px] object-contain relative z-10"
         />
         
         {/* Frame counter overlay */}
-        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-20">
           {currentFrameIndex + 1} / {totalFrames}
         </div>
       </div>
