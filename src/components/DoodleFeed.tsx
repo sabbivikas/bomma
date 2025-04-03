@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Doodle } from '@/types/doodle';
 import { getAllDoodles } from '@/utils/doodleService';
 import DoodleCard from './DoodleCard';
@@ -23,54 +23,8 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
-  // Initial load of doodles
-  useEffect(() => {
-    loadDoodles();
-    
-    // Set up event listener for doodle publishing from other components/tabs
-    window.addEventListener('doodle-published', handleLocalPublish);
-    
-    return () => {
-      window.removeEventListener('doodle-published', handleLocalPublish);
-    };
-  }, []);
-  
-  // Set up real-time listener for new doodles
-  useEffect(() => {
-    const channel = supabase
-      .channel('public:doodles')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'doodles' 
-        }, 
-        (payload) => {
-          // Don't show notification for our own doodles
-          const publishedDoodleId = highlightDoodleId;
-          if (payload.new && payload.new.id !== publishedDoodleId) {
-            setNewDoodlesCount(prevCount => prevCount + 1);
-            toast({
-              title: "New doodle published!",
-              description: "Someone just shared a new creation.",
-              variant: "default",
-            });
-          }
-        }
-      )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [highlightDoodleId, toast]);
-  
-  const handleLocalPublish = () => {
-    // This is triggered when the current user publishes a doodle
-    loadDoodles();
-  };
-  
-  const loadDoodles = async () => {
+  // Memoized load doodles function with useCallback
+  const loadDoodles = useCallback(async () => {
     setIsLoading(true);
     setNewDoodlesCount(0);
     setLastLoadedTime(new Date());
@@ -118,15 +72,62 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
   
-  const handleDoodleLiked = (updatedDoodle: Doodle) => {
+  // Initial load of doodles - only once on mount
+  useEffect(() => {
+    loadDoodles();
+    
+    // Set up event listener for doodle publishing from other components/tabs
+    window.addEventListener('doodle-published', handleLocalPublish);
+    
+    return () => {
+      window.removeEventListener('doodle-published', handleLocalPublish);
+    };
+  }, [loadDoodles]);
+  
+  const handleLocalPublish = useCallback(() => {
+    // This is triggered when the current user publishes a doodle
+    loadDoodles();
+  }, [loadDoodles]);
+  
+  // Set up real-time listener for new doodles
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:doodles')
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'doodles' 
+        }, 
+        (payload) => {
+          // Don't show notification for our own doodles
+          const publishedDoodleId = highlightDoodleId;
+          if (payload.new && payload.new.id !== publishedDoodleId) {
+            setNewDoodlesCount(prevCount => prevCount + 1);
+            toast({
+              title: "New doodle published!",
+              description: "Someone just shared a new creation.",
+              variant: "default",
+            });
+          }
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [highlightDoodleId, toast]);
+  
+  const handleDoodleLiked = useCallback((updatedDoodle: Doodle) => {
     setDoodles((prevDoodles) =>
       prevDoodles.map((doodle) =>
         doodle.id === updatedDoodle.id ? updatedDoodle : doodle
       )
     );
-  };
+  }, []);
 
   const handleRefresh = () => {
     loadDoodles();
@@ -209,4 +210,4 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
   );
 };
 
-export default DoodleFeed;
+export default React.memo(DoodleFeed);

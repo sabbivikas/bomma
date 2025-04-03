@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Layer {
@@ -14,11 +13,13 @@ export class LayerManager {
   private layers: Map<string, Layer>;
   private width: number;
   private height: number;
+  private devicePixelRatio: number;
   
   constructor(width: number, height: number) {
     this.layers = new Map<string, Layer>();
     this.width = width;
     this.height = height;
+    this.devicePixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     
     // Create default layers
     this.initLayer('background', 'Background', 0);
@@ -27,10 +28,21 @@ export class LayerManager {
   
   private initLayer(id: string, name: string, zIndex: number): Layer {
     const canvas = document.createElement('canvas');
-    canvas.width = this.width;
-    canvas.height = this.height;
+    
+    // Set physical pixel size (actual resolution)
+    canvas.width = this.width * this.devicePixelRatio;
+    canvas.height = this.height * this.devicePixelRatio;
+    
+    // Set display size (CSS)
+    canvas.style.width = `${this.width}px`;
+    canvas.style.height = `${this.height}px`;
     
     const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Scale all drawing operations by devicePixelRatio
+      context.scale(this.devicePixelRatio, this.devicePixelRatio);
+    }
     
     const layer: Layer = {
       id,
@@ -93,7 +105,7 @@ export class LayerManager {
     // Render each visible layer to the target canvas
     for (const layer of sortedLayers) {
       if (layer.visible && layer.canvas) {
-        targetContext.drawImage(layer.canvas, 0, 0);
+        targetContext.drawImage(layer.canvas, 0, 0, targetCanvas.width, targetCanvas.height);
       }
     }
   }
@@ -114,12 +126,22 @@ export class LayerManager {
           tempCanvas.height = layer.canvas.height;
           tempContext.drawImage(layer.canvas, 0, 0);
           
-          // Resize the layer canvas
-          layer.canvas.width = width;
-          layer.canvas.height = height;
+          // Update physical pixel size (actual resolution)
+          layer.canvas.width = width * this.devicePixelRatio;
+          layer.canvas.height = height * this.devicePixelRatio;
+          
+          // Update display size (CSS)
+          layer.canvas.style.width = `${width}px`;
+          layer.canvas.style.height = `${height}px`;
+          
+          // Reset scale transformation
+          layer.context.resetTransform();
+          
+          // Apply devicePixelRatio scaling
+          layer.context.scale(this.devicePixelRatio, this.devicePixelRatio);
           
           // Restore the content
-          layer.context.drawImage(tempCanvas, 0, 0);
+          layer.context.drawImage(tempCanvas, 0, 0, width, height);
         }
       }
     });
