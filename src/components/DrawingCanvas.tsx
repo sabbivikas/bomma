@@ -815,11 +815,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </Button>
         </div>
         
-        {/* Theme Selector */}
         {showThemeSelector && (
           <div className="mt-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Visual Theme Selector */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Visual Theme</Label>
                 <Select 
@@ -840,5 +838,5 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                 <p className="text-xs text-gray-500">Visual theme affects the background style of your story frames</p>
               </div>
               
-              {/* Seasonal Theme Selector */}
-              <div className="space-y
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Seasonal Theme</Label>
