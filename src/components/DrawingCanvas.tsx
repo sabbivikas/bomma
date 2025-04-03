@@ -841,4 +841,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               </div>
               
               {/* Seasonal Theme Selector */}
-              <div className="
+              <div className="space-y
