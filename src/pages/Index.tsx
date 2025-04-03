@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -16,6 +15,16 @@ const Index = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [newDoodleId, setNewDoodleId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Update the page title when this component mounts
+    document.title = "Bomma | Home";
+    
+    // Restore the original title when component unmounts
+    return () => {
+      document.title = "Bomma";
+    };
+  }, []);
   
   // Check if we have a newly created doodle from the navigation state
   useEffect(() => {

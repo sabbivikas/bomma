@@ -1,11 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import StoryCreator from '@/components/StoryCreator';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
 
 const CreateStory = () => {
+  useEffect(() => {
+    // Update the page title when this component mounts
+    document.title = "Bomma | Create Story";
+    
+    // Restore the original title when component unmounts
+    return () => {
+      document.title = "Bomma";
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background effects */}

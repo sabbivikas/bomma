@@ -7,10 +7,18 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Update the page title when this component mounts
+    document.title = "Bomma | Page Not Found";
+    
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
+    
+    // Restore the original title when component unmounts
+    return () => {
+      document.title = "Bomma";
+    };
   }, [location.pathname]);
 
   return (

@@ -26,6 +26,16 @@ const Create = () => {
   const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
   
+  useEffect(() => {
+    // Update the page title when this component mounts
+    document.title = "Bomma | Create Doodle";
+    
+    // Restore the original title when component unmounts
+    return () => {
+      document.title = "Bomma";
+    };
+  }, []);
+
   // Add dreamy dust particles
   useEffect(() => {
     // Only add particles if not on mobile to avoid performance issues

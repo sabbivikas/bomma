@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -22,6 +21,16 @@ const Stories = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Update the page title when this component mounts
+    document.title = "Bomma | Stories";
+    
+    // Restore the original title when component unmounts
+    return () => {
+      document.title = "Bomma";
+    };
+  }, []);
 
   useEffect(() => {
     loadStories();
