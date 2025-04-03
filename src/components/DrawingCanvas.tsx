@@ -4,24 +4,48 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Download,
-  Paintbrush, Palette, Share, PlusSquare
+  Paintbrush, Palette, Share, PlusSquare, Type
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
   prompt?: string;
 }
 
+interface TextElement {
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+  fontFamily: string;
+  isDragging: boolean;
+}
+
 const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
+  const [tool, setTool] = useState<'pen' | 'eraser' | 'text'>('pen');
   const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState([5]);
   const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Text tool states
+  const [textElements, setTextElements] = useState<TextElement[]>([]);
+  const [currentTextElement, setCurrentTextElement] = useState<TextElement | null>(null);
+  const [textDialogOpen, setTextDialogOpen] = useState(false);
+  const [textInput, setTextInput] = useState('');
+  const [textSize, setTextSize] = useState([18]);
+  const [textFont, setTextFont] = useState('Arial');
+  const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null);
   
   // Simple canvas size
   const [canvasSize] = useState({ width: 800, height: 600 });
@@ -66,6 +90,53 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
   }, [color, width, tool]);
   
+  // Render text elements
+  useEffect(() => {
+    if (!contextRef.current || !canvasRef.current) return;
+    
+    // Only redraw text when in text mode or after adding/moving text
+    if (tool === 'text' || currentTextElement) {
+      // Create a temporary canvas to avoid flickering
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvasRef.current.width;
+      tempCanvas.height = canvasRef.current.height;
+      const tempContext = tempCanvas.getContext('2d');
+      
+      if (tempContext && contextRef.current) {
+        // Copy the current canvas to temp
+        tempContext.drawImage(canvasRef.current, 0, 0);
+        
+        // Draw all text elements
+        textElements.forEach((element, i) => {
+          tempContext.font = `${element.size}px ${element.fontFamily}`;
+          tempContext.fillStyle = element.color;
+          tempContext.fillText(element.text, element.x, element.y);
+          
+          // Draw selection rectangle for selected text
+          if (i === selectedTextIndex) {
+            const metrics = tempContext.measureText(element.text);
+            const height = element.size;
+            
+            tempContext.strokeStyle = '#007bff';
+            tempContext.lineWidth = 1;
+            tempContext.setLineDash([3, 3]);
+            tempContext.strokeRect(
+              element.x - 4, 
+              element.y - height, 
+              metrics.width + 8, 
+              height + 8
+            );
+            tempContext.setLineDash([]);
+          }
+        });
+        
+        // Update the main canvas
+        contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        contextRef.current.drawImage(tempCanvas, 0, 0);
+      }
+    }
+  }, [textElements, selectedTextIndex, tool]);
+  
   // Get coordinates from mouse or touch event
   const getCoordinates = (event: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
@@ -85,7 +156,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
   
-  // Start drawing
+  // Start drawing or text placement
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || !contextRef.current) return;
@@ -97,17 +168,61 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     const coords = getCoordinates(event, canvas);
     
-    contextRef.current.beginPath();
-    contextRef.current.moveTo(coords.x, coords.y);
-    lastPointRef.current = coords;
-    
-    setIsDrawing(true);
+    // Handle based on selected tool
+    if (tool === 'text') {
+      // Check if clicked on existing text
+      const clickedTextIndex = textElements.findIndex(el => {
+        if (!contextRef.current) return false;
+        
+        contextRef.current.font = `${el.size}px ${el.fontFamily}`;
+        const metrics = contextRef.current.measureText(el.text);
+        const height = el.size;
+        
+        return (
+          coords.x >= el.x - 4 &&
+          coords.x <= el.x + metrics.width + 4 &&
+          coords.y >= el.y - height &&
+          coords.y <= el.y + 8
+        );
+      });
+      
+      if (clickedTextIndex !== -1) {
+        // Select text for dragging
+        setSelectedTextIndex(clickedTextIndex);
+        
+        const selectedText = { ...textElements[clickedTextIndex], isDragging: true };
+        
+        setTextElements(prev => 
+          prev.map((el, i) => i === clickedTextIndex ? selectedText : el)
+        );
+        
+        lastPointRef.current = coords;
+      } else {
+        // Add new text
+        setSelectedTextIndex(null);
+        setCurrentTextElement({ 
+          text: '', 
+          x: coords.x, 
+          y: coords.y,
+          color: color,
+          size: textSize[0],
+          fontFamily: textFont,
+          isDragging: false
+        });
+        setTextDialogOpen(true);
+      }
+    } else {
+      // Drawing with pen or eraser
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(coords.x, coords.y);
+      lastPointRef.current = coords;
+      
+      setIsDrawing(true);
+    }
   };
   
-  // Draw
+  // Draw or move text
   const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !contextRef.current || !lastPointRef.current) return;
-    
     // Prevent scrolling on touch devices
     if ('touches' in event) {
       event.preventDefault();
@@ -118,20 +233,70 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     const coords = getCoordinates(event, canvas);
     
-    contextRef.current.lineTo(coords.x, coords.y);
-    contextRef.current.stroke();
-    
-    lastPointRef.current = coords;
+    if (tool === 'text' && selectedTextIndex !== null && lastPointRef.current) {
+      // Move selected text
+      const dx = coords.x - lastPointRef.current.x;
+      const dy = coords.y - lastPointRef.current.y;
+      
+      setTextElements(prev => prev.map((el, i) => {
+        if (i === selectedTextIndex) {
+          return {
+            ...el,
+            x: el.x + dx,
+            y: el.y + dy
+          };
+        }
+        return el;
+      }));
+      
+      lastPointRef.current = coords;
+    } else if (isDrawing && contextRef.current && lastPointRef.current) {
+      // Draw with pen or eraser
+      contextRef.current.lineTo(coords.x, coords.y);
+      contextRef.current.stroke();
+      
+      lastPointRef.current = coords;
+    }
   };
   
-  // Stop drawing
+  // Stop drawing or text placement
   const stopDrawing = () => {
+    // End drawing
     if (contextRef.current) {
       contextRef.current.closePath();
     }
     
+    // Reset dragging state for text
+    if (selectedTextIndex !== null) {
+      setTextElements(prev => prev.map((el, i) => {
+        if (i === selectedTextIndex) {
+          return { ...el, isDragging: false };
+        }
+        return el;
+      }));
+    }
+    
     setIsDrawing(false);
     lastPointRef.current = null;
+  };
+  
+  // Add text to canvas
+  const handleAddText = () => {
+    if (!currentTextElement || !textInput.trim()) {
+      setTextDialogOpen(false);
+      setCurrentTextElement(null);
+      return;
+    }
+    
+    const newTextElement: TextElement = {
+      ...currentTextElement,
+      text: textInput.trim()
+    };
+    
+    setTextElements([...textElements, newTextElement]);
+    setTextInput('');
+    setTextDialogOpen(false);
+    setCurrentTextElement(null);
   };
   
   // Clear canvas
@@ -140,19 +305,58 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     contextRef.current.fillStyle = 'white';
     contextRef.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    // Clear text elements
+    setTextElements([]);
+    setSelectedTextIndex(null);
   };
   
   // Handle publish
   const handlePublish = () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !contextRef.current) return;
     setIsPublishing(true);
     
     try {
+      // Ensure all text is rendered to canvas before saving
+      // This ensures text becomes part of the saved image
+      textElements.forEach(element => {
+        if (contextRef.current) {
+          contextRef.current.font = `${element.size}px ${element.fontFamily}`;
+          contextRef.current.fillStyle = element.color;
+          contextRef.current.fillText(element.text, element.x, element.y);
+        }
+      });
+      
       onSave(canvasRef.current);
     } catch (error) {
       console.error("Error publishing doodle:", error);
     } finally {
       setIsPublishing(false);
+    }
+  };
+  
+  // Remove selected text
+  const handleRemoveText = () => {
+    if (selectedTextIndex !== null) {
+      setTextElements(prev => prev.filter((_, i) => i !== selectedTextIndex));
+      setSelectedTextIndex(null);
+    }
+  };
+  
+  // Edit selected text
+  const handleEditText = () => {
+    if (selectedTextIndex !== null) {
+      const selectedText = textElements[selectedTextIndex];
+      setCurrentTextElement(selectedText);
+      setTextInput(selectedText.text);
+      setTextSize([selectedText.size]);
+      setTextFont(selectedText.fontFamily);
+      setColor(selectedText.color);
+      setTextDialogOpen(true);
+      
+      // Remove the old text, it will be added again after editing
+      setTextElements(prev => prev.filter((_, i) => i !== selectedTextIndex));
+      setSelectedTextIndex(null);
     }
   };
   
@@ -166,6 +370,15 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     '#FFFF00', // Yellow
     '#FF00FF', // Magenta
     '#00FFFF', // Cyan
+  ];
+  
+  // Font options
+  const fontOptions = [
+    'Arial',
+    'Times New Roman',
+    'Courier New',
+    'Georgia',
+    'Comic Sans MS',
   ];
 
   // Responsive canvas size for mobile
@@ -216,7 +429,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             size="sm"
             variant={tool === 'pen' ? 'default' : 'outline'}
             className="flex items-center gap-2"
-            onClick={() => setTool('pen')}
+            onClick={() => {
+              setTool('pen');
+              setSelectedTextIndex(null);
+            }}
           >
             <Pen className="h-4 w-4" />
             <span>Pen</span>
@@ -226,10 +442,23 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             size="sm"
             variant={tool === 'eraser' ? 'default' : 'outline'}
             className="flex items-center gap-2"
-            onClick={() => setTool('eraser')}
+            onClick={() => {
+              setTool('eraser');
+              setSelectedTextIndex(null);
+            }}
           >
             <Eraser className="h-4 w-4" />
             <span>Eraser</span>
+          </Button>
+          
+          <Button
+            size="sm"
+            variant={tool === 'text' ? 'default' : 'outline'}
+            className="flex items-center gap-2"
+            onClick={() => setTool('text')}
+          >
+            <Type className="h-4 w-4" />
+            <span>Text</span>
           </Button>
           
           <Button
@@ -254,23 +483,67 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </Button>
         </div>
         
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <Paintbrush className="h-4 w-4" />
-                Brush Width
-              </label>
-              <span className="text-sm text-gray-500">{width[0]}px</span>
-            </div>
-            <Slider
-              value={width}
-              onValueChange={setWidth}
-              min={1}
-              max={20}
-              step={1}
-            />
+        {/* Text options - only show when text tool is selected */}
+        {tool === 'text' && selectedTextIndex !== null && (
+          <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={handleEditText}
+            >
+              <span>Edit Text</span>
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2 text-red-500"
+              onClick={handleRemoveText}
+            >
+              <span>Remove Text</span>
+            </Button>
           </div>
+        )}
+        
+        <div className="space-y-4">
+          {(tool === 'pen' || tool === 'eraser') && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Paintbrush className="h-4 w-4" />
+                  Brush Width
+                </label>
+                <span className="text-sm text-gray-500">{width[0]}px</span>
+              </div>
+              <Slider
+                value={width}
+                onValueChange={setWidth}
+                min={1}
+                max={20}
+                step={1}
+              />
+            </div>
+          )}
+          
+          {tool === 'text' && !selectedTextIndex && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Type className="h-4 w-4" />
+                  Font Size
+                </label>
+                <span className="text-sm text-gray-500">{textSize[0]}px</span>
+              </div>
+              <Slider
+                value={textSize}
+                onValueChange={setTextSize}
+                min={8}
+                max={72}
+                step={1}
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
@@ -304,9 +577,56 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          className="cursor-crosshair"
+          className={cn(
+            "cursor-crosshair",
+            tool === 'text' && "cursor-text"
+          )}
         />
       </div>
+      
+      {/* Text Input Dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="text">Enter Text</Label>
+              <Textarea
+                id="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Enter your text here..."
+                className="min-h-20"
+                autoFocus
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="font-family">Font</Label>
+              <select
+                id="font-family"
+                value={textFont}
+                onChange={(e) => setTextFont(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {fontOptions.map((font) => (
+                  <option key={font} value={font} style={{ fontFamily: font }}>
+                    {font}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddText}>Add Text</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
