@@ -1,446 +1,259 @@
-import { Story, StoryCreateInput, StoryFrame, StoryFrameCreateInput, Comment } from '@/types/doodle';
+import { Story, StoryCreateInput, Frame, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { getSessionId } from '@/utils/doodleService';
 
-// Helper function to convert database row to StoryFrame model
-const mapToStoryFrame = (row: any): StoryFrame => ({
-  id: row.id,
-  storyId: row.story_id,
-  imageUrl: row.image_url,
-  order: row.order,
-  duration: row.duration,
-  createdAt: row.created_at
-});
+// Key for storing session ID in local storage
+const SESSION_ID_KEY = 'make-something-wonderful-session-id';
 
-// Helper function to convert database row to Story model
-const mapToStory = (row: any, frames: StoryFrame[] = []): Story => ({
-  id: row.id,
-  title: row.title,
-  frames,
-  createdAt: row.created_at,
-  sessionId: row.session_id,
-  likes: row.likes || 0,
-  isAnimation: row.is_animation
-});
+// Custom event for story publishing
+const publishEvent = new Event('story-published');
+
+// Get session ID or generate a new one
+export function getSessionId(): string {
+  let sessionId = localStorage.getItem(SESSION_ID_KEY);
+  
+  if (!sessionId) {
+    sessionId = uuidv4();
+    localStorage.setItem(SESSION_ID_KEY, sessionId);
+  }
+  
+  return sessionId;
+}
 
 // Get all stories from Supabase
 export async function getAllStories(): Promise<Story[]> {
-  try {
-    // Use any type to bypass TypeScript's type checking since we're handling the mapping manually
-    const { data: storiesData, error: storiesError } = await supabase
-      .from('stories')
-      .select('*')
-      .order('created_at', { ascending: false }) as { data: any[], error: any };
-    
-    if (storiesError) {
-      console.error('Error fetching stories:', storiesError);
-      return [];
-    }
-    
-    // Fetch frames for each story
-    const stories: Story[] = await Promise.all(
-      storiesData.map(async (story) => {
-        const { data: framesData, error: framesError } = await supabase
-          .from('story_frames')
-          .select('*')
-          .eq('story_id', story.id)
-          .order('order', { ascending: true }) as { data: any[], error: any };
-        
-        if (framesError) {
-          console.error(`Error fetching frames for story ${story.id}:`, framesError);
-          return mapToStory(story, []);
-        }
-        
-        // Convert to our StoryFrame type
-        const frames: StoryFrame[] = framesData.map(mapToStoryFrame);
-        
-        // Convert to our Story type
-        return mapToStory(story, frames);
-      })
-    );
-    
-    return stories;
-  } catch (err) {
-    console.error('Unexpected error in getAllStories:', err);
+  const { data, error } = await supabase
+    .from('stories')
+    .select('*')
+    .eq('moderation_status', 'approved') // Only show approved content
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching stories:', error);
     return [];
   }
+  
+  // Convert the data to match our Story type
+  return data.map(item => ({
+    id: item.id,
+    title: item.title,
+    isAnimation: item.is_animation,
+    frames: item.frames as Frame[],
+    sessionId: item.session_id,
+    createdAt: item.created_at,
+    likes: item.likes,
+    reported: item.reported || false,
+    reportCount: item.report_count || 0,
+    moderationStatus: (item.moderation_status as any) || 'approved'
+  }));
 }
 
-// Get a story by ID
-export async function getStoryById(id: string): Promise<Story | null> {
-  try {
-    const { data: storyData, error: storyError } = await supabase
-      .from('stories')
-      .select('*')
-      .eq('id', id)
-      .single() as { data: any, error: any };
-    
-    if (storyError) {
-      console.error(`Error fetching story ${id}:`, storyError);
-      return null;
-    }
-    
-    const { data: framesData, error: framesError } = await supabase
-      .from('story_frames')
-      .select('*')
-      .eq('story_id', id)
-      .order('order', { ascending: true }) as { data: any[], error: any };
-    
-    if (framesError) {
-      console.error(`Error fetching frames for story ${id}:`, framesError);
-      return mapToStory(storyData, []);
-    }
-    
-    // Convert to our StoryFrame type
-    const frames: StoryFrame[] = framesData.map(mapToStoryFrame);
-    
-    // Convert to our Story type
-    return mapToStory(storyData, frames);
-  } catch (err) {
-    console.error(`Unexpected error in getStoryById for ${id}:`, err);
-    return null;
-  }
-}
-
-// Create a new story
+// Add a new story to Supabase
 export async function createStory(input: StoryCreateInput): Promise<Story | null> {
-  try {
-    // Create the story
-    const { data: storyData, error: storyError } = await supabase
-      .from('stories')
-      .insert({
-        title: input.title,
-        session_id: input.sessionId,
-        is_animation: input.isAnimation,
-        likes: 0
-      })
-      .select()
-      .single() as { data: any, error: any };
-    
-    if (storyError) {
-      console.error('Error creating story:', storyError);
-      return null;
-    }
-    
-    // Return the created story with empty frames
-    return mapToStory(storyData, []);
-  } catch (err) {
-    console.error('Unexpected error in createStory:', err);
+  // Additional validation before saving to database
+  if (!input.title || input.title.trim().length < 3 || !input.frames || input.frames.length === 0) {
+    console.error('Invalid story data - missing required fields or content');
     return null;
   }
-}
-
-// Add a frame to a story
-export async function addFrameToStory(storyId: string, frame: StoryFrameCreateInput): Promise<StoryFrame | null> {
-  try {
-    // Get the current max order value for the story
-    const { data: maxOrderData, error: maxOrderError } = await supabase
-      .from('story_frames')
-      .select('order')
-      .eq('story_id', storyId)
-      .order('order', { ascending: false })
-      .limit(1) as { data: any[], error: any };
-    
-    const nextOrder = maxOrderError || !maxOrderData || maxOrderData.length === 0 ? 0 : maxOrderData[0].order + 1;
-    
-    // Add the frame
-    const { data: frameData, error: frameError } = await supabase
-      .from('story_frames')
-      .insert({
-        story_id: storyId,
-        image_url: frame.imageUrl,
-        order: nextOrder,
-        duration: frame.duration
-      })
-      .select()
-      .single() as { data: any, error: any };
-    
-    if (frameError) {
-      console.error('Error adding frame to story:', frameError);
-      return null;
-    }
-    
-    // Convert to our StoryFrame type
-    return mapToStoryFrame(frameData);
-  } catch (err) {
-    console.error(`Unexpected error in addFrameToStory for ${storyId}:`, err);
+  
+  const newStory = {
+    title: input.title,
+    is_animation: input.isAnimation,
+    frames: input.frames,
+    session_id: input.sessionId,
+    likes: 0
+  };
+  
+  const { data, error } = await supabase
+    .from('stories')
+    .insert(newStory)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating story:', error);
     return null;
   }
-}
-
-// Update a frame
-export async function updateFrame(frameId: string, updates: Partial<StoryFrameCreateInput>): Promise<StoryFrame | null> {
-  try {
-    const updateData: Record<string, any> = {};
-    
-    if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
-    if (updates.order !== undefined) updateData.order = updates.order;
-    if (updates.duration !== undefined) updateData.duration = updates.duration;
-    
-    const { data: frameData, error: frameError } = await supabase
-      .from('story_frames')
-      .update(updateData)
-      .eq('id', frameId)
-      .select()
-      .single() as { data: any, error: any };
-    
-    if (frameError) {
-      console.error(`Error updating frame ${frameId}:`, frameError);
-      return null;
-    }
-    
-    // Convert to our StoryFrame type
-    return mapToStoryFrame(frameData);
-  } catch (err) {
-    console.error(`Unexpected error in updateFrame for ${frameId}:`, err);
-    return null;
-  }
-}
-
-// Delete a frame
-export async function deleteFrame(frameId: string): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('story_frames')
-      .delete()
-      .eq('id', frameId) as { error: any };
-    
-    if (error) {
-      console.error(`Error deleting frame ${frameId}:`, error);
-      return false;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error(`Unexpected error in deleteFrame for ${frameId}:`, err);
-    return false;
-  }
-}
-
-// Get stories by session ID (user's stories)
-export async function getMyStories(): Promise<Story[]> {
-  try {
-    const sessionId = getSessionId();
-    
-    const { data: storiesData, error: storiesError } = await supabase
-      .from('stories')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: false }) as { data: any[], error: any };
-    
-    if (storiesError) {
-      console.error('Error fetching my stories:', storiesError);
-      return [];
-    }
-    
-    // Fetch frames for each story
-    const stories: Story[] = await Promise.all(
-      storiesData.map(async (story) => {
-        const { data: framesData, error: framesError } = await supabase
-          .from('story_frames')
-          .select('*')
-          .eq('story_id', story.id)
-          .order('order', { ascending: true }) as { data: any[], error: any };
-        
-        if (framesError) {
-          console.error(`Error fetching frames for story ${story.id}:`, framesError);
-          return mapToStory(story, []);
-        }
-        
-        // Convert to our StoryFrame type
-        const frames: StoryFrame[] = framesData.map(mapToStoryFrame);
-        
-        // Convert to our Story type
-        return mapToStory(story, frames);
-      })
-    );
-    
-    return stories;
-  } catch (err) {
-    console.error('Unexpected error in getMyStories:', err);
-    return [];
-  }
+  
+  // Dispatch event to notify other components that a story was published
+  window.dispatchEvent(publishEvent);
+  
+  // Convert to our Story type with safe fallbacks for new fields
+  return {
+    id: data.id,
+    title: data.title,
+    isAnimation: data.is_animation,
+    frames: data.frames as Frame[],
+    sessionId: data.session_id,
+    createdAt: data.created_at,
+    likes: data.likes,
+    reported: (data as any).reported || false,
+    reportCount: (data as any).report_count || 0,
+    moderationStatus: (data as any).moderation_status || 'approved'
+  };
 }
 
 // Like a story
 export async function likeStory(id: string): Promise<Story | null> {
-  try {
-    // First get the current story to increment likes
-    const { data: currentStory, error: fetchError } = await supabase
-      .from('stories')
-      .select('likes')
-      .eq('id', id)
-      .single() as { data: any, error: any };
-      
-    if (fetchError) {
-      console.error('Error fetching story for like:', fetchError);
-      return null;
-    }
+  // First get the current story to increment likes
+  const { data: currentStory, error: fetchError } = await supabase
+    .from('stories')
+    .select('likes')
+    .eq('id', id)
+    .single();
     
-    const updatedLikes = (currentStory.likes || 0) + 1;
-    
-    // Update the likes count
-    const { data, error } = await supabase
-      .from('stories')
-      .update({ likes: updatedLikes })
-      .eq('id', id)
-      .select()
-      .single() as { data: any, error: any };
-      
-    if (error) {
-      console.error('Error updating story likes:', error);
-      return null;
-    }
-    
-    // We need to fetch the frames separately
-    const { data: framesData, error: framesError } = await supabase
-      .from('story_frames')
-      .select('*')
-      .eq('story_id', id)
-      .order('order', { ascending: true }) as { data: any[], error: any };
-    
-    if (framesError) {
-      console.error(`Error fetching frames for story ${id}:`, framesError);
-      return mapToStory(data, []);
-    }
-    
-    // Convert to our StoryFrame type
-    const frames: StoryFrame[] = framesData.map(mapToStoryFrame);
-    
-    // Convert to our Story type
-    return mapToStory(data, frames);
-  } catch (err) {
-    console.error(`Unexpected error in likeStory for ${id}:`, err);
+  if (fetchError) {
+    console.error('Error fetching story for like:', fetchError);
     return null;
   }
-}
-
-// Delete a story and all its frames
-export async function deleteStory(id: string): Promise<boolean> {
-  try {
-    const sessionId = getSessionId();
+  
+  const updatedLikes = (currentStory.likes || 0) + 1;
+  
+  // Update the likes count
+  const { data, error } = await supabase
+    .from('stories')
+    .update({ likes: updatedLikes })
+    .eq('id', id)
+    .select()
+    .single();
     
-    // First check if story belongs to current session
-    const { data: storyData, error: checkError } = await supabase
-      .from('stories')
-      .select('session_id')
-      .eq('id', id)
-      .single() as { data: any, error: any };
-    
-    if (checkError || !storyData) {
-      console.error('Error checking story ownership:', checkError);
-      return false;
-    }
-    
-    if (storyData.session_id !== sessionId) {
-      console.error('Cannot delete story owned by another session');
-      return false;
-    }
-    
-    // Delete the frames first (due to foreign key constraint)
-    const { error: framesError } = await supabase
-      .from('story_frames')
-      .delete()
-      .eq('story_id', id) as { error: any };
-    
-    if (framesError) {
-      console.error(`Error deleting frames for story ${id}:`, framesError);
-      return false;
-    }
-    
-    // Delete any comments associated with the story
-    const { error: commentsError } = await supabase
-      .from('comments')
-      .delete()
-      .eq('story_id', id) as { error: any };
-    
-    if (commentsError) {
-      console.error(`Error deleting comments for story ${id}:`, commentsError);
-      // Continue with deleting the story even if comment deletion fails
-    }
-    
-    // Then delete the story
-    const { error: storyError } = await supabase
-      .from('stories')
-      .delete()
-      .eq('id', id) as { error: any };
-    
-    if (storyError) {
-      console.error(`Error deleting story ${id}:`, storyError);
-      return false;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error(`Unexpected error in deleteStory for ${id}:`, err);
-    return false;
+  if (error) {
+    console.error('Error updating story likes:', error);
+    return null;
   }
+  
+  // Convert to our Story type with safe fallbacks for new fields
+  return {
+    id: data.id,
+    title: data.title,
+    isAnimation: data.is_animation,
+    frames: data.frames as Frame[],
+    sessionId: data.session_id,
+    createdAt: data.created_at,
+    likes: data.likes,
+    reported: (data as any).reported || false,
+    reportCount: (data as any).report_count || 0,
+    moderationStatus: (data as any).moderation_status || 'approved'
+  };
 }
 
-// Get comments for a story
-export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
-  try {
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*')
-      .eq('story_id', storyId)
-      .order('created_at', { ascending: false }) as { data: any[], error: any };
-    
-    if (error) {
-      console.error('Error fetching comments:', error);
-      return [];
-    }
-    
-    // Convert the data to match our Comment type
-    return data.map(item => ({
-      id: item.id,
-      doodleId: item.doodle_id,
-      storyId: item.story_id,
-      text: item.text,
-      createdAt: item.created_at,
-      sessionId: item.session_id
-    }));
-  } catch (err) {
-    console.error(`Unexpected error in getCommentsForStory for ${storyId}:`, err);
+// Get stories by session ID (user's stories)
+export async function getMyStories(): Promise<Story[]> {
+  const sessionId = getSessionId();
+  
+  const { data, error } = await supabase
+    .from('stories')
+    .select('*')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching my stories:', error);
     return [];
   }
+  
+  // Convert the data to match our Story type with safe fallbacks
+  return data.map(item => ({
+    id: item.id,
+    title: item.title,
+    isAnimation: item.is_animation,
+    frames: item.frames as Frame[],
+    sessionId: item.session_id,
+    createdAt: item.created_at,
+    likes: item.likes,
+    reported: (data as any).reported || false,
+    reportCount: (data as any).report_count || 0,
+    moderationStatus: (data as any).moderation_status || 'approved'
+  }));
 }
 
-// Add a comment to a story
-export async function addCommentToStory(storyId: string, text: string): Promise<Comment | null> {
-  try {
-    const sessionId = getSessionId();
-    
-    const newComment = {
-      story_id: storyId,
-      text,
-      session_id: sessionId,
-      doodle_id: null // Add null doodle_id to satisfy TypeScript
-    };
-    
-    const { data, error } = await supabase
-      .from('comments')
-      .insert(newComment)
-      .select()
-      .single() as { data: any, error: any };
-    
-    if (error) {
-      console.error('Error adding comment:', error);
-      return null;
-    }
-    
-    // Convert to our Comment type
-    return {
-      id: data.id,
-      storyId: data.story_id,
-      doodleId: data.doodle_id,
-      text: data.text,
-      createdAt: data.created_at,
-      sessionId: data.session_id
-    };
-  } catch (err) {
-    console.error(`Unexpected error in addCommentToStory for ${storyId}:`, err);
+// Delete a story (only if it belongs to the current session)
+export async function deleteStory(id: string): Promise<boolean> {
+  const sessionId = getSessionId();
+  
+  // First check if story belongs to current session
+  const { data: storyData, error: checkError } = await supabase
+    .from('stories')
+    .select('session_id')
+    .eq('id', id)
+    .single();
+  
+  if (checkError || !storyData) {
+    console.error('Error checking story ownership:', checkError);
+    return false;
+  }
+  
+  if (storyData.session_id !== sessionId) {
+    console.error('Cannot delete story owned by another session');
+    return false;
+  }
+  
+  // Delete the story
+  const { error } = await supabase
+    .from('stories')
+    .delete()
+    .eq('id', id);
+  
+  if (error) {
+    console.error('Error deleting story:', error);
+    return false;
+  }
+  
+  return true;
+}
+
+// Get a specific story by ID
+export async function getStoryById(id: string): Promise<Story | null> {
+  const { data, error } = await supabase
+    .from('stories')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching story:', error);
     return null;
   }
+  
+  if (!data) {
+    return null;
+  }
+  
+  // Convert the data to match our Story type
+  return {
+    id: data.id,
+    title: data.title,
+    isAnimation: data.is_animation,
+    frames: data.frames as Frame[],
+    sessionId: data.session_id,
+    createdAt: data.created_at,
+    likes: data.likes,
+    reported: data.reported || false,
+    reportCount: data.report_count || 0,
+    moderationStatus: (data.moderation_status as any) || 'approved'
+  };
+}
+
+// Comments related functions
+// Get comments for a story
+export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
+  const { data, error } = await supabase
+    .from('story_comments')
+    .select('*')
+    .eq('story_id', storyId)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching story comments:', error);
+    return [];
+  }
+  
+  // Convert the data to match our Comment type
+  return data.map(item => ({
+    id: item.id,
+    storyId: item.story_id,
+    text: item.text,
+    createdAt: item.created_at,
+    sessionId: item.session_id
+  }));
 }

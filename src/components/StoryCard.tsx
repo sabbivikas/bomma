@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Story } from '@/types/doodle';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Film, BookOpen, MessageCircle, Share2, MoreHorizontal, Flag } from 'lucide-react';
-import { likeStory } from '@/utils/storyService';
+import { likeStory, getCommentsForStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -21,6 +21,21 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
   const { toast } = useToast();
   const isMyStory = story.sessionId === getSessionId();
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+  
+  // Fetch comment count when component mounts
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        const comments = await getCommentsForStory(story.id);
+        setCommentCount(comments.length);
+      } catch (error) {
+        console.error('Error fetching comment count:', error);
+      }
+    };
+    
+    fetchCommentCount();
+  }, [story.id]);
   
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -194,6 +209,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
             aria-label="Comment on story"
           >
             <MessageCircle size={16} />
+            {commentCount > 0 && <span>{commentCount}</span>}
           </Button>
 
           <Button

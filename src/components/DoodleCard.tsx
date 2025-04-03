@@ -23,6 +23,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
   const timeAgo = formatDistanceToNow(new Date(doodle.createdAt), { addSuffix: true });
   const sessionId = getSessionId();
   
@@ -38,6 +39,20 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     }
   }, [highlight]);
   
+  // Load comment count on initial render
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        const doodleComments = await getCommentsForDoodle(doodle.id);
+        setCommentCount(doodleComments.length);
+      } catch (error) {
+        console.error('Error loading comment count:', error);
+      }
+    };
+    
+    fetchCommentCount();
+  }, [doodle.id]);
+  
   useEffect(() => {
     if (showComments) {
       // Load comments when comment section is opened
@@ -50,6 +65,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     try {
       const doodleComments = await getCommentsForDoodle(doodle.id);
       setComments(doodleComments);
+      setCommentCount(doodleComments.length);
     } catch (error) {
       console.error('Error loading comments:', error);
     } finally {
@@ -107,6 +123,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
         if (newComment) {
           // Update local comments state to include the new comment
           setComments(prevComments => [newComment, ...prevComments]);
+          setCommentCount(prevCount => prevCount + 1);
           
           toast({
             title: "Comment added",
@@ -199,7 +216,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
       });
     }
   };
-
+  
   // Add new state for report dialog
   const [showReportDialog, setShowReportDialog] = useState(false);
   
@@ -286,7 +303,9 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
             onClick={handleCommentToggle}
           >
             <MessageCircle size={18} strokeWidth={2} />
-            <span className="text-sm">Comment</span>
+            <span className="text-sm">
+              {commentCount > 0 ? `${commentCount} ${commentCount === 1 ? 'Comment' : 'Comments'}` : 'Comment'}
+            </span>
           </Button>
         </div>
         
@@ -305,7 +324,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
       {showComments && (
         <div className="px-4 pb-4 border-t border-gray-100">
           <div className="flex items-center justify-between py-2">
-            <h4 className="text-sm font-medium">Comments</h4>
+            <h4 className="text-sm font-medium">Comments {commentCount > 0 && `(${commentCount})`}</h4>
             <Button variant="ghost" size="sm" className="p-1 h-6" onClick={handleCommentToggle}>
               <X size={16} />
             </Button>
