@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
+import { isContentVisible } from '@/utils/moderationService';
 
 interface DoodleFeedProps {
   highlightDoodleId?: string | null;
@@ -84,6 +85,11 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
           return false;
         }
         
+        // Filter out content that's not approved or no moderation status (defaults to approved)
+        if (!isContentVisible(doodle.moderationStatus)) {
+          return false;
+        }
+        
         // Ensure the image URL is valid and has actual content
         const hasValidImage = doodle.imageUrl && 
                             doodle.imageUrl.startsWith('data:image') && 
@@ -100,7 +106,7 @@ const DoodleFeed: React.FC<DoodleFeedProps> = ({ highlightDoodleId }) => {
       setDoodles(validDoodles);
       
       // Log for debugging
-      console.log(`Loaded ${loadedDoodles.length} doodles, ${validDoodles.length} are valid`);
+      console.log(`Loaded ${loadedDoodles.length} doodles, ${validDoodles.length} are valid and visible`);
       
     } catch (error) {
       console.error('Error loading doodles:', error);

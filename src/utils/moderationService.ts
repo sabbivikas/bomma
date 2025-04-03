@@ -1,6 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionId } from '@/utils/doodleService';
 import { ContentReport } from '@/types/doodle';
+
+// Report threshold for auto-hiding content
+const AUTO_HIDE_THRESHOLD = 3;
 
 // Report content function
 export async function reportContent(
@@ -12,7 +16,25 @@ export async function reportContent(
   try {
     const sessionId = getSessionId();
     
-    // Create a new report - using any type to bypass TypeScript's strict checking
+    // Check if this user has already reported this content
+    const { data: existingReports, error: checkError } = await supabase
+      .from('content_reports')
+      .select('id')
+      .eq('content_id', contentId)
+      .eq('session_id', sessionId);
+    
+    if (checkError) {
+      console.error('Error checking existing reports:', checkError);
+      return false;
+    }
+    
+    // If user already reported this content, don't allow duplicate reports
+    if (existingReports && existingReports.length > 0) {
+      console.log('User already reported this content');
+      return false;
+    }
+    
+    // Create a new report
     const { error } = await supabase
       .from('content_reports')
       .insert({
@@ -22,19 +44,18 @@ export async function reportContent(
         details: details || null,
         session_id: sessionId,
         status: 'pending'
-      } as any);
+      });
     
     if (error) {
       console.error('Error creating report:', error);
       return false;
     }
     
-    // Additionally, flag the content in its respective table
+    // Get current report count for this content
     const table = contentType === 'doodle' ? 'doodles' : 'stories';
     
-    // Use a direct update with reported flag and increment report count
-    // Using any type to bypass TypeScript's strict checking
-    const { error: flagError } = await supabase
+    // Use direct update with reported flag and increment report count
+    const { data: updatedContent, error: flagError } = await supabase
       .from(table)
       .update({ 
         reported: true,
@@ -42,12 +63,29 @@ export async function reportContent(
           row_id: contentId,
           table_name: table
         })
-      } as any)
-      .eq('id', contentId);
+      })
+      .eq('id', contentId)
+      .select('report_count');
     
     if (flagError) {
       console.error(`Error flagging ${contentType}:`, flagError);
       // Don't return false here as the report was still created
+    }
+    
+    // If the report count exceeds threshold, auto-hide content by changing moderation status
+    if (updatedContent && updatedContent.length > 0 && updatedContent[0].report_count >= AUTO_HIDE_THRESHOLD) {
+      const { error: hideError } = await supabase
+        .from(table)
+        .update({ 
+          moderation_status: 'pending'
+        })
+        .eq('id', contentId);
+        
+      if (hideError) {
+        console.error(`Error auto-hiding ${contentType}:`, hideError);
+      } else {
+        console.log(`Content ${contentId} auto-hidden due to ${updatedContent[0].report_count} reports`);
+      }
     }
     
     return true;
@@ -60,10 +98,9 @@ export async function reportContent(
 // Get reports for moderators
 export async function getReports(status?: 'pending' | 'reviewed' | 'resolved'): Promise<ContentReport[]> {
   try {
-    // Using any type to bypass TypeScript's strict checking
     let query = supabase
       .from('content_reports')
-      .select('*') as any;
+      .select('*');
     
     if (status) {
       query = query.eq('status', status);
@@ -86,11 +123,11 @@ export async function getReports(status?: 'pending' | 'reviewed' | 'resolved'): 
     return data.map((item: any) => ({
       id: item.id,
       contentId: item.content_id,
-      contentType: item.content_type as 'doodle' | 'story',
+      contentType: item.content_type,
       reason: item.reason,
       details: item.details,
       sessionId: item.session_id,
-      status: item.status as 'pending' | 'reviewed' | 'resolved',
+      status: item.status,
       createdAt: item.created_at,
       resolvedAt: item.resolved_at
     }));
@@ -106,13 +143,12 @@ export async function updateReportStatus(
   status: 'pending' | 'reviewed' | 'resolved'
 ): Promise<boolean> {
   try {
-    // Using any type to bypass TypeScript's strict checking
     const { error } = await supabase
       .from('content_reports')
       .update({ 
         status,
         resolved_at: status === 'resolved' ? new Date().toISOString() : null 
-      } as any)
+      })
       .eq('id', reportId);
     
     if (error) {
@@ -136,10 +172,9 @@ export async function updateContentModerationStatus(
   try {
     const table = contentType === 'doodle' ? 'doodles' : 'stories';
     
-    // Using any type to bypass TypeScript's strict checking
     const { error } = await supabase
       .from(table)
-      .update({ moderation_status: moderationStatus } as any)
+      .update({ moderation_status: moderationStatus })
       .eq('id', contentId);
     
     if (error) {
@@ -173,3 +208,10 @@ export function getModerationGuide(): { steps: string[], statuses: Record<string
     }
   };
 }
+
+// New function to check if content is visible based on moderation status
+export function isContentVisible(moderationStatus?: string): boolean {
+  // Only show content with approved status or no status (defaults to approved)
+  return moderationStatus === 'approved' || !moderationStatus;
+}
+
