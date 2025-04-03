@@ -1,3 +1,4 @@
+
 import { Doodle, DoodleCreateInput, Comment } from '@/types/doodle';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +35,7 @@ export async function getAllDoodles(): Promise<Doodle[]> {
   }
   
   // Convert the data to match our Doodle type
+  // Use typecast to handle schema mismatches
   return data.map(item => ({
     id: item.id,
     imageUrl: item.image_url,
@@ -41,9 +43,9 @@ export async function getAllDoodles(): Promise<Doodle[]> {
     sessionId: item.session_id,
     createdAt: item.created_at,
     likes: item.likes,
-    reported: item.reported,
-    reportCount: item.report_count,
-    moderationStatus: item.moderation_status
+    reported: item.reported || false,
+    reportCount: item.report_count || 0,
+    moderationStatus: (item.moderation_status as any) || 'approved'
   }));
 }
 
@@ -76,7 +78,7 @@ export async function createDoodle(input: DoodleCreateInput): Promise<Doodle | n
   // Dispatch event to notify other components that a doodle was published
   window.dispatchEvent(publishEvent);
   
-  // Convert to our Doodle type
+  // Convert to our Doodle type with safe fallbacks for new fields
   return {
     id: data.id,
     imageUrl: data.image_url,
@@ -84,9 +86,9 @@ export async function createDoodle(input: DoodleCreateInput): Promise<Doodle | n
     sessionId: data.session_id,
     createdAt: data.created_at,
     likes: data.likes,
-    reported: data.reported,
-    reportCount: data.report_count,
-    moderationStatus: data.moderation_status
+    reported: (data as any).reported || false,
+    reportCount: (data as any).report_count || 0,
+    moderationStatus: (data as any).moderation_status || 'approved'
   };
 }
 
@@ -119,7 +121,7 @@ export async function likeDoodle(id: string): Promise<Doodle | null> {
     return null;
   }
   
-  // Convert to our Doodle type
+  // Convert to our Doodle type with safe fallbacks for new fields
   return {
     id: data.id,
     imageUrl: data.image_url,
@@ -127,9 +129,9 @@ export async function likeDoodle(id: string): Promise<Doodle | null> {
     sessionId: data.session_id,
     createdAt: data.created_at,
     likes: data.likes,
-    reported: data.reported,
-    reportCount: data.report_count,
-    moderationStatus: data.moderation_status
+    reported: (data as any).reported || false,
+    reportCount: (data as any).report_count || 0,
+    moderationStatus: (data as any).moderation_status || 'approved'
   };
 }
 
@@ -148,7 +150,7 @@ export async function getMyDoodles(): Promise<Doodle[]> {
     return [];
   }
   
-  // Convert the data to match our Doodle type
+  // Convert the data to match our Doodle type with safe fallbacks
   return data.map(item => ({
     id: item.id,
     imageUrl: item.image_url,
@@ -156,9 +158,9 @@ export async function getMyDoodles(): Promise<Doodle[]> {
     sessionId: item.session_id,
     createdAt: item.created_at,
     likes: item.likes,
-    reported: item.reported,
-    reportCount: item.report_count,
-    moderationStatus: item.moderation_status
+    reported: (item as any).reported || false,
+    reportCount: (item as any).report_count || 0,
+    moderationStatus: (item as any).moderation_status || 'approved'
   }));
 }
 
