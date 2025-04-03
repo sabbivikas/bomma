@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ContentReport } from '@/types/doodle';
-import { getReports } from '@/utils/moderationService';
+import { getReports, updateReportStatus, updateContentModerationStatus } from '@/utils/moderationService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
-import { ShieldAlert, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, CheckCircle, Clock, AlertTriangle, Eye, Trash2, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const AdminModeration: React.FC = () => {
@@ -46,12 +46,92 @@ const AdminModeration: React.FC = () => {
     }
   };
 
-  // This is a placeholder for future functionality
   const handleReviewReport = (reportId: string) => {
     toast({
       title: "Feature coming soon",
-      description: "The moderation review interface is under development",
+      description: "The full moderation review interface is under development",
     });
+  };
+  
+  const handleMarkAsReviewed = async (report: ContentReport) => {
+    try {
+      const success = await updateReportStatus(report.id, 'reviewed');
+      if (success) {
+        toast({
+          title: "Report marked as reviewed",
+          description: "The report has been moved to the Under Review tab",
+          variant: "success",
+        });
+        loadReports();
+      }
+    } catch (error) {
+      console.error('Error updating report status:', error);
+      toast({
+        title: "Error updating report",
+        description: "Could not update report status",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleApproveContent = async (report: ContentReport) => {
+    try {
+      // Update the content moderation status
+      const contentSuccess = await updateContentModerationStatus(
+        report.contentId, 
+        report.contentType, 
+        'approved'
+      );
+      
+      // Mark the report as resolved
+      const reportSuccess = await updateReportStatus(report.id, 'resolved');
+      
+      if (contentSuccess && reportSuccess) {
+        toast({
+          title: "Content approved",
+          description: "The content has been approved and the report resolved",
+          variant: "success",
+        });
+        loadReports();
+      }
+    } catch (error) {
+      console.error('Error approving content:', error);
+      toast({
+        title: "Error approving content",
+        description: "Could not approve the content",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleRejectContent = async (report: ContentReport) => {
+    try {
+      // Update the content moderation status
+      const contentSuccess = await updateContentModerationStatus(
+        report.contentId, 
+        report.contentType, 
+        'rejected'
+      );
+      
+      // Mark the report as resolved
+      const reportSuccess = await updateReportStatus(report.id, 'resolved');
+      
+      if (contentSuccess && reportSuccess) {
+        toast({
+          title: "Content rejected",
+          description: "The content has been rejected and the report resolved",
+          variant: "success",
+        });
+        loadReports();
+      }
+    } catch (error) {
+      console.error('Error rejecting content:', error);
+      toast({
+        title: "Error rejecting content",
+        description: "Could not reject the content",
+        variant: "destructive",
+      });
+    }
   };
 
   // Render the status badge based on report status
@@ -162,8 +242,29 @@ const AdminModeration: React.FC = () => {
             
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" size="sm" onClick={() => handleReviewReport(report.id)}>
+                <Eye className="mr-2 h-4 w-4" />
                 View Content
               </Button>
+              
+              {report.status === 'pending' && (
+                <Button variant="secondary" size="sm" onClick={() => handleMarkAsReviewed(report)}>
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  Mark as Reviewed
+                </Button>
+              )}
+              
+              {report.status === 'reviewed' && (
+                <>
+                  <Button variant="destructive" size="sm" onClick={() => handleRejectContent(report)}>
+                    <X className="mr-2 h-4 w-4" />
+                    Reject Content
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => handleApproveContent(report)}>
+                    <Check className="mr-2 h-4 w-4" />
+                    Approve Content
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         ))}

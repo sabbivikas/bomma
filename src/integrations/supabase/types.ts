@@ -51,13 +51,52 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string | null
+          details: string | null
+          id: string
+          reason: string
+          resolved_at: string | null
+          session_id: string
+          status: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          reason: string
+          resolved_at?: string | null
+          session_id: string
+          status?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          reason?: string
+          resolved_at?: string | null
+          session_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       doodles: {
         Row: {
           created_at: string
           id: string
           image_url: string
           likes: number
+          moderation_status: string | null
           prompt: string
+          report_count: number | null
+          reported: boolean | null
           session_id: string
         }
         Insert: {
@@ -65,7 +104,10 @@ export type Database = {
           id?: string
           image_url: string
           likes?: number
+          moderation_status?: string | null
           prompt: string
+          report_count?: number | null
+          reported?: boolean | null
           session_id: string
         }
         Update: {
@@ -73,7 +115,10 @@ export type Database = {
           id?: string
           image_url?: string
           likes?: number
+          moderation_status?: string | null
           prompt?: string
+          report_count?: number | null
+          reported?: boolean | null
           session_id?: string
         }
         Relationships: []
@@ -84,6 +129,9 @@ export type Database = {
           id: string
           is_animation: boolean
           likes: number
+          moderation_status: string | null
+          report_count: number | null
+          reported: boolean | null
           session_id: string
           title: string
         }
@@ -92,6 +140,9 @@ export type Database = {
           id?: string
           is_animation?: boolean
           likes?: number
+          moderation_status?: string | null
+          report_count?: number | null
+          reported?: boolean | null
           session_id: string
           title: string
         }
@@ -100,6 +151,9 @@ export type Database = {
           id?: string
           is_animation?: boolean
           likes?: number
+          moderation_status?: string | null
+          report_count?: number | null
+          reported?: boolean | null
           session_id?: string
           title?: string
         }
@@ -145,7 +199,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_report_count: {
+        Args: {
+          row_id: string
+          table_name: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

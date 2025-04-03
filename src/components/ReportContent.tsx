@@ -34,13 +34,18 @@ const ReportContent: React.FC<ReportContentProps> = ({ contentId, contentType, i
 
     setIsSubmitting(true);
     try {
-      await reportContent(contentId, contentType, reason, details);
-      toast({
-        title: "Report submitted",
-        description: "Thank you for helping keep our community safe",
-        variant: "success",
-      });
-      onClose();
+      const success = await reportContent(contentId, contentType, reason, details);
+      
+      if (success) {
+        toast({
+          title: "Report submitted",
+          description: "Thank you for helping keep our community safe",
+          variant: "success",
+        });
+        onClose();
+      } else {
+        throw new Error("Failed to submit report");
+      }
     } catch (error) {
       console.error('Error submitting report:', error);
       toast({

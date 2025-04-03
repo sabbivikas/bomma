@@ -58,4 +58,7 @@ export interface ContentReport {
   sessionId: string;
   status: 'pending' | 'reviewed' | 'resolved';
   createdAt: string;
+  resolvedAt?: string;
 }
+
+export type ContentReportInput = Omit<ContentReport, 'id' | 'createdAt' | 'resolvedAt'>;
