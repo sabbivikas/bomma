@@ -9,7 +9,7 @@ interface ThemeContextType {
 }
 
 const defaultTheme: ThemeState = {
-  visualTheme: 'default',
+  visualTheme: 'white',
   seasonalTheme: 'none',
 };
 

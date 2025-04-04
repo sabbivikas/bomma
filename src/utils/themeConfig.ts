@@ -1,8 +1,17 @@
-
 import { ThemeConfig } from '@/types/theme';
 
 // Visual Themes
 export const visualThemes: ThemeConfig[] = [
+  {
+    id: 'white',
+    name: 'White',
+    description: 'Clean white background',
+    category: 'visual',
+    backgroundStyle: 'bg-white',
+    textStyle: 'font-elegant text-black',
+    accentColor: 'bg-gray-300',
+    borderStyle: 'border-gray-200',
+  },
   {
     id: 'default',
     name: 'Default',
