@@ -844,3 +844,293 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     const tempContext = tempCanvas.getContext('2d');
+    
+    if (tempContext) {
+      // Copy current canvas content to temp canvas
+      tempContext.drawImage(canvas, 0, 0);
+      
+      // Clear canvas and redraw background
+      contextRef.current.clearRect(0, 0, canvas.width, canvas.height);
+      applyThemeBackground(contextRef.current, canvas.width, canvas.height);
+      
+      // Restore the drawing
+      contextRef.current.drawImage(tempCanvas, 0, 0);
+      
+      // Draw all text elements
+      textElements.forEach(element => {
+        if (!contextRef.current) return;
+        
+        contextRef.current.font = `${element.size}px ${element.fontFamily}`;
+        contextRef.current.fillStyle = element.color;
+        contextRef.current.fillText(element.text, element.x, element.y);
+      });
+      
+      // Draw all shapes
+      shapeElements.forEach(shape => {
+        if (!contextRef.current) return;
+        
+        contextRef.current.strokeStyle = shape.color;
+        contextRef.current.fillStyle = shape.color;
+        
+        if (shape.type === 'rectangle') {
+          contextRef.current.beginPath();
+          contextRef.current.rect(shape.x, shape.y, shape.width, shape.height);
+          if (shape.fill) {
+            contextRef.current.fill();
+          } else {
+            contextRef.current.stroke();
+          }
+        } else if (shape.type === 'circle') {
+          const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
+          const centerX = shape.x + shape.width / 2;
+          const centerY = shape.y + shape.height / 2;
+          
+          contextRef.current.beginPath();
+          contextRef.current.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          if (shape.fill) {
+            contextRef.current.fill();
+          } else {
+            contextRef.current.stroke();
+          }
+        }
+      });
+      
+      // Render current shape if drawing
+      renderShapes();
+    }
+  }, [textElements, shapeElements, currentShape]);
+  
+  return (
+    <div className="flex flex-col gap-4 w-full">
+      {prompt && (
+        <div className="bg-muted/30 p-3 rounded-lg">
+          <p className="text-sm italic">"{prompt}"</p>
+        </div>
+      )}
+      
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-grow space-y-4">
+          {/* Canvas container with white background for eraser to work properly */}
+          <div className="relative border rounded-md overflow-hidden bg-white">
+            <canvas
+              ref={canvasRef}
+              onMouseDown={startDrawing}
+              onMouseMove={isDrawing ? draw : undefined}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={isDrawing ? draw : undefined}
+              onTouchEnd={stopDrawing}
+              className="w-full touch-none max-w-full"
+            />
+            
+            {/* Text edit overlay */}
+            {selectedTextIndex !== null && (
+              <div className="absolute top-2 right-2 bg-background/90 p-2 rounded-md flex gap-2">
+                <Button variant="ghost" size="icon" onClick={handleEditText}>
+                  <Type className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleRemoveText}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Drawing tools */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
+              <ToggleGroupItem value="pen" aria-label="Pen">
+                <Pen className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="eraser" aria-label="Eraser">
+                <Eraser className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="text" aria-label="Text">
+                <Type className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="rectangle" aria-label="Rectangle">
+                <Square className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="circle" aria-label="Circle">
+                <CircleIcon className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={clearCanvas}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                onClick={handlePublish}
+                disabled={isPublishing}
+              >
+                {isPublishing ? 'Saving...' : 'Save Frame'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="w-full md:w-64 space-y-4">
+          {/* Color picker */}
+          <div className="space-y-2">
+            <Label>Color</Label>
+            <div className="grid grid-cols-8 gap-2">
+              {colorOptions.map((colorOption) => (
+                <button
+                  key={colorOption}
+                  className={cn(
+                    "w-6 h-6 rounded-full border",
+                    color === colorOption && "ring-2 ring-primary ring-offset-2"
+                  )}
+                  style={{ backgroundColor: colorOption }}
+                  onClick={() => setColor(colorOption)}
+                />
+              ))}
+            </div>
+          </div>
+          
+          {/* Brush size slider */}
+          <div className="space-y-2">
+            <Label>Brush Size: {width[0]}px</Label>
+            <Slider
+              value={width}
+              onValueChange={setWidth}
+              min={1}
+              max={20}
+              step={1}
+            />
+          </div>
+          
+          {/* Fill toggle for shapes */}
+          {(tool === 'rectangle' || tool === 'circle') && (
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox 
+                id="fill-shape" 
+                checked={fill} 
+                onCheckedChange={(checked) => setFill(!!checked)}
+              />
+              <Label htmlFor="fill-shape">Fill shape</Label>
+            </div>
+          )}
+          
+          {/* Text options */}
+          {tool === 'text' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Font Size: {textSize[0]}px</Label>
+                <Slider
+                  value={textSize}
+                  onValueChange={setTextSize}
+                  min={10}
+                  max={36}
+                  step={1}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Font Family</Label>
+                <Select value={textFont} onValueChange={setTextFont}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontOptions.map(font => (
+                      <SelectItem key={font} value={font}>{font}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          
+          {/* Theme controls */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Canvas Theme</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowThemeSelector(!showThemeSelector)}
+              >
+                <Palette className="h-4 w-4 mr-1" />
+                {showThemeSelector ? "Hide" : "Change"}
+              </Button>
+            </div>
+            
+            {showThemeSelector && (
+              <div className="mt-2 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm">Visual Theme</Label>
+                  <Select 
+                    value={theme.visualTheme} 
+                    onValueChange={(value) => setVisualTheme(value as VisualTheme)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {visualThemes.map(theme => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm">Seasonal Overlay</Label>
+                  <Select 
+                    value={theme.seasonalTheme} 
+                    onValueChange={(value) => setSeasonalTheme(value as SeasonalTheme)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {seasonalThemes.map(theme => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <ThemePreview />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Text input dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="text-input">Text Content</Label>
+              <Textarea
+                id="text-input"
+                placeholder="Enter your text..."
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddText}>Add Text</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
