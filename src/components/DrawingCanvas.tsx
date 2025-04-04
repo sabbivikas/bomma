@@ -133,8 +133,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 
   // Function to apply theme background to canvas
   const applyThemeBackground = (context: CanvasRenderingContext2D, width: number, height: number) => {
-    const visualThemeConfig = getThemeConfig(theme.visualTheme);
-    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
+    const visualThemeConfig = getThemeConfig(theme.visualTheme as VisualTheme);
+    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme as SeasonalTheme) : null;
     
     // Start with a white background as base
     context.fillStyle = 'white';
@@ -485,10 +485,21 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       setIsDrawing(true);
     } else {
       // Drawing with pen or eraser
-      contextRef.current.beginPath();
-      contextRef.current.moveTo(coords.x, coords.y);
-      lastPointRef.current = coords;
+      if (contextRef.current) {
+        contextRef.current.beginPath();
+        contextRef.current.moveTo(coords.x, coords.y);
+        
+        // Set the appropriate color and width based on the tool
+        if (tool === 'eraser') {
+          contextRef.current.strokeStyle = 'white';
+          contextRef.current.lineWidth = width[0] * 2; // Make eraser a bit larger
+        } else {
+          contextRef.current.strokeStyle = color;
+          contextRef.current.lineWidth = width[0];
+        }
+      }
       
+      lastPointRef.current = coords;
       setIsDrawing(true);
     }
   };
@@ -599,6 +610,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     setTextElements([]);
     setShapeElements([]);
     setSelectedTextIndex(null);
+    
+    // Reapply theme background
+    applyThemeBackground(contextRef.current, canvasRef.current.width, canvasRef.current.height);
   };
   
   // Handle publish
@@ -614,6 +628,36 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           contextRef.current.font = `${element.size}px ${element.fontFamily}`;
           contextRef.current.fillStyle = element.color;
           contextRef.current.fillText(element.text, element.x, element.y);
+        }
+      });
+      
+      // Render all shapes to canvas
+      shapeElements.forEach(shape => {
+        if (!contextRef.current) return;
+        
+        contextRef.current.strokeStyle = shape.color;
+        contextRef.current.fillStyle = shape.color;
+        
+        if (shape.type === 'rectangle') {
+          contextRef.current.beginPath();
+          contextRef.current.rect(shape.x, shape.y, shape.width, shape.height);
+          if (shape.fill) {
+            contextRef.current.fill();
+          } else {
+            contextRef.current.stroke();
+          }
+        } else if (shape.type === 'circle') {
+          const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
+          const centerX = shape.x + shape.width / 2;
+          const centerY = shape.y + shape.height / 2;
+          
+          contextRef.current.beginPath();
+          contextRef.current.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          if (shape.fill) {
+            contextRef.current.fill();
+          } else {
+            contextRef.current.stroke();
+          }
         }
       });
       
@@ -744,6 +788,70 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     'Georgia',
     'Comic Sans MS',
   ];
+  
+  // Render all shapes on top of the canvas
+  const renderShapes = () => {
+    if (!contextRef.current) return;
+    const ctx = contextRef.current;
+    
+    // Render current shape being drawn
+    if (currentShape) {
+      ctx.save();
+      ctx.strokeStyle = currentShape.color;
+      ctx.fillStyle = currentShape.color;
+      
+      if (currentShape.type === 'rectangle') {
+        ctx.beginPath();
+        ctx.rect(currentShape.x, currentShape.y, currentShape.width, currentShape.height);
+        if (currentShape.fill) {
+          ctx.fill();
+        } else {
+          ctx.stroke();
+        }
+      } else if (currentShape.type === 'circle') {
+        const radius = Math.min(Math.abs(currentShape.width), Math.abs(currentShape.height)) / 2;
+        const centerX = currentShape.x + currentShape.width / 2;
+        const centerY = currentShape.y + currentShape.height / 2;
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        if (currentShape.fill) {
+          ctx.fill();
+        } else {
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+  };
+  
+  // Render text elements
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !contextRef.current) return;
+    
+    // Need to redraw everything when text changes
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempContext = tempCanvas.getContext('2d');
+    
+    if (tempContext) {
+      // Copy current canvas (which has all the drawings) to temp canvas
+      tempContext.drawImage(canvas, 0, 0);
+      
+      // Render text elements (only temporarily for user to see)
+      textElements.forEach(element => {
+        if (!contextRef.current) return;
+        contextRef.current.font = `${element.size}px ${element.fontFamily}`;
+        contextRef.current.fillStyle = element.color;
+        contextRef.current.fillText(element.text, element.x, element.y);
+      });
+      
+      // Render shapes on canvas
+      renderShapes();
+    }
+  }, [textElements, shapeElements, currentShape]);
   
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
@@ -989,3 +1097,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 };
 
 export default DrawingCanvas;
+
