@@ -1,3 +1,4 @@
+
 import { ThemeConfig } from '@/types/theme';
 
 // Visual Themes
@@ -159,6 +160,11 @@ export const getThemeClasses = (visualTheme: string, seasonalTheme: string): str
   const seasonal = getThemeConfig(seasonalTheme);
   
   if (!visual) return '';
+  
+  // Special case for white theme - should be clean white background
+  if (visual.id === 'white') {
+    return `bg-white ${visual.textStyle} ${visual.accentColor} ${visual.borderStyle}`;
+  }
   
   // Combine visual theme with seasonal overlay if applicable
   if (seasonal && seasonal.id !== 'none') {
