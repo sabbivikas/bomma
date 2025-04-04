@@ -9,8 +9,6 @@ import CreateAnimation from '@/pages/CreateAnimation';
 import NotFound from '@/pages/NotFound';
 import AdminModeration from '@/pages/AdminModeration';
 import AdminRoute from '@/components/AdminRoute';
-import GameCreator from '@/pages/GameCreator';
-import GamePlayerPage from '@/pages/GamePlayerPage';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import './App.css';
@@ -25,8 +23,6 @@ function App() {
         <Route path="/stories" element={<Stories />} />
         <Route path="/stories/:id" element={<ViewStory />} />
         <Route path="/create-animation" element={<CreateAnimation />} />
-        <Route path="/create-game" element={<GameCreator />} />
-        <Route path="/play-game" element={<GamePlayerPage />} />
         <Route path="/admin/moderation" element={<AdminRoute><AdminModeration /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
