@@ -835,3 +835,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             
             <ToggleGroupItem value="text" aria-label="Text tool">
               <Type className="h-4 w-4 mr-2" />
+              Text
