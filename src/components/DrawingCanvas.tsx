@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -837,3 +838,277 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </ToggleGroupItem>
             
             <ToggleGroupItem value="rectangle" aria-label="Rectangle tool">
+              <Square className="h-4 w-4 mr-2" />
+              Rectangle
+            </ToggleGroupItem>
+            
+            <ToggleGroupItem value="circle" aria-label="Circle tool">
+              <CircleIcon className="h-4 w-4 mr-2" />
+              Circle
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-4 justify-center">
+          {/* Color selection */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-center">Color</Label>
+            <div className="flex flex-wrap gap-1">
+              {colorOptions.map((colorOption) => (
+                <button
+                  key={colorOption}
+                  type="button"
+                  className={cn(
+                    "w-6 h-6 rounded-full border border-gray-300",
+                    color === colorOption && "ring-2 ring-offset-1 ring-blue-500"
+                  )}
+                  style={{ backgroundColor: colorOption }}
+                  onClick={() => setColor(colorOption)}
+                />
+              ))}
+            </div>
+          </div>
+          
+          {/* Width selection */}
+          <div className="flex flex-col gap-1 min-w-[120px]">
+            <Label className="text-xs text-center">Width: {width}</Label>
+            <Slider
+              value={width}
+              onValueChange={setWidth}
+              min={1}
+              max={20}
+              step={1}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Fill toggle for shapes */}
+          {(tool === 'rectangle' || tool === 'circle') && (
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id="fill-shape"
+                checked={fill}
+                onCheckedChange={(checked) => setFill(checked === true)}
+              />
+              <Label htmlFor="fill-shape" className="text-sm">Fill Shape</Label>
+            </div>
+          )}
+          
+          {/* Theme selector */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowThemeSelector(!showThemeSelector)}
+            className="flex items-center gap-2"
+          >
+            <Palette className="h-4 w-4" />
+            Theme
+          </Button>
+        </div>
+        
+        {/* Theme selector panel */}
+        {showThemeSelector && (
+          <div className="p-3 bg-gray-50 border rounded-md">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Style</Label>
+                <Select
+                  value={theme.visualTheme}
+                  onValueChange={(value) => setVisualTheme(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {visualThemes.map((theme) => (
+                      <SelectItem key={theme.id} value={theme.id}>
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Theme</Label>
+                <Select
+                  value={theme.seasonalTheme}
+                  onValueChange={(value) => setSeasonalTheme(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasonalThemes.map((theme) => (
+                      <SelectItem key={theme.id} value={theme.id}>
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <ThemePreview />
+          </div>
+        )}
+        
+        {/* Canvas */}
+        <div className="w-full border border-gray-200 rounded-lg overflow-hidden bg-white relative">
+          <canvas
+            ref={canvasRef}
+            onMouseDown={startDrawing}
+            onMouseUp={stopDrawing}
+            onMouseMove={draw}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchEnd={stopDrawing}
+            onTouchMove={draw}
+            className="touch-none w-full"
+          ></canvas>
+          
+          {/* Shape preview overlay */}
+          {currentShape && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: `${currentShape.x}px`,
+                top: `${currentShape.y}px`,
+                width: `${currentShape.width}px`,
+                height: `${currentShape.height}px`,
+                border: `1px solid ${currentShape.color}`,
+                backgroundColor: currentShape.fill ? `${currentShape.color}50` : 'transparent',
+                borderRadius: currentShape.type === 'circle' ? '50%' : '0',
+              }}
+            />
+          )}
+        </div>
+        
+        {/* Action buttons */}
+        <div className="flex flex-wrap justify-between">
+          <div className="flex gap-2">
+            {selectedTextIndex !== null && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleEditText}
+                >
+                  Edit Text
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRemoveText}
+                >
+                  Remove Text
+                </Button>
+              </>
+            )}
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={clearCanvas}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear
+            </Button>
+          </div>
+          
+          <Button 
+            size="sm"
+            onClick={handlePublish}
+            disabled={isPublishing}
+          >
+            {isPublishing ? (
+              "Publishing..."
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Publish
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+      
+      {/* Text input dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="text-input">Text</Label>
+              <Input
+                id="text-input"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Enter text..."
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label>Font Size: {textSize}</Label>
+              <Slider
+                id="text-size"
+                min={8}
+                max={72}
+                step={1}
+                value={textSize}
+                onValueChange={setTextSize}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="font-family">Font</Label>
+              <Select 
+                value={textFont} 
+                onValueChange={setTextFont}
+              >
+                <SelectTrigger id="font-family">
+                  <SelectValue placeholder="Select a font" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fontOptions.map((font) => (
+                    <SelectItem key={font} value={font}>{font}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label>Text Color</Label>
+              <div className="flex flex-wrap gap-2">
+                {colorOptions.map((colorOption) => (
+                  <button
+                    key={colorOption}
+                    type="button"
+                    className={cn(
+                      "w-6 h-6 rounded-full border border-gray-300",
+                      color === colorOption && "ring-2 ring-offset-1 ring-blue-500"
+                    )}
+                    style={{ backgroundColor: colorOption }}
+                    onClick={() => setColor(colorOption)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddText}>
+              Add Text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
