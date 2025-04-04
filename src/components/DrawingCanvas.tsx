@@ -18,7 +18,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTheme } from '@/contexts/ThemeContext';
 import { visualThemes, seasonalThemes, getThemeConfig } from '@/utils/themeConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox"; // Added missing import
+import { Checkbox } from "@/components/ui/checkbox";
+import { VisualTheme, SeasonalTheme } from '@/types/theme';
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -691,8 +692,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 
   // Theme preview component
   const ThemePreview = () => {
-    const visualThemeConfig = getThemeConfig(theme.visualTheme);
-    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
+    const visualThemeConfig = getThemeConfig(theme.visualTheme as VisualTheme);
+    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme as SeasonalTheme) : null;
     
     // Create a mini-preview canvas to show theme
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -824,7 +825,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                 <Label className="text-sm font-medium">Visual Theme</Label>
                 <Select 
                   value={theme.visualTheme}
-                  onValueChange={(value) => setVisualTheme(value as any)}
+                  onValueChange={(value) => setVisualTheme(value as VisualTheme)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a visual theme" />
@@ -844,7 +845,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                 <Label className="text-sm font-medium">Seasonal Theme</Label>
                 <Select 
                   value={theme.seasonalTheme}
-                  onValueChange={(value) => setSeasonalTheme(value as any)}
+                  onValueChange={(value) => setSeasonalTheme(value as SeasonalTheme)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a seasonal theme" />
