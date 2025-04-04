@@ -1,7 +1,6 @@
 
 // Define the theme types and interfaces
 export type VisualTheme = 
-  | 'white'
   | 'default'
   | 'ghibli'
   | 'darkFantasy'

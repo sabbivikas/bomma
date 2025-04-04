@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,11 +161,8 @@ const StoryCreator: React.FC = () => {
 
   // Generate theme-based background style for frames
   const getThemeBackgroundStyle = () => {
-    if (theme.visualTheme === 'white') {
-      return 'bg-white';
-    }
-    
-    return visualThemeConfig?.backgroundStyle || '';
+    let style = visualThemeConfig?.backgroundStyle || '';
+    return style;
   };
 
   return (
