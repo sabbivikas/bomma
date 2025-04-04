@@ -77,7 +77,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const lastPointRef = useRef<{ x: number, y: number } | null>(null);\
+  const lastPointRef = useRef<{ x: number, y: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -836,4 +836,4 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
               Text
             </ToggleGroupItem>
             
-            <ToggleGroupItem value="rectangle" aria-label="Rectangle
+            <ToggleGroupItem value="rectangle" aria-label="Rectangle tool">
