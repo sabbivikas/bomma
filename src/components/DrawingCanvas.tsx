@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -133,176 +132,182 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 
   // Function to apply theme background to canvas
   const applyThemeBackground = (context: CanvasRenderingContext2D, width: number, height: number) => {
-    const visualThemeConfig = getThemeConfig(theme.visualTheme as VisualTheme);
-    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme as SeasonalTheme) : null;
+    const visualThemeConfig = getThemeConfig(theme.visualTheme);
+    const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
     
-    // Start with a white background as base
+    // Always start with a plain white background
     context.fillStyle = 'white';
     context.fillRect(0, 0, width, height);
     
-    if (visualThemeConfig) {
-      // Apply visual theme background
-      if (visualThemeConfig.id === 'ghibli') {
-        // Ghibli theme - soft pastel gradient
-        const gradient = context.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, '#E6F0FD');
-        gradient.addColorStop(0.5, '#D3ECFD');
-        gradient.addColorStop(1, '#FCE8E6');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, width, height);
-      } else if (visualThemeConfig.id === 'darkFantasy') {
-        // Dark fantasy theme
-        const gradient = context.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, '#1A1B26');
-        gradient.addColorStop(0.5, '#292A37');
-        gradient.addColorStop(1, '#3A3C4E');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, width, height);
-      } else if (visualThemeConfig.id === 'vintage') {
-        // Vintage theme
-        const gradient = context.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, '#F3E7D3');
-        gradient.addColorStop(0.5, '#EBD9B4');
-        gradient.addColorStop(1, '#D9C9A3');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, width, height);
-      } else if (visualThemeConfig.id === 'comic') {
-        // Comic book theme
-        const gradient = context.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, '#FFF8DC');
-        gradient.addColorStop(0.5, '#FFFACD');
-        gradient.addColorStop(1, '#FAFAD2');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, width, height);
-        
-        // Add comic dots pattern
-        context.fillStyle = 'rgba(0,0,0,0.05)';
-        const dotSize = 5;
-        const spacing = 20;
-        for (let x = 0; x < width; x += spacing) {
-          for (let y = 0; y < height; y += spacing) {
-            context.beginPath();
-            context.arc(x, y, dotSize/2, 0, Math.PI * 2);
-            context.fill();
-          }
+    // If no visual theme is selected or it's 'minimal', keep white background
+    if (!visualThemeConfig || visualThemeConfig.id === 'minimal') {
+      return;
+    }
+    
+    // Apply visual theme background
+    if (visualThemeConfig.id === 'ghibli') {
+      // Ghibli theme - soft pastel gradient
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#E6F0FD');
+      gradient.addColorStop(0.5, '#D3ECFD');
+      gradient.addColorStop(1, '#FCE8E6');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, width, height);
+    } else if (visualThemeConfig.id === 'darkFantasy') {
+      // Dark fantasy theme
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#1A1B26');
+      gradient.addColorStop(0.5, '#292A37');
+      gradient.addColorStop(1, '#3A3C4E');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, width, height);
+    } else if (visualThemeConfig.id === 'vintage') {
+      // Vintage theme
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#F3E7D3');
+      gradient.addColorStop(0.5, '#EBD9B4');
+      gradient.addColorStop(1, '#D9C9A3');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, width, height);
+    } else if (visualThemeConfig.id === 'comic') {
+      // Comic book theme
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#FFF8DC');
+      gradient.addColorStop(0.5, '#FFFACD');
+      gradient.addColorStop(1, '#FAFAD2');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, width, height);
+      
+      // Add comic dots pattern
+      context.fillStyle = 'rgba(0,0,0,0.05)';
+      const dotSize = 5;
+      const spacing = 20;
+      for (let x = 0; x < width; x += spacing) {
+        for (let y = 0; y < height; y += spacing) {
+          context.beginPath();
+          context.arc(x, y, dotSize/2, 0, Math.PI * 2);
+          context.fill();
         }
-      } else if (visualThemeConfig.id === 'default') {
-        // Default theme - soft blue gradient
-        const gradient = context.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, '#E0F7FA');
-        gradient.addColorStop(0.5, '#B3E5FC');
-        gradient.addColorStop(1, '#D1C4E9');
-        context.fillStyle = gradient;
-        context.globalAlpha = 0.3; // Make it subtle
-        context.fillRect(0, 0, width, height);
-        context.globalAlpha = 1.0;
+      }
+    } else if (visualThemeConfig.id === 'default') {
+      // Default theme - soft blue gradient
+      const gradient = context.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#E0F7FA');
+      gradient.addColorStop(0.5, '#B3E5FC');
+      gradient.addColorStop(1, '#D1C4E9');
+      context.fillStyle = gradient;
+      context.globalAlpha = 0.3; // Make it subtle
+      context.fillRect(0, 0, width, height);
+      context.globalAlpha = 1.0;
+    }
+    
+    // Skip seasonal overlays if 'none' is selected
+    if (!seasonalThemeConfig || seasonalThemeConfig.id === 'none') {
+      return;
+    }
+    
+    // Apply seasonal overlays
+    context.globalAlpha = 0.15; // Make it subtle
+    
+    if (seasonalThemeConfig.id === 'spring') {
+      // Spring - add some flowers or petals
+      context.fillStyle = '#f8bbce';
+      for (let i = 0; i < 15; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = 5 + Math.random() * 15;
+        drawFlower(context, x, y, size);
+      }
+    } else if (seasonalThemeConfig.id === 'summer') {
+      // Summer - add sun rays
+      const centerX = width / 2;
+      const centerY = height / 4;
+      const radius = Math.min(width, height) / 3;
+      
+      context.fillStyle = '#FFEB3B';
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      context.fill();
+      
+      // Draw rays
+      context.strokeStyle = '#FFEB3B';
+      context.lineWidth = 10;
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        context.beginPath();
+        context.moveTo(
+          centerX + Math.cos(angle) * radius,
+          centerY + Math.sin(angle) * radius
+        );
+        context.lineTo(
+          centerX + Math.cos(angle) * (radius + 50),
+          centerY + Math.sin(angle) * (radius + 50)
+        );
+        context.stroke();
+      }
+    } else if (seasonalThemeConfig.id === 'autumn') {
+      // Autumn - add leaves
+      const leafColors = ['#D2691E', '#8B4513', '#A0522D', '#CD853F'];
+      for (let i = 0; i < 20; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = 5 + Math.random() * 15;
+        const colorIndex = Math.floor(Math.random() * leafColors.length);
+        
+        context.fillStyle = leafColors[colorIndex];
+        drawLeaf(context, x, y, size);
+      }
+    } else if (seasonalThemeConfig.id === 'winter') {
+      // Winter - add snowflakes
+      context.fillStyle = 'white';
+      for (let i = 0; i < 30; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = 2 + Math.random() * 5;
+        drawSnowflake(context, x, y, size);
+      }
+    } else if (seasonalThemeConfig.id === 'halloween') {
+      // Halloween theme
+      context.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      context.fillRect(0, 0, width, height);
+      
+      // Add spooky elements
+      const spookyColors = ['#FF6D00', '#6A1B9A', '#4A148C'];
+      for (let i = 0; i < 15; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = 10 + Math.random() * 20;
+        const colorIndex = Math.floor(Math.random() * spookyColors.length);
+        
+        context.fillStyle = spookyColors[colorIndex];
+        if (Math.random() > 0.5) {
+          // Draw spider web
+          drawSpiderWeb(context, x, y, size);
+        } else {
+          // Draw bat
+          drawBat(context, x, y, size);
+        }
+      }
+    } else if (seasonalThemeConfig.id === 'christmas') {
+      // Christmas theme
+      for (let i = 0; i < 20; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = 5 + Math.random() * 15;
+        
+        if (Math.random() > 0.5) {
+          // Draw snowflake
+          context.fillStyle = 'white';
+          drawSnowflake(context, x, y, size);
+        } else {
+          // Draw simple ornament
+          context.fillStyle = Math.random() > 0.5 ? '#C8102E' : '#228B22';
+          drawOrnament(context, x, y, size);
+        }
       }
     }
     
-    // Apply seasonal overlays if applicable
-    if (seasonalThemeConfig && seasonalThemeConfig.id !== 'none') {
-      context.globalAlpha = 0.15; // Make it subtle
-      
-      if (seasonalThemeConfig.id === 'spring') {
-        // Spring - add some flowers or petals
-        context.fillStyle = '#f8bbce';
-        for (let i = 0; i < 15; i++) {
-          const x = Math.random() * width;
-          const y = Math.random() * height;
-          const size = 5 + Math.random() * 15;
-          drawFlower(context, x, y, size);
-        }
-      } else if (seasonalThemeConfig.id === 'summer') {
-        // Summer - add sun rays
-        const centerX = width / 2;
-        const centerY = height / 4;
-        const radius = Math.min(width, height) / 3;
-        
-        context.fillStyle = '#FFEB3B';
-        context.beginPath();
-        context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        context.fill();
-        
-        // Draw rays
-        context.strokeStyle = '#FFEB3B';
-        context.lineWidth = 10;
-        for (let i = 0; i < 12; i++) {
-          const angle = (i / 12) * Math.PI * 2;
-          context.beginPath();
-          context.moveTo(
-            centerX + Math.cos(angle) * radius,
-            centerY + Math.sin(angle) * radius
-          );
-          context.lineTo(
-            centerX + Math.cos(angle) * (radius + 50),
-            centerY + Math.sin(angle) * (radius + 50)
-          );
-          context.stroke();
-        }
-      } else if (seasonalThemeConfig.id === 'autumn') {
-        // Autumn - add leaves
-        const leafColors = ['#D2691E', '#8B4513', '#A0522D', '#CD853F'];
-        for (let i = 0; i < 20; i++) {
-          const x = Math.random() * width;
-          const y = Math.random() * height;
-          const size = 5 + Math.random() * 15;
-          const colorIndex = Math.floor(Math.random() * leafColors.length);
-          
-          context.fillStyle = leafColors[colorIndex];
-          drawLeaf(context, x, y, size);
-        }
-      } else if (seasonalThemeConfig.id === 'winter') {
-        // Winter - add snowflakes
-        context.fillStyle = 'white';
-        for (let i = 0; i < 30; i++) {
-          const x = Math.random() * width;
-          const y = Math.random() * height;
-          const size = 2 + Math.random() * 5;
-          drawSnowflake(context, x, y, size);
-        }
-      } else if (seasonalThemeConfig.id === 'halloween') {
-        // Halloween theme
-        context.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        context.fillRect(0, 0, width, height);
-        
-        // Add spooky elements
-        const spookyColors = ['#FF6D00', '#6A1B9A', '#4A148C'];
-        for (let i = 0; i < 15; i++) {
-          const x = Math.random() * width;
-          const y = Math.random() * height;
-          const size = 10 + Math.random() * 20;
-          const colorIndex = Math.floor(Math.random() * spookyColors.length);
-          
-          context.fillStyle = spookyColors[colorIndex];
-          if (Math.random() > 0.5) {
-            // Draw spider web
-            drawSpiderWeb(context, x, y, size);
-          } else {
-            // Draw bat
-            drawBat(context, x, y, size);
-          }
-        }
-      } else if (seasonalThemeConfig.id === 'christmas') {
-        // Christmas theme
-        for (let i = 0; i < 20; i++) {
-          const x = Math.random() * width;
-          const y = Math.random() * height;
-          const size = 5 + Math.random() * 15;
-          
-          if (Math.random() > 0.5) {
-            // Draw snowflake
-            context.fillStyle = 'white';
-            drawSnowflake(context, x, y, size);
-          } else {
-            // Draw simple ornament
-            context.fillStyle = Math.random() > 0.5 ? '#C8102E' : '#228B22';
-            drawOrnament(context, x, y, size);
-          }
-        }
-      }
-      
-      context.globalAlpha = 1.0;
-    }
+    context.globalAlpha = 1.0;
   };
   
   // Helper functions to draw seasonal elements
@@ -840,6 +845,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       // Copy current canvas (which has all the drawings) to temp canvas
       tempContext.drawImage(canvas, 0, 0);
       
+      // Clear canvas and reapply theme background
+      applyThemeBackground(contextRef.current, canvas.width, canvas.height);
+      
+      // Restore drawings
+      contextRef.current.drawImage(tempCanvas, 0, 0);
+      
       // Render text elements (only temporarily for user to see)
       textElements.forEach(element => {
         if (!contextRef.current) return;
@@ -1097,4 +1108,3 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 };
 
 export default DrawingCanvas;
-
