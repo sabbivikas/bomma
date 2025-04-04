@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -838,3 +839,153 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500">Visual theme affects the background style of your story frames</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Seasonal Overlay</Label>
+                <Select 
+                  value={theme.seasonalTheme}
+                  onValueChange={(value) => setSeasonalTheme(value as SeasonalTheme)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a seasonal theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasonalThemes.map((seasonalTheme) => (
+                      <SelectItem key={seasonalTheme.id} value={seasonalTheme.id}>
+                        {seasonalTheme.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">Add seasonal decorations to your background</p>
+              </div>
+            </div>
+            
+            <ThemePreview />
+            
+            <div className="mt-4 flex items-center">
+              <Checkbox 
+                id="fillShapes" 
+                checked={fill} 
+                onCheckedChange={(checked) => setFill(!!checked)}
+              />
+              <Label htmlFor="fillShapes" className="ml-2 text-sm">
+                Fill shapes with color (for rectangle/circle tools)
+              </Label>
+            </div>
+          </div>
+        )}
+        
+        <div className="w-full relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+          <canvas
+            ref={canvasRef}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            className="mx-auto touch-none"
+          />
+          
+          <div className="flex flex-wrap gap-2 p-3 border-t bg-white">
+            <div>
+              <Label className="text-xs text-gray-500">Color</Label>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {colorOptions.map((colorOption) => (
+                  <button
+                    key={colorOption}
+                    className={`w-6 h-6 rounded-full border ${color === colorOption ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
+                    style={{ backgroundColor: colorOption }}
+                    onClick={() => setColor(colorOption)}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex-1 min-w-[180px]">
+              <Label className="text-xs text-gray-500">
+                {tool === 'pen' ? 'Brush Width' : tool === 'eraser' ? 'Eraser Size' : 'Text Size'}
+              </Label>
+              <div className="mt-1">
+                <Slider
+                  value={tool === 'text' ? textSize : width}
+                  onValueChange={tool === 'text' ? setTextSize : setWidth}
+                  min={1}
+                  max={tool === 'text' ? 72 : 30}
+                  step={1}
+                />
+              </div>
+            </div>
+            
+            {tool === 'text' && (
+              <div className="min-w-[150px]">
+                <Label className="text-xs text-gray-500">Font</Label>
+                <Select value={textFont} onValueChange={setTextFont}>
+                  <SelectTrigger className="mt-1 h-8">
+                    <SelectValue placeholder="Font Family" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontOptions.map((font) => (
+                      <SelectItem key={font} value={font}>
+                        {font}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          
+          {selectedTextIndex !== null && (
+            <div className="absolute top-2 left-2 flex gap-1">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleRemoveText}
+                className="h-7 px-2"
+              >
+                Delete Text
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleEditText}
+                className="h-7 px-2"
+              >
+                Edit Text
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <Dialog open={textDialogOpen} onOpenChange={setTextDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="text">Text Content</Label>
+              <Input
+                id="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleAddText}>
+              Add Text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
