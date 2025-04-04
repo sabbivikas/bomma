@@ -77,7 +77,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const lastPointRef = useRef<{ x: number, y: number } | null>(null);
+  const lastPointRef = useRef<{ x: number, y: number } | null>(null);\
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -388,7 +388,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     ctx.fill();
   };
 
-  // Improved function to get precise coordinates for both mouse and touch events
   const getCoordinates = (event: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -591,7 +590,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       setIsDrawing(true);
     }
   };
-  
+
   // Add text to canvas
   const handleAddText = () => {
     if (!currentTextElement || !textInput.trim()) {
@@ -713,7 +712,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     }
   };
 
-  // Update canvas sizing and touch handling for mobile
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
@@ -835,3 +833,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             
             <ToggleGroupItem value="text" aria-label="Text tool">
               <Type className="h-4 w-4 mr-2" />
+              Text
+            </ToggleGroupItem>
+            
+            <ToggleGroupItem value="rectangle" aria-label="Rectangle
