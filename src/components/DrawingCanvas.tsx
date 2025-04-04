@@ -591,7 +591,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       setIsDrawing(true);
     }
   };
-
+  
   // Add text to canvas
   const handleAddText = () => {
     if (!currentTextElement || !textInput.trim()) {
