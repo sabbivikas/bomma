@@ -19,6 +19,7 @@ import { visualThemes, seasonalThemes, getThemeConfig } from '@/utils/themeConfi
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { VisualTheme, SeasonalTheme } from '@/types/theme';
+import ThemePreview from '@/components/ThemePreview';
 
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
@@ -832,6 +833,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     };
   }, [canvasSize]);
 
-  // Theme preview component
-  const ThemePreview = () => {
-    const visualThemeConfig = getThemeConfig(theme.visualTheme as VisualTheme);
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Drawing tools */}
