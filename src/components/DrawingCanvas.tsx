@@ -88,6 +88,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     currentStrokeStyleRef.current = color;
   }, [color]);
 
+  // Track touch interaction to prevent accidental tool switching
+  const [isTouching, setIsTouching] = useState(false);
+  // Track when a text was last clicked to prevent multiple actions
+  const lastTextClickTimeRef = useRef<number>(0);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -427,8 +432,28 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     return { x: 0, y: 0 };
   };
   
+  // Utility function to check if a point is inside a text's clickable area
+  const isPointInText = (x: number, y: number, textElement: TextElement) => {
+    if (!contextRef.current) return false;
+    
+    contextRef.current.font = `${textElement.size}px ${textElement.fontFamily}`;
+    const metrics = contextRef.current.measureText(textElement.text);
+    const height = textElement.size;
+    
+    // Add a larger touch area for mobile
+    const padding = isMobile ? 15 : 5;
+    
+    return (
+      x >= textElement.x - padding &&
+      x <= textElement.x + metrics.width + padding &&
+      y >= textElement.y - height - padding &&
+      y <= textElement.y + padding
+    );
+  };
+  
   // Start drawing, text placement, or shape creation
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    setIsTouching(true);
     const canvas = canvasRef.current;
     if (!canvas || !contextRef.current) return;
     
@@ -442,45 +467,48 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     // Handle based on selected tool
     if (tool === 'text') {
       // Check if clicked on existing text
-      const clickedTextIndex = textElements.findIndex(el => {
-        if (!contextRef.current) return false;
-        
-        contextRef.current.font = `${el.size}px ${el.fontFamily}`;
-        const metrics = contextRef.current.measureText(el.text);
-        const height = el.size;
-        
-        return (
-          coords.x >= el.x - 4 &&
-          coords.x <= el.x + metrics.width + 4 &&
-          coords.y >= el.y - height &&
-          coords.y <= el.y + 8
-        );
-      });
+      let clickedTextIndex = -1;
+      for (let i = 0; i < textElements.length; i++) {
+        if (isPointInText(coords.x, coords.y, textElements[i])) {
+          clickedTextIndex = i;
+          break;
+        }
+      }
+      
+      // Store current time to debounce clicks
+      const now = Date.now();
+      const minTimeBetweenClicks = 300; // ms
       
       if (clickedTextIndex !== -1) {
-        // Select text for dragging
-        setSelectedTextIndex(clickedTextIndex);
-        
-        const selectedText = { ...textElements[clickedTextIndex], isDragging: true };
-        
-        setTextElements(prev => 
-          prev.map((el, i) => i === clickedTextIndex ? selectedText : el)
-        );
-        
-        lastPointRef.current = coords;
+        if (now - lastTextClickTimeRef.current > minTimeBetweenClicks) {
+          // Select text for dragging
+          setSelectedTextIndex(clickedTextIndex);
+          
+          const selectedText = { ...textElements[clickedTextIndex], isDragging: true };
+          
+          setTextElements(prev => 
+            prev.map((el, i) => i === clickedTextIndex ? selectedText : el)
+          );
+          
+          lastPointRef.current = coords;
+          lastTextClickTimeRef.current = now;
+        }
       } else {
-        // Add new text
-        setSelectedTextIndex(null);
-        setCurrentTextElement({ 
-          text: '', 
-          x: coords.x, 
-          y: coords.y,
-          color: color,
-          size: textSize[0],
-          fontFamily: textFont,
-          isDragging: false
-        });
-        setTextDialogOpen(true);
+        if (now - lastTextClickTimeRef.current > minTimeBetweenClicks) {
+          // Add new text
+          setSelectedTextIndex(null);
+          setCurrentTextElement({ 
+            text: '', 
+            x: coords.x, 
+            y: coords.y,
+            color: color,
+            size: textSize[0],
+            fontFamily: textFont,
+            isDragging: false
+          });
+          setTextDialogOpen(true);
+          lastTextClickTimeRef.current = now;
+        }
       }
     } else if (tool === 'rectangle' || tool === 'circle') {
       // Start creating a shape
@@ -571,8 +599,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   };
   
   // Stop drawing, text placement, or shape creation
-  const stopDrawing = () => {
+  const stopDrawing = (event?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     // End drawing
+    setIsTouching(false);
+    
     if (contextRef.current) {
       contextRef.current.closePath();
     }
@@ -895,7 +925,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       <div className="flex flex-col w-full gap-4 mb-4">
         <div className="flex flex-wrap gap-2 justify-center">
           <ToggleGroup type="single" value={tool} onValueChange={(value) => {
-            if (value) setTool(value as typeof tool);
+            if (value && !isTouching) setTool(value as typeof tool);
             setSelectedTextIndex(null);
           }}>
             <ToggleGroupItem value="pen" aria-label="Pen tool">
@@ -1015,6 +1045,54 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </div>
         )}
         
+        {/* Move font selection to the top when text tool is active */}
+        {tool === 'text' && (
+          <div className="flex flex-wrap gap-4 mt-2 bg-gray-50 p-3 rounded-md border border-gray-200">
+            <div className="min-w-[150px]">
+              <Label className="text-xs text-gray-500">Font</Label>
+              <Select value={textFont} onValueChange={setTextFont}>
+                <SelectTrigger className="mt-1 h-8">
+                  <SelectValue placeholder="Font Family" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fontOptions.map((font) => (
+                    <SelectItem key={font} value={font}>
+                      {font}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex-1 min-w-[180px]">
+              <Label className="text-xs text-gray-500">Text Size</Label>
+              <div className="mt-1">
+                <Slider
+                  value={textSize}
+                  onValueChange={setTextSize}
+                  min={8}
+                  max={72}
+                  step={1}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-xs text-gray-500">Text Color</Label>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {colorOptions.map((colorOption) => (
+                  <button
+                    key={colorOption}
+                    className={`w-6 h-6 rounded-full border ${color === colorOption ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
+                    style={{ backgroundColor: colorOption }}
+                    onClick={() => setColor(colorOption)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="w-full relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
           <canvas
             ref={canvasRef}
@@ -1025,6 +1103,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
+            onTouchCancel={stopDrawing}
             className="mx-auto touch-none"
           />
           
@@ -1045,52 +1124,39 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             
             <div className="flex-1 min-w-[180px]">
               <Label className="text-xs text-gray-500">
-                {tool === 'pen' ? 'Brush Width' : tool === 'eraser' ? 'Eraser Size' : 'Text Size'}
+                {tool === 'pen' ? 'Brush Width' : tool === 'eraser' ? 'Eraser Size' : 'Width'}
               </Label>
               <div className="mt-1">
                 <Slider
-                  value={tool === 'text' ? textSize : width}
-                  onValueChange={tool === 'text' ? setTextSize : setWidth}
+                  value={width}
+                  onValueChange={setWidth}
                   min={1}
-                  max={tool === 'text' ? 72 : 30}
+                  max={30}
                   step={1}
                 />
               </div>
             </div>
             
-            {tool === 'text' && (
-              <div className="min-w-[150px]">
-                <Label className="text-xs text-gray-500">Font</Label>
-                <Select value={textFont} onValueChange={setTextFont}>
-                  <SelectTrigger className="mt-1 h-8">
-                    <SelectValue placeholder="Font Family" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontOptions.map((font) => (
-                      <SelectItem key={font} value={font}>
-                        {font}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            {/* Font selection moved to the top when text tool is active */}
           </div>
           
           {selectedTextIndex !== null && (
-            <div className="absolute top-2 left-2 flex gap-1">
+            <div className="absolute top-2 left-2 flex gap-1 z-10">
               <Button
                 size="sm"
                 variant="destructive"
                 onClick={handleRemoveText}
-                className="h-7 px-2"
+                className="h-9 px-3 text-sm font-medium shadow-md"
+                type="button"
               >
                 Delete Text
               </Button>
               <Button
                 size="sm"
+                variant="default"
                 onClick={handleEditText}
-                className="h-7 px-2"
+                className="h-9 px-3 text-sm font-medium shadow-md"
+                type="button"
               >
                 Edit Text
               </Button>
@@ -1112,6 +1178,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 className="col-span-3"
+                autoFocus
               />
             </div>
           </div>
