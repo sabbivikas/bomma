@@ -93,6 +93,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   // Track when a text was last clicked to prevent multiple actions
   const lastTextClickTimeRef = useRef<number>(0);
 
+  // Add a flag to prevent continuous text element selection while dragging
+  const isDraggingTextRef = useRef<boolean>(false);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -479,10 +482,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       const now = Date.now();
       const minTimeBetweenClicks = 300; // ms
       
-      if (clickedTextIndex !== -1) {
+      if (clickedTextIndex !== -1 && !isDraggingTextRef.current) {
         if (now - lastTextClickTimeRef.current > minTimeBetweenClicks) {
           // Select text for dragging
           setSelectedTextIndex(clickedTextIndex);
+          isDraggingTextRef.current = true;
           
           const selectedText = { ...textElements[clickedTextIndex], isDragging: true };
           
@@ -494,7 +498,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           lastTextClickTimeRef.current = now;
         }
       } else {
-        if (now - lastTextClickTimeRef.current > minTimeBetweenClicks) {
+        if (now - lastTextClickTimeRef.current > minTimeBetweenClicks && !isDraggingTextRef.current) {
           // Add new text
           setSelectedTextIndex(null);
           setCurrentTextElement({ 
@@ -559,7 +563,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     const coords = getCoordinates(event, canvas);
     
-    if (tool === 'text' && selectedTextIndex !== null && lastPointRef.current) {
+    if (tool === 'text' && selectedTextIndex !== null && lastPointRef.current && isDraggingTextRef.current) {
       // Move selected text
       const dx = coords.x - lastPointRef.current.x;
       const dy = coords.y - lastPointRef.current.y;
@@ -628,6 +632,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     
     setIsDrawing(false);
     lastPointRef.current = null;
+    
+    // Reset the text dragging flag to allow for new text selection
+    setTimeout(() => {
+      isDraggingTextRef.current = false;
+    }, 100);
   };
   
   // Add text to canvas
