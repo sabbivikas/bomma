@@ -80,6 +80,14 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const lastPointRef = useRef<{ x: number, y: number } | null>(null);
 
+  // Keep track of current stroke style for touch events
+  const currentStrokeStyleRef = useRef<string>('#000000');
+
+  useEffect(() => {
+    // Update the current stroke style ref whenever color changes
+    currentStrokeStyleRef.current = color;
+  }, [color]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -497,9 +505,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         // Set the appropriate color and width based on the tool
         if (tool === 'eraser') {
           contextRef.current.strokeStyle = 'white';
+          currentStrokeStyleRef.current = 'white';
           contextRef.current.lineWidth = width[0] * 2; // Make eraser a bit larger
         } else {
           contextRef.current.strokeStyle = color;
+          currentStrokeStyleRef.current = color;
           contextRef.current.lineWidth = width[0];
         }
       }
@@ -548,6 +558,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
     } else if (isDrawing && contextRef.current && lastPointRef.current) {
       // Draw with pen or eraser
+      // Make sure the correct color is set before drawing the line
+      if (contextRef.current.strokeStyle !== currentStrokeStyleRef.current) {
+        contextRef.current.strokeStyle = currentStrokeStyleRef.current;
+      }
+      
       contextRef.current.lineTo(coords.x, coords.y);
       contextRef.current.stroke();
       
@@ -756,6 +771,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       const context = canvas.getContext('2d');
       if (context) {
+        // Clear canvas first
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Apply theme background directly to preview canvas
         applyThemeBackground(context, canvas.width, canvas.height);
       }
     }, [theme.visualTheme, theme.seasonalTheme]);
