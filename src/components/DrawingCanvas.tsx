@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -836,3 +837,294 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Drawing tools */}
+      <div className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          {/* Tool selection */}
+          <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
+            <ToggleGroupItem value="pen" aria-label="Pen tool" title="Pen">
+              <Pen className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="eraser" aria-label="Eraser tool" title="Eraser">
+              <Eraser className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="text" aria-label="Text tool" title="Text">
+              <Type className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="rectangle" aria-label="Rectangle tool" title="Rectangle">
+              <Square className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="circle" aria-label="Circle tool" title="Circle">
+              <CircleIcon className="h-5 w-5" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          
+          {/* Color and width controls */}
+          <div className="flex items-center gap-2 ml-auto">
+            <Input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="w-10 h-10 p-1 cursor-pointer"
+              style={{ padding: '2px' }}
+              title="Color picker"
+            />
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 w-10 p-0" title="Line width">
+                  <div 
+                    className="rounded-full bg-black" 
+                    style={{ 
+                      width: `${Math.min(width[0], 8)}px`, 
+                      height: `${Math.min(width[0], 8)}px`
+                    }} 
+                  />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="p-2">
+                  <h4 className="mb-2 text-sm font-medium">Brush Size</h4>
+                  <Slider value={width} onValueChange={setWidth} max={20} step={1} />
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {(tool === 'rectangle' || tool === 'circle') && (
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="fill-toggle" 
+                  checked={fill} 
+                  onCheckedChange={(checked) => setFill(checked === true)}
+                />
+                <Label htmlFor="fill-toggle" className="text-sm">Fill</Label>
+              </div>
+            )}
+          </div>
+          
+          {/* Theme selection */}
+          <Popover open={showThemeSelector} onOpenChange={setShowThemeSelector}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" title="Canvas Theme">
+                <Palette className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <div className="space-y-4">
+                <h4 className="font-medium mb-2">Canvas Theme</h4>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="visual-theme">Visual Style</Label>
+                  <Select 
+                    value={theme.visualTheme} 
+                    onValueChange={(value) => setVisualTheme(value as VisualTheme)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {visualThemes.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="seasonal-theme">Seasonal Theme</Label>
+                  <Select 
+                    value={theme.seasonalTheme} 
+                    onValueChange={(value) => setSeasonalTheme(value as SeasonalTheme)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select seasonal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {seasonalThemes.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="pt-2">
+                  <ThemePreview theme={theme} />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Canvas actions */}
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearCanvas} 
+              title="Clear Canvas"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+            
+            <Button
+              variant="success"
+              size="sm"
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="flex gap-2 items-center"
+            >
+              {isPublishing ? "Publishing..." : "Publish"}
+              <Share className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Canvas area */}
+      <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-neutral-50">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onTouchStart={startDrawing}
+          onMouseMove={draw}
+          onTouchMove={draw}
+          onMouseUp={stopDrawing}
+          onTouchEnd={stopDrawing}
+          onMouseLeave={stopDrawing}
+          className="cursor-crosshair touch-none"
+        />
+        
+        {/* Preview current shape */}
+        {currentShape && (
+          <div
+            className="absolute pointer-events-none border-2 border-dashed border-black"
+            style={{
+              left: Math.min(currentShape.x, currentShape.x + currentShape.width),
+              top: Math.min(currentShape.y, currentShape.y + currentShape.height),
+              width: Math.abs(currentShape.width),
+              height: Math.abs(currentShape.height),
+              borderRadius: currentShape.type === 'circle' ? '50%' : '0',
+              opacity: 0.5,
+            }}
+          />
+        )}
+        
+        {/* Selected text controls */}
+        {selectedTextIndex !== null && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-md p-2 z-10 flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleEditText} title="Edit Text">
+              <Type className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRemoveText} title="Remove Text">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+      
+      {/* Drawing prompt */}
+      {prompt && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 flex items-center">
+          <Sparkles className="h-5 w-5 mr-2 text-amber-600" />
+          <p className="text-sm">
+            <span className="font-semibold">Today's prompt: </span>
+            {prompt}
+          </p>
+        </div>
+      )}
+      
+      {/* Text input dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+            <DialogDescription>
+              Enter the text you want to add to your drawing
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="text-input">Text Content</Label>
+              <Textarea
+                id="text-input"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Enter your text..."
+                className="min-h-[100px]"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="text-size">Text Size</Label>
+                <Slider
+                  id="text-size"
+                  value={textSize}
+                  onValueChange={setTextSize}
+                  min={8}
+                  max={72}
+                  step={1}
+                />
+                <div className="text-right text-sm text-gray-500">{textSize[0]}px</div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="text-font">Font</Label>
+                <Select value={textFont} onValueChange={setTextFont}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Arial">Arial</SelectItem>
+                    <SelectItem value="Verdana">Verdana</SelectItem>
+                    <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                    <SelectItem value="Courier New">Courier New</SelectItem>
+                    <SelectItem value="Georgia">Georgia</SelectItem>
+                    <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="text-color">Text Color</Label>
+              <div className="flex items-center">
+                <Input
+                  id="text-color"
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-12 h-12 p-1 cursor-pointer"
+                />
+                <div 
+                  className="ml-4 p-2 rounded border border-gray-200 flex-grow"
+                  style={{ 
+                    fontFamily: textFont,
+                    fontSize: `${textSize[0]}px`,
+                    color: color
+                  }}
+                >
+                  {textInput || 'Preview Text'}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddText}>
+              Add Text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
