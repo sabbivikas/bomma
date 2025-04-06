@@ -27,18 +27,18 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   };
 
   return (
-    <div className="mt-4">
+    <div className="mt-3">
       <div className="flex justify-between items-center mb-1">
-        <h3 className="text-md font-medium text-gray-700">
+        <h3 className="text-sm font-medium text-gray-700">
           {framesCount === 0 ? "Create your first frame" : "Add next frame"}
         </h3>
         
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="bg-white rounded-xl shadow-sm p-3 mb-4">
+      <div className="bg-white rounded-xl shadow-sm p-2 mb-3">
         {showSuccess && (
-          <div className="mb-2 text-xs text-green-600 font-medium flex items-center">
+          <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
             <span>Frame added successfully</span>
           </div>

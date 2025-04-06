@@ -822,15 +822,29 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       if (!container) return;
       
       const containerWidth = container.clientWidth;
+      const containerHeight = Math.min(window.innerHeight * 0.6, 600); // Limit height on mobile/tablet
+      
+      // Check if we're on a tablet-sized screen
+      const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
       
       // Calculate new dimensions while maintaining aspect ratio
-      const newWidth = Math.min(containerWidth, canvasSize.width);
-      const scaleFactor = newWidth / canvasSize.width;
-      const newHeight = canvasSize.height * scaleFactor;
+      let newWidth, newHeight, scaleFactor;
+      
+      if (isTablet) {
+        // For tablets, make sure we don't take up too much vertical space
+        newWidth = Math.min(containerWidth * 0.85, canvasSize.width);
+        scaleFactor = newWidth / canvasSize.width;
+        newHeight = Math.min(containerHeight, canvasSize.height * scaleFactor);
+      } else {
+        // For other devices
+        newWidth = Math.min(containerWidth, canvasSize.width);
+        scaleFactor = newWidth / canvasSize.width;
+        newHeight = canvasSize.height * scaleFactor;
+      }
       
       // Update canvas display size
       canvas.style.width = `${newWidth}px`;
-      canvas.style.height = `${newHeight}px`;  // Fixed: Added the value for canvas.style.height
+      canvas.style.height = `${newHeight}px`;
       
       // Store the scale factor for coordinate calculations
       setCanvasScale(canvas.width / newWidth);
@@ -938,7 +952,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     });
   };
   
-  // Render the drawing canvas and tools
+  // Render the drawing canvas and tools with improved responsive layout
   return (
     <div className="flex flex-col w-full">
       {/* Prompt display if available */}
@@ -950,13 +964,18 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         </div>
       )}
       
-      {/* Main drawing area container */}
-      <div className="flex flex-col lg:flex-row gap-3">
-        {/* Tools panel - vertical on desktop, horizontal on mobile */}
-        <div className={`${isMobile ? 'order-2' : 'order-1 w-12'} flex flex-col bg-white rounded-lg shadow-sm p-1.5 border border-gray-100`}>
-          {/* Drawing Tools */}
-          <div className="flex flex-col gap-1.5 mb-3">
-            <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)} className="flex flex-col gap-1">
+      {/* Main drawing area container with improved responsive layout */}
+      <div className="flex flex-col md:flex-row gap-3">
+        {/* Tools panel - horizontal on tablets and mobile, vertical on desktop */}
+        <div className={`${isMobile || window.innerWidth <= 1024 ? 'order-2 flex-row flex-wrap justify-center' : 'order-1 w-12 flex-col'} flex bg-white rounded-lg shadow-sm p-1.5 border border-gray-100`}>
+          {/* Drawing Tools in a more compact layout for tablet */}
+          <div className={`flex ${isMobile || window.innerWidth <= 1024 ? 'flex-row gap-2 flex-wrap justify-center' : 'flex-col gap-1.5 mb-3'}`}>
+            <ToggleGroup 
+              type="single" 
+              value={tool} 
+              onValueChange={(value) => value && setTool(value as any)} 
+              className={`flex ${isMobile || window.innerWidth <= 1024 ? 'flex-row gap-1 flex-wrap' : 'flex-col gap-1'}`}
+            >
               <ToggleGroupItem value="pen" className="h-8 w-8 p-0" title="Pen">
                 <Pen className="h-4 w-4" />
               </ToggleGroupItem>
@@ -975,34 +994,34 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </ToggleGroup>
           </div>
           
-          {/* Color picker - simplified */}
-          <div className="my-1">
+          {/* Color picker with adaptive layout */}
+          <div className={`${isMobile || window.innerWidth <= 1024 ? 'mx-2' : 'my-1'}`}>
             <input 
               type="color" 
               value={color} 
               onChange={(e) => setColor(e.target.value)} 
-              className="w-full h-6 cursor-pointer rounded-sm" 
+              className={`${isMobile || window.innerWidth <= 1024 ? 'w-8 h-8' : 'w-full h-6'} cursor-pointer rounded-sm`} 
               title="Color"
             />
           </div>
           
-          {/* Width slider - vertical and simplified */}
-          <div className="my-2">
+          {/* Width slider with adaptive orientation */}
+          <div className={`${isMobile || window.innerWidth <= 1024 ? 'mx-2 w-24' : 'my-2'}`}>
             <Slider 
               defaultValue={width} 
               max={30} 
               min={1} 
               step={1} 
               onValueChange={setWidth}
-              orientation="vertical"
-              className="h-20"
+              orientation={isMobile || window.innerWidth <= 1024 ? "horizontal" : "vertical"}
+              className={isMobile || window.innerWidth <= 1024 ? "w-full" : "h-20"}
               title="Width"
             />
           </div>
           
-          {/* Fill option only shows when shape tool is selected */}
+          {/* Fill option with adaptive layout */}
           {(tool === 'rectangle' || tool === 'circle') && (
-            <div className="my-1 flex items-center justify-center">
+            <div className={`${isMobile || window.innerWidth <= 1024 ? 'mx-2' : 'my-1'} flex items-center justify-center`}>
               <Checkbox 
                 id="fill-shapes" 
                 checked={fill} 
@@ -1013,11 +1032,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </div>
           )}
           
-          {/* Divider */}
-          <div className="border-t border-gray-100 my-2"></div>
+          {/* Divider with adaptive orientation */}
+          <div className={`${isMobile || window.innerWidth <= 1024 ? 'border-l h-8 mx-2' : 'border-t w-full my-2'} border-gray-100`}></div>
           
-          {/* Action buttons - compact */}
-          <div className="flex flex-col gap-1.5">
+          {/* Action buttons with adaptive layout */}
+          <div className={`flex ${isMobile || window.innerWidth <= 1024 ? 'flex-row gap-2' : 'flex-col gap-1.5'}`}>
             {/* Theme button */}
             <button 
               className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
@@ -1064,20 +1083,20 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </button>
           </div>
           
-          {/* Publish button at the bottom */}
-          <div className="mt-auto pt-3">
+          {/* Publish button with adaptive placement */}
+          <div className={`${isMobile || window.innerWidth <= 1024 ? 'ml-3' : 'mt-auto pt-3'}`}>
             <Button 
               onClick={handlePublish} 
               disabled={isPublishing}
               size="sm"
-              className="w-full text-xs"
+              className={`${isMobile || window.innerWidth <= 1024 ? 'px-3' : 'w-full'} text-xs`}
             >
               {isPublishing ? "..." : "Publish"}
             </Button>
           </div>
         </div>
         
-        {/* Canvas container */}
+        {/* Canvas container with improved responsive sizing */}
         <div className="order-1 lg:order-2 flex-1 relative border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           <canvas
             ref={canvasRef}
@@ -1088,7 +1107,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
-            className="touch-none bg-white w-full h-auto"
+            className="touch-none bg-white w-full h-auto max-h-screen"
           />
           
           {/* Render text elements */}
@@ -1118,9 +1137,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           )}
         </div>
         
-        {/* Frames panel - simplified */}
+        {/* Frames panel with adaptive positioning */}
         {showFramesPanel && (
-          <div className="order-3 lg:w-40 bg-white rounded-lg shadow-sm p-2 border border-gray-100">
+          <div className={`${isMobile || window.innerWidth <= 1024 ? 'order-3' : 'order-3 lg:w-40'} bg-white rounded-lg shadow-sm p-2 border border-gray-100`}>
             <div className="flex justify-between items-center mb-1">
               <h3 className="text-xs font-medium">Frames</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowFramesPanel(false)} className="h-5 w-5 p-0">
