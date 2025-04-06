@@ -329,7 +329,8 @@ const Create = () => {
         canvas {
           border-radius: 0;
           background: linear-gradient(180deg, rgba(230, 242, 255, 0.8) 0%, rgba(240, 235, 255, 0.8) 100%);
-          width: 100%;
+          width: 100% !important;
+          max-width: 100% !important;
           height: auto;
           aspect-ratio: 16/10;
           display: block;
@@ -337,11 +338,31 @@ const Create = () => {
           box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         
+        /* Remove any margins or padding that might be causing white space */
+        .drawing-canvas-container {
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          overflow: hidden;
+        }
+        
         /* Drawing tools container styling */
         .drawing-tools-container {
           background-color: rgba(255, 255, 255, 0.7) !important;
           backdrop-filter: blur(4px);
           border-top: 1px solid rgba(209, 213, 219, 0.5);
+          width: 100% !important;
+          max-width: 100% !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+        }
+        
+        /* Remove any horizontal scrolling */
+        body, html, #root {
+          overflow-x: hidden;
         }
         
         /* iPad-specific styles */

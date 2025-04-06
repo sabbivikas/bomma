@@ -49,7 +49,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="rounded-xl border border-gray-200 shadow overflow-hidden bg-gradient-to-b from-blue-50/80 to-purple-50/80 backdrop-blur-sm">
+      <div className="rounded-xl border border-gray-200 shadow overflow-hidden bg-gradient-to-b from-blue-50/80 to-purple-50/80 backdrop-blur-sm w-full">
         {showSuccess && (
           <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center px-3 pt-2">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
