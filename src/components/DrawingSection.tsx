@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 import DrawingCanvas from '@/components/DrawingCanvas';
-import FrameCounter from './FrameCounter';
+import FrameCounter from '@/components/story/FrameCounter';
 import { Button } from "@/components/ui/button";
 
 interface DrawingSectionProps {
