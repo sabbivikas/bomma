@@ -831,3 +831,442 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       let newWidth, newHeight, scaleFactor;
       
       if (isTablet) {
+        // For tablets, use slightly larger canvas for better drawing experience
+        newWidth = Math.min(containerWidth - 40, 700);
+        newHeight = Math.min(containerHeight - 40, 500);
+        scaleFactor = Math.min(newWidth / canvasSize.width, newHeight / canvasSize.height);
+      } else if (isMobile) {
+        // For mobile, adapt to smaller screens
+        newWidth = containerWidth - 20;
+        newHeight = Math.min(containerHeight - 20, 450);
+        scaleFactor = Math.min(newWidth / canvasSize.width, newHeight / canvasSize.height);
+      } else {
+        // For desktop, use more space
+        newWidth = Math.min(containerWidth - 40, canvasSize.width);
+        newHeight = Math.min(containerHeight, canvasSize.height);
+        scaleFactor = Math.min(newWidth / canvasSize.width, newHeight / canvasSize.height);
+      }
+      
+      // Update canvas display size (not the actual drawing dimensions)
+      canvas.style.width = `${canvasSize.width * scaleFactor}px`;
+      canvas.style.height = `${canvasSize.height * scaleFactor}px`;
+      
+      // Store scale factor for coordinate mapping
+      setCanvasScale(scaleFactor);
+      
+      // Calculate offset for coordinate mapping
+      const rect = canvas.getBoundingClientRect();
+      setCanvasOffset({
+        x: rect.left,
+        y: rect.top
+      });
+    };
+    
+    // Initial sizing
+    handleResize();
+    
+    // Add resize listener
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile, canvasSize]);
+  
+  // Add text and shape rendering on each render cycle
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !contextRef.current) return;
+    
+    // Create a temporary canvas to avoid flickering
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempContext = tempCanvas.getContext('2d');
+    
+    if (!tempContext) return;
+    
+    // Copy current canvas content to temp canvas
+    tempContext.drawImage(canvas, 0, 0);
+    
+    // Clear the main canvas
+    contextRef.current.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Restore the base drawing
+    contextRef.current.drawImage(tempCanvas, 0, 0);
+    
+    // Render current shape if one is being drawn
+    if (currentShape && isDrawing) {
+      contextRef.current.strokeStyle = currentShape.color;
+      contextRef.current.fillStyle = currentShape.color;
+      contextRef.current.lineWidth = width[0];
+      
+      if (currentShape.type === 'rectangle') {
+        contextRef.current.beginPath();
+        contextRef.current.rect(
+          currentShape.x, 
+          currentShape.y, 
+          currentShape.width, 
+          currentShape.height
+        );
+        if (fill) {
+          contextRef.current.fill();
+        } else {
+          contextRef.current.stroke();
+        }
+      } else if (currentShape.type === 'circle') {
+        const radius = Math.min(
+          Math.abs(currentShape.width), 
+          Math.abs(currentShape.height)
+        ) / 2;
+        const centerX = currentShape.x + currentShape.width / 2;
+        const centerY = currentShape.y + currentShape.height / 2;
+        
+        contextRef.current.beginPath();
+        contextRef.current.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        if (fill) {
+          contextRef.current.fill();
+        } else {
+          contextRef.current.stroke();
+        }
+      }
+    }
+    
+    // Render all existing shapes
+    shapeElements.forEach(shape => {
+      contextRef.current!.strokeStyle = shape.color;
+      contextRef.current!.fillStyle = shape.color;
+      contextRef.current!.lineWidth = width[0];
+      
+      if (shape.type === 'rectangle') {
+        contextRef.current!.beginPath();
+        contextRef.current!.rect(shape.x, shape.y, shape.width, shape.height);
+        if (shape.fill) {
+          contextRef.current!.fill();
+        } else {
+          contextRef.current!.stroke();
+        }
+      } else if (shape.type === 'circle') {
+        const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
+        const centerX = shape.x + shape.width / 2;
+        const centerY = shape.y + shape.height / 2;
+        
+        contextRef.current!.beginPath();
+        contextRef.current!.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        if (shape.fill) {
+          contextRef.current!.fill();
+        } else {
+          contextRef.current!.stroke();
+        }
+      }
+    });
+    
+    // Render all text elements
+    textElements.forEach(element => {
+      contextRef.current!.font = `${element.size}px ${element.fontFamily}`;
+      contextRef.current!.fillStyle = element.color;
+      contextRef.current!.fillText(element.text, element.x, element.y);
+      
+      // Highlight selected text with a faint box
+      if (selectedTextIndex !== null && element === textElements[selectedTextIndex]) {
+        const metrics = contextRef.current!.measureText(element.text);
+        const height = element.size;
+        
+        contextRef.current!.strokeStyle = 'rgba(0, 123, 255, 0.5)';
+        contextRef.current!.lineWidth = 1;
+        contextRef.current!.setLineDash([3, 3]);
+        contextRef.current!.strokeRect(
+          element.x - 4, 
+          element.y - height - 4, 
+          metrics.width + 8, 
+          height + 8
+        );
+        contextRef.current!.setLineDash([]);
+      }
+    });
+  }, [textElements, shapeElements, currentShape, isDrawing, selectedTextIndex, fill, width]);
+  
+  // Render tools UI
+  const renderTools = () => {
+    return (
+      <div className="mb-3 flex flex-wrap items-center gap-1 sm:gap-2">
+        <ToggleGroup 
+          type="single" 
+          value={tool} 
+          onValueChange={(value) => {
+            if (value) setTool(value as any);
+          }}
+          className="flex flex-wrap"
+        >
+          <ToggleGroupItem value="pen" aria-label="Pen tool">
+            <Pen className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="eraser" aria-label="Eraser tool">
+            <Eraser className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="text" aria-label="Text tool">
+            <Type className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="rectangle" aria-label="Rectangle tool">
+            <Square className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="circle" aria-label="Circle tool">
+            <CircleIcon className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+        
+        {/* Color picker */}
+        <div className="flex items-center ml-1">
+          <input 
+            type="color" 
+            value={color} 
+            onChange={(e) => setColor(e.target.value)}
+            className="w-8 h-8 border border-gray-300 rounded-md cursor-pointer"
+            style={{ padding: 2 }}
+          />
+        </div>
+        
+        {/* Line width slider */}
+        <div className="flex items-center ml-1 sm:ml-3 min-w-[100px] max-w-[150px]">
+          <Slider 
+            value={width} 
+            onValueChange={setWidth} 
+            max={20} 
+            step={1} 
+            className="flex-1" 
+          />
+        </div>
+        
+        {/* Fill toggle for shapes */}
+        {(tool === 'rectangle' || tool === 'circle') && (
+          <div className="flex items-center ml-1 gap-1">
+            <Checkbox 
+              id="fill-shape" 
+              checked={fill} 
+              onCheckedChange={(checked) => setFill(!!checked)} 
+            />
+            <Label htmlFor="fill-shape" className="text-xs cursor-pointer">
+              Fill
+            </Label>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // Render actions (clear, publish)
+  const renderActions = () => {
+    return (
+      <div className="mt-3 flex flex-wrap justify-between items-center gap-2">
+        {selectedTextIndex !== null && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEditText}
+              className="border border-gray-300"
+            >
+              Edit Text
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRemoveText}
+              className="border border-gray-300"
+            >
+              Remove Text
+            </Button>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2 ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearCanvas}
+            className="border border-gray-300"
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Clear
+          </Button>
+          
+          <Button
+            onClick={handlePublish}
+            disabled={isPublishing}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            {isPublishing ? "Publishing..." : "Publish Doodle"}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+  
+  return (
+    <div className="drawing-canvas-container">
+      {/* Drawing tools */}
+      {renderTools()}
+      
+      {/* Canvas */}
+      <div className="relative bg-white rounded-lg border border-gray-200 shadow mx-auto overflow-hidden" style={{ maxWidth: '100%' }}>
+        <canvas
+          ref={canvasRef}
+          className="touch-none mx-auto"
+          onMouseDown={startDrawing}
+          onMouseMove={isDrawing ? draw : undefined}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={isDrawing ? draw : undefined}
+          onTouchEnd={stopDrawing}
+          style={{ 
+            display: 'block',
+            maxWidth: '100%',
+            height: 'auto'
+          }}
+        />
+        
+        {prompt && (
+          <div className="absolute top-0 right-0 bg-white/75 backdrop-blur-sm p-2 text-xs font-medium rounded-bl-lg border-l border-b border-gray-200">
+            <span className="block">Today's prompt:</span>
+            <span className="block font-bold text-sm">{prompt}</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Actions */}
+      {renderActions()}
+      
+      {/* Text Dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+            <DialogDescription>
+              Enter the text you want to add to your doodle.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="textInput">Text</Label>
+              <Textarea
+                id="textInput"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Enter your text here..."
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Font Size</Label>
+              <Slider
+                value={textSize}
+                onValueChange={setTextSize}
+                min={10}
+                max={36}
+                step={1}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Font</Label>
+              <Select value={textFont} onValueChange={setTextFont}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Arial">Arial</SelectItem>
+                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                  <SelectItem value="Courier New">Courier New</SelectItem>
+                  <SelectItem value="Georgia">Georgia</SelectItem>
+                  <SelectItem value="Verdana">Verdana</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Color</Label>
+              <div className="mt-1">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-full h-10 border border-gray-300 rounded-md cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={handleAddText}>
+              Add Text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Theme Selector */}
+      <Popover open={showThemeSelector} onOpenChange={setShowThemeSelector}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="absolute top-1 right-1 z-10 opacity-70 hover:opacity-100"
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-4">
+            <h3 className="font-medium">Canvas Theme</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {visualThemes.map((theme) => (
+                <ThemePreview
+                  key={theme.id}
+                  theme={theme}
+                  onClick={() => setVisualTheme(theme.id as VisualTheme)}
+                />
+              ))}
+            </div>
+            
+            <h3 className="font-medium pt-2">Seasonal Overlay</h3>
+            <div className="grid grid-cols-4 gap-2">
+              {seasonalThemes.map((theme) => (
+                <ThemePreview
+                  key={theme.id}
+                  theme={theme}
+                  small
+                  onClick={() => setSeasonalTheme(theme.id as SeasonalTheme)}
+                />
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      {/* Mobile-specific adapations */}
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .drawing-canvas-container .toggle-group-item {
+            min-height: 40px;
+            min-width: 40px;
+          }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1024px) {
+          /* iPad specific styles */
+          .drawing-canvas-container .toggle-group-item {
+            min-height: 44px;
+            min-width: 44px;
+          }
+          
+          .drawing-canvas-container input[type="color"] {
+            min-width: 44px;
+            min-height: 44px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
