@@ -240,25 +240,15 @@ const Create = () => {
           </div>
         ) : (
           <div className="flex flex-col">
-            {/* Main content area with single prompt and canvas */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              {/* Drawing area - takes up most of the space */}
-              <div className="lg:col-span-4">
-                {/* Prompt card with clear visual styling at the top */}
-                <div className="mb-6 p-4 bg-white/90 rounded-lg border-2 border-purple-200 shadow-md">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="h-5 w-5 text-amber-500" />
-                    <h3 className="font-medium text-gray-800">Today's prompt:</h3>
-                  </div>
-                  <p className="font-medium text-gray-900 text-lg mt-1">{prompt}</p>
-                </div>
-                
-                {/* Main canvas with proper styling */}
+            {/* Drawing container with fixed layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+              {/* Main drawing area - takes up most of the space */}
+              <div className="lg:col-span-4 order-2 lg:order-1">
                 <div className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-purple-200">
                   <DrawingCanvas onSave={handleSave} prompt={prompt} />
                 </div>
                 
-                {/* Canvas controls below drawing area */}
+                {/* Canvas control buttons */}
                 <div className="mt-4 flex justify-between items-center">
                   <Button 
                     variant="outline"
@@ -287,8 +277,18 @@ const Create = () => {
                 </div>
               </div>
               
-              {/* Side panel with tips and options */}
-              <div className="space-y-4">
+              {/* Right sidebar with prompt, tips, options */}
+              <div className="lg:col-span-2 order-1 lg:order-2 space-y-4">
+                {/* Prompt card with clear visual styling */}
+                <div className="p-4 bg-white/90 rounded-lg border-2 border-purple-200 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-amber-500" />
+                    <h3 className="font-medium text-gray-800">Today's prompt:</h3>
+                  </div>
+                  <p className="font-medium text-gray-900 text-lg mt-2">{prompt}</p>
+                </div>
+                
+                {/* Tips card */}
                 <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
                   <h3 className="font-medium text-gray-800 mb-3 text-lg">Tips:</h3>
                   <ul className="space-y-3 text-gray-600">
@@ -307,6 +307,7 @@ const Create = () => {
                   </ul>
                 </div>
                 
+                {/* Options card */}
                 <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
                   <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
                   
@@ -383,10 +384,14 @@ const Create = () => {
           50% { transform: translateY(-20px) translateX(10px); }
         }
         
-        /* Add a nicer frame for the drawing canvas */
+        /* Canvas styling */
         canvas {
           border-radius: 8px;
           background-color: white;
+          width: 100%;
+          height: auto;
+          aspect-ratio: 16/9;
+          display: block;
         }
         
         /* iPad-specific styles */
