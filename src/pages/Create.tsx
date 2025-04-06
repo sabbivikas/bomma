@@ -239,23 +239,21 @@ const Create = () => {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row md:gap-8 max-w-7xl mx-auto">
-            {/* Drawing section - using max-w-xl to limit canvas width */}
-            <div className="flex-1 max-w-3xl">
-              <DrawingSection 
-                framesCount={0}
-                hasNoFrames={true}
-                onSaveFrame={handleSave}
-                prompt={prompt}
-              />
-            </div>
+          <div className="max-w-3xl mx-auto">
+            {/* Drawing section */}
+            <DrawingSection 
+              framesCount={0}
+              hasNoFrames={true}
+              onSaveFrame={handleSave}
+              prompt={prompt}
+            />
             
-            {/* Right sidebar for additional options */}
-            <div className="md:w-80 mt-6 md:mt-0">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 sticky top-20">
-                <h3 className="font-semibold text-gray-800 mb-4 text-lg">Options:</h3>
-                
-                <div className="flex items-center space-x-2 mb-6">
+            {/* Options below the canvas */}
+            <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-800 mb-3">Options:</h3>
+              
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="stay-on-page" 
                     checked={stayOnPage} 
@@ -269,9 +267,9 @@ const Create = () => {
                 <Button 
                   variant="outline"
                   onClick={() => navigate('/')}
-                  className="w-full flex items-center justify-center gap-2 h-10"
+                  className="flex items-center justify-center gap-2 h-9"
                 >
-                  <Eye className="h-5 w-5" /> View All Doodles
+                  <Eye className="h-4 w-4" /> View All Doodles
                 </Button>
               </div>
             </div>

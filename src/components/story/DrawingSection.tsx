@@ -49,9 +49,9 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="bg-white rounded-xl border border-gray-200 shadow p-2 md:p-3">
+      <div className="bg-white rounded-xl border border-gray-200 shadow p-0 overflow-hidden">
         {showSuccess && (
-          <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center">
+          <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center px-3 pt-2">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
             <span>Frame added successfully</span>
           </div>
