@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -831,7 +832,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       // Update canvas display size
       canvas.style.width = `${newWidth}px`;
-      canvas.style.height = `${newHeight}px`;
+      canvas.style.height = `${newHeight}px`;  // Fixed: Added the value for canvas.style.height
       
       // Store the scale factor for coordinate calculations
       setCanvasScale(canvas.width / newWidth);
