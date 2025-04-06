@@ -830,4 +830,340 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       let newWidth, newHeight, scaleFactor;
       
       if (isTablet) {
-        // For tablets, use
+        // For tablets, use a fixed proportion of the container
+        newWidth = containerWidth;
+        newHeight = containerWidth * 0.75; // 4:3 aspect ratio works well for tablets
+        
+        // Ensure height isn't too tall for the container
+        if (newHeight > containerHeight) {
+          newHeight = containerHeight;
+          newWidth = newHeight * (4/3);
+        }
+      } else if (isMobile) {
+        // For phones, maximize width and use a taller ratio
+        newWidth = containerWidth;
+        newHeight = containerWidth * 0.8; // Taller ratio for phones
+        
+        // Ensure height isn't too tall for the container
+        if (newHeight > containerHeight) {
+          newHeight = containerHeight;
+          newWidth = newHeight * 1.25; // 5:4 aspect ratio
+        }
+      } else {
+        // For desktop, maintain 16:10 aspect ratio but fit container
+        if (containerWidth / containerHeight > 16/10) {
+          // Container is wider than the target ratio, constrain by height
+          newHeight = containerHeight;
+          newWidth = newHeight * (16/10);
+        } else {
+          // Container is taller than target ratio, constrain by width
+          newWidth = containerWidth;
+          newHeight = newWidth * (10/16);
+        }
+      }
+      
+      // Calculate scale factor for coordinate mapping
+      scaleFactor = newWidth / canvasSize.width;
+      setCanvasScale(scaleFactor);
+      
+      // Update the display size while keeping the internal canvas size fixed
+      canvas.style.width = `${newWidth}px`;
+      canvas.style.height = `${newHeight}px`;
+      
+      // Calculate offset for coordinate mapping
+      const rect = canvas.getBoundingClientRect();
+      setCanvasOffset({
+        x: rect.left,
+        y: rect.top
+      });
+    };
+    
+    // Call once to initialize
+    handleResize();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isMobile, canvasSize.width]);
+
+  // Render canvas, tools and UI
+  return (
+    <div className="flex flex-col space-y-2">
+      {/* Canvas container with no borders */}
+      <div className="w-full overflow-hidden relative bg-white">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={isDrawing ? draw : undefined}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={isDrawing ? draw : undefined}
+          onTouchEnd={stopDrawing}
+          className="w-full touch-none cursor-crosshair"
+        />
+        
+        {selectedTextIndex !== null && (
+          <div className="absolute bottom-4 right-4 flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleEditText}
+              className="bg-white/80 backdrop-blur-sm"
+            >
+              Edit Text
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleRemoveText}
+              className="bg-white/80 backdrop-blur-sm"
+            >
+              Remove Text
+            </Button>
+          </div>
+        )}
+      </div>
+      
+      {/* Controls and tools */}
+      <div className="flex flex-col space-y-4">
+        {/* Drawing tools */}
+        <div className={cn(
+          "flex items-center justify-between",
+          isMobile ? "flex-col space-y-4" : "space-x-4"
+        )}>
+          {/* Tool selection */}
+          <div className="flex-1">
+            <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
+              <ToggleGroupItem value="pen" aria-label="Pen tool" className="toggle-group-item">
+                <Pen className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="eraser" aria-label="Eraser tool" className="toggle-group-item">
+                <Eraser className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="text" aria-label="Text tool" className="toggle-group-item">
+                <Type className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="rectangle" aria-label="Rectangle tool" className="toggle-group-item">
+                <Square className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="circle" aria-label="Circle tool" className="toggle-group-item">
+                <CircleIcon className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          
+          {/* Color picker */}
+          <div className="flex space-x-2 items-center">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-10 p-0 aspect-square">
+                  <div
+                    className="w-6 h-6 rounded-full border border-gray-300"
+                    style={{ backgroundColor: color }}
+                  />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64">
+                <div className="grid grid-cols-6 gap-2">
+                  {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', 
+                    '#00FFFF', '#FF9900', '#9900FF', '#009900', '#990000', '#000099',
+                    '#FFFFFF', '#CCCCCC', '#999999', '#666666', '#333333', '#FFCCCC',
+                    '#CCFFCC', '#CCCCFF', '#FFFFCC', '#FFCCFF', '#CCFFFF', '#FFC299'].map((c) => (
+                    <button
+                      key={c}
+                      className={cn("w-8 h-8 rounded-full border", color === c ? "border-black ring-2 ring-black ring-offset-1" : "border-gray-300")}
+                      style={{ backgroundColor: c }}
+                      onClick={() => setColor(c)}
+                    />
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center space-x-2">
+                  <Label htmlFor="color-input">Custom:</Label>
+                  <Input 
+                    id="color-input"
+                    type="color" 
+                    value={color} 
+                    onChange={(e) => setColor(e.target.value)} 
+                    className="w-10 h-8 p-0" 
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {/* Width slider */}
+            <div className="w-36">
+              <Slider
+                value={width}
+                min={1}
+                max={30}
+                step={1}
+                onValueChange={setWidth}
+              />
+            </div>
+            
+            {/* Fill shape toggle (only for shape tools) */}
+            {(tool === 'rectangle' || tool === 'circle') && (
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="fill-shape" 
+                  checked={fill} 
+                  onCheckedChange={(checked) => setFill(checked === true)}
+                />
+                <Label htmlFor="fill-shape" className="text-sm">Fill</Label>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Font controls (for text tool) */}
+        {tool === 'text' && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <Select value={textFont} onValueChange={setTextFont}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Font" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Arial">Arial</SelectItem>
+                <SelectItem value="Verdana">Verdana</SelectItem>
+                <SelectItem value="Times New Roman">Times</SelectItem>
+                <SelectItem value="Comic Sans MS">Comic Sans</SelectItem>
+                <SelectItem value="Courier New">Courier</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <div className="w-32 flex items-center space-x-2">
+              <Label htmlFor="text-size" className="text-xs whitespace-nowrap">Size:</Label>
+              <Slider
+                id="text-size"
+                value={textSize}
+                min={8}
+                max={72}
+                step={1}
+                onValueChange={setTextSize}
+              />
+            </div>
+            
+            <span className="text-sm text-gray-500">{textSize}px</span>
+          </div>
+        )}
+        
+        {/* Action buttons */}
+        <div className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={clearCanvas}
+            className="border-2 border-gray-300"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear
+          </Button>
+          
+          <Button 
+            onClick={handlePublish} 
+            disabled={isPublishing}
+            className="bg-black text-white border-2 border-black"
+            variant="default"
+          >
+            {isPublishing ? 'Publishing...' : 'Publish Doodle'}
+          </Button>
+        </div>
+      </div>
+      
+      {/* Text input dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+            <DialogDescription>
+              Enter the text you want to add to your drawing.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="text-input">Text</Label>
+              <Textarea
+                id="text-input"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Enter your text here..."
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddText}>Add Text</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Theme selector dialog */}
+      <Dialog open={showThemeSelector} onOpenChange={setShowThemeSelector}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose Canvas Theme</DialogTitle>
+            <DialogDescription>
+              Select a theme for your canvas background
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Visual Theme</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {visualThemes.map((vtheme) => (
+                  <button
+                    key={vtheme.id}
+                    className={cn(
+                      "p-2 rounded border",
+                      theme.visualTheme === vtheme.id ? "border-black ring-2 ring-black" : "border-gray-200"
+                    )}
+                    onClick={() => setVisualTheme(vtheme.id as VisualTheme)}
+                  >
+                    <ThemePreview theme={vtheme.id as VisualTheme} seasonalTheme="none" />
+                    <p className="text-sm mt-1">{vtheme.name}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Seasonal Overlay (Optional)</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {seasonalThemes.map((stheme) => (
+                  <button
+                    key={stheme.id}
+                    className={cn(
+                      "p-2 rounded border",
+                      theme.seasonalTheme === stheme.id ? "border-black ring-2 ring-black" : "border-gray-200"
+                    )}
+                    onClick={() => setSeasonalTheme(stheme.id as SeasonalTheme)}
+                  >
+                    <ThemePreview 
+                      theme={theme.visualTheme} 
+                      seasonalTheme={stheme.id as SeasonalTheme} 
+                    />
+                    <p className="text-sm mt-1">{stheme.name}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setShowThemeSelector(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
