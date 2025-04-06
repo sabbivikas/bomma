@@ -7,17 +7,17 @@ interface FrameCounterProps {
 
 const FrameCounter: React.FC<FrameCounterProps> = ({ count }) => {
   return (
-    <div className="flex items-center text-xs sm:text-sm text-gray-500">
-      <div className="flex gap-0.5 sm:gap-1 mr-1.5">
+    <div className="flex items-center text-xs text-gray-500">
+      <div className="flex gap-0.5 mr-1">
         {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
           <div 
             key={i} 
-            className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500"
+            className="w-2 h-2 rounded-full bg-green-500"
             title={`Frame ${i + 1}`}
           />
         ))}
         {count > 3 && (
-          <div className="text-[10px] sm:text-xs flex items-center justify-center px-1 bg-green-100 rounded-full">
+          <div className="text-[10px] flex items-center justify-center px-1 bg-green-100 rounded-full">
             +{count - 3}
           </div>
         )}

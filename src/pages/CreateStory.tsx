@@ -20,7 +20,7 @@ const CreateStory = () => {
       <div className="min-h-screen flex flex-col relative">
         <Navbar />
         
-        <main className="flex-1 container mx-auto px-3 sm:px-4 py-4 relative z-10 pb-16 max-w-4xl">
+        <main className="flex-1 container mx-auto px-3 py-4 relative z-10 pb-16 max-w-4xl">
           <StoryCreator />
         </main>
       </div>
