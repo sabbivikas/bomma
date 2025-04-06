@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -200,8 +201,8 @@ const Create = () => {
       {!isMobile && <Cloud />}
       <Navbar />
       
-      <main className={`flex-1 container mx-auto px-2 py-4 relative z-10 ${isIpad ? 'max-w-3xl' : ''}`}>
-        <div className="mb-4 animate-pop-in">
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-8 relative z-10">
+        <div className="mb-6 animate-pop-in">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 sketchy-text inline-block font-funky">
             <FunkyText text={publishedDoodle ? "Your Published Doodle" : "Create Your Doodle"} />
           </h1>
@@ -223,46 +224,96 @@ const Create = () => {
           </div>
         )}
         
-        <div className={`mx-auto ${isIpad ? 'w-full' : 'max-w-6xl'}`}>
-          {publishedDoodle ? (
-            <div className="flex flex-col items-center">
-              <div className="w-full max-w-md animate-pop-in">
-                <DoodleCard doodle={publishedDoodle} onLike={handleDoodleLiked} highlight={true} />
-              </div>
-              
-              <div className="flex gap-4 mt-6">
-                <Button
-                  onClick={handleCreateNew}
-                  className="border-2 border-black sketchy-button gap-2 bg-black text-white"
-                >
-                  Create Another Doodle
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                  className="border-2 border-black sketchy-button gap-2"
-                >
-                  <Eye className="h-4 w-4" /> View All Doodles
-                </Button>
+        {publishedDoodle ? (
+          <div className="flex flex-col items-center">
+            <div className="w-full max-w-md animate-pop-in">
+              <DoodleCard doodle={publishedDoodle} onLike={handleDoodleLiked} highlight={true} />
+            </div>
+            
+            <div className="flex gap-4 mt-6">
+              <Button
+                onClick={handleCreateNew}
+                className="border-2 border-black sketchy-button gap-2 bg-black text-white"
+              >
+                Create Another Doodle
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/')}
+                className="border-2 border-black sketchy-button gap-2"
+              >
+                <Eye className="h-4 w-4" /> View All Doodles
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+                <DrawingCanvas onSave={handleSave} prompt={prompt} />
               </div>
             </div>
-          ) : (
-            <>
-              <DrawingCanvas onSave={handleSave} prompt={prompt} />
-
-              <div className="mt-4 flex items-center space-x-2">
+            
+            <div className="space-y-4">
+              <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                <h3 className="font-medium text-gray-800 mb-2">Today's prompt:</h3>
+                <div className="p-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+                  <p className="font-medium text-gray-900">{prompt}</p>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                <h3 className="font-medium text-gray-800 mb-2">Tips:</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 font-bold">•</span>
+                    Use the toolbar to select different drawing tools
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 font-bold">•</span>
+                    You can change colors and line thickness
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 font-bold">•</span>
+                    Let your imagination guide you!
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="flex gap-2 mt-4 justify-end">
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="border border-gray-200"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="default"
+                  className="bg-black hover:bg-black/90 text-white"
+                  onClick={() => {
+                    const canvas = document.querySelector('canvas');
+                    if (canvas) handleSave(canvas as HTMLCanvasElement);
+                  }}
+                  disabled={isPublishing}
+                >
+                  {isPublishing ? 'Publishing...' : 'Publish Doodle'}
+                </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2 mt-2">
                 <Checkbox 
                   id="stay-on-page" 
                   checked={stayOnPage} 
                   onCheckedChange={(checked) => setStayOnPage(checked === true)}
                 />
                 <Label htmlFor="stay-on-page" className="text-sm text-gray-600">
-                  Stay on this page after publishing (create multiple doodles)
+                  Stay on this page after publishing
                 </Label>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
       </main>
       
       {/* Add CSS for enhanced dreamy effects */}
@@ -324,17 +375,6 @@ const Create = () => {
           /* Better spacing for iPad */
           .gap-2 {
             gap: 0.75rem !important;
-          }
-          
-          /* Improve canvas container */
-          canvas {
-            max-height: 70vh !important;
-          }
-          
-          /* Ensure colors selector is easy to tap */
-          input[type="color"] {
-            min-width: 44px;
-            min-height: 44px;
           }
         }
         `}
