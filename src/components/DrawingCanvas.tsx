@@ -1219,23 +1219,26 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           <div className="space-y-4">
             <h3 className="font-medium">Canvas Theme</h3>
             <div className="grid grid-cols-3 gap-2">
-              {visualThemes.map((theme) => (
+              {visualThemes.map((themeConfig) => (
                 <ThemePreview
-                  key={theme.id}
-                  theme={theme}
-                  onClick={() => setVisualTheme(theme.id as VisualTheme)}
+                  key={themeConfig.id}
+                  visualTheme={themeConfig.id as VisualTheme}
+                  seasonalTheme={theme.seasonalTheme}
+                  className="cursor-pointer hover:ring-2 ring-primary"
+                  onClick={() => setVisualTheme(themeConfig.id as VisualTheme)}
                 />
               ))}
             </div>
             
             <h3 className="font-medium pt-2">Seasonal Overlay</h3>
             <div className="grid grid-cols-4 gap-2">
-              {seasonalThemes.map((theme) => (
+              {seasonalThemes.map((themeConfig) => (
                 <ThemePreview
-                  key={theme.id}
-                  theme={theme}
-                  small
-                  onClick={() => setSeasonalTheme(theme.id as SeasonalTheme)}
+                  key={themeConfig.id}
+                  visualTheme={theme.visualTheme}
+                  seasonalTheme={themeConfig.id as SeasonalTheme}
+                  className="cursor-pointer hover:ring-2 ring-primary"
+                  onClick={() => setSeasonalTheme(themeConfig.id as SeasonalTheme)}
                 />
               ))}
             </div>
@@ -1244,7 +1247,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       </Popover>
       
       {/* Mobile-specific adapations */}
-      <style jsx>{`
+      <style>
+        {`
         @media (max-width: 640px) {
           .drawing-canvas-container .toggle-group-item {
             min-height: 40px;
@@ -1264,7 +1268,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             min-height: 44px;
           }
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
 };
