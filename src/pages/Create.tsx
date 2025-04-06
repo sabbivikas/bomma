@@ -16,6 +16,30 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Doodle } from '@/types/doodle';
 import DoodleCard from '@/components/DoodleCard';
 
+// Helper function to detect if the device is an iPad
+const useIsIpad = () => {
+  const [isIpad, setIsIpad] = useState(false);
+
+  useEffect(() => {
+    const checkIsIpad = () => {
+      // Check for iPad specifically
+      const isIpadOS = navigator.userAgent.match(/iPad/i) !== null ||
+        (navigator.userAgent.match(/Mac/i) !== null && navigator.maxTouchPoints > 0);
+      
+      // Also check for typical iPad dimensions - width between 750px and 1024px
+      const isIpadSize = window.innerWidth >= 750 && window.innerWidth <= 1024;
+      
+      setIsIpad(isIpadOS || isIpadSize);
+    };
+
+    checkIsIpad();
+    window.addEventListener('resize', checkIsIpad);
+    return () => window.removeEventListener('resize', checkIsIpad);
+  }, []);
+
+  return isIpad;
+};
+
 const Create = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,6 +49,7 @@ const Create = () => {
   const [publishedDoodle, setPublishedDoodle] = useState<Doodle | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
+  const isIpad = useIsIpad();
   
   useEffect(() => {
     // Update the page title when this component mounts
@@ -171,19 +196,19 @@ const Create = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.8),transparent_70%)] z-0"></div>
       
       {/* The background ghibli elements */}
-      <GhibliAnimations />
-      <Cloud />
+      {!isMobile && <GhibliAnimations />}
+      {!isMobile && <Cloud />}
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-2 py-4 relative z-10">
+      <main className={`flex-1 container mx-auto px-2 py-4 relative z-10 ${isIpad ? 'max-w-3xl' : ''}`}>
         <div className="mb-4 animate-pop-in">
-          <h1 className="text-3xl font-bold mb-2 sketchy-text inline-block font-funky">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 sketchy-text inline-block font-funky">
             <FunkyText text={publishedDoodle ? "Your Published Doodle" : "Create Your Doodle"} />
           </h1>
           <div className="sketchy-divider mb-3"></div>
           <div className="flex items-center gap-2">
             <Lightbulb className="text-black animate-pulse-light" />
-            <p className="text-muted-foreground">
+            <p className="text-sm md:text-base text-muted-foreground">
               {publishedDoodle 
                 ? "Amazing! Your creation is now part of our wonderful community." 
                 : "Let your creativity flow and create something wonderful!"}
@@ -199,7 +224,7 @@ const Create = () => {
         )}
         
         {/* Increase max-width to allow more space for the canvas */}
-        <div className="max-w-6xl mx-auto">
+        <div className={`mx-auto ${isIpad ? 'w-full' : 'max-w-6xl'}`}>
           {publishedDoodle ? (
             <div className="flex flex-col items-center">
               <div className="w-full max-w-md animate-pop-in">
@@ -287,6 +312,35 @@ const Create = () => {
         @keyframes float {
           0%, 100% { transform: translateY(0) translateX(0); }
           50% { transform: translateY(-20px) translateX(10px); }
+        }
+        
+        /* Additional iPad-specific styles */
+        @media (min-width: 768px) and (max-width: 1024px) {
+          .order-1 {
+            order: 1 !important;
+          }
+          .order-2 {
+            order: 2 !important;
+          }
+          .order-3 {
+            order: 3 !important;
+          }
+          
+          /* Increase touch targets for iPad */
+          button, .toggle-group-item {
+            min-height: 40px;
+            min-width: 40px;
+          }
+          
+          /* Ensure proper spacing on iPad */
+          .gap-2 {
+            gap: 0.75rem !important;
+          }
+          
+          /* Improve canvas container on iPad */
+          canvas {
+            max-height: 70vh !important;
+          }
         }
         `}
       </style>

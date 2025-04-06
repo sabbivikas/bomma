@@ -966,138 +966,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       {/* Main drawing area container with improved responsive layout */}
       <div className="flex flex-col md:flex-row gap-3">
-        {/* Tools panel - horizontal on tablets and mobile, vertical on desktop */}
-        <div className={`${isMobile || window.innerWidth <= 1024 ? 'order-2 flex-row flex-wrap justify-center' : 'order-1 w-12 flex-col'} flex bg-white rounded-lg shadow-sm p-1.5 border border-gray-100`}>
-          {/* Drawing Tools in a more compact layout for tablet */}
-          <div className={`flex ${isMobile || window.innerWidth <= 1024 ? 'flex-row gap-2 flex-wrap justify-center' : 'flex-col gap-1.5 mb-3'}`}>
-            <ToggleGroup 
-              type="single" 
-              value={tool} 
-              onValueChange={(value) => value && setTool(value as any)} 
-              className={`flex ${isMobile || window.innerWidth <= 1024 ? 'flex-row gap-1 flex-wrap' : 'flex-col gap-1'}`}
-            >
-              <ToggleGroupItem value="pen" className="h-8 w-8 p-0" title="Pen">
-                <Pen className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="eraser" className="h-8 w-8 p-0" title="Eraser">
-                <Eraser className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="text" className="h-8 w-8 p-0" title="Text">
-                <Type className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="rectangle" className="h-8 w-8 p-0" title="Rectangle">
-                <Square className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="circle" className="h-8 w-8 p-0" title="Circle">
-                <CircleIcon className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          
-          {/* Color picker with adaptive layout */}
-          <div className={`${isMobile || window.innerWidth <= 1024 ? 'mx-2' : 'my-1'}`}>
-            <input 
-              type="color" 
-              value={color} 
-              onChange={(e) => setColor(e.target.value)} 
-              className={`${isMobile || window.innerWidth <= 1024 ? 'w-8 h-8' : 'w-full h-6'} cursor-pointer rounded-sm`} 
-              title="Color"
-            />
-          </div>
-          
-          {/* Width slider with adaptive orientation */}
-          <div className={`${isMobile || window.innerWidth <= 1024 ? 'mx-2 w-24' : 'my-2'}`}>
-            <Slider 
-              defaultValue={width} 
-              max={30} 
-              min={1} 
-              step={1} 
-              onValueChange={setWidth}
-              orientation={isMobile || window.innerWidth <= 1024 ? "horizontal" : "vertical"}
-              className={isMobile || window.innerWidth <= 1024 ? "w-full" : "h-20"}
-              title="Width"
-            />
-          </div>
-          
-          {/* Fill option with adaptive layout */}
-          {(tool === 'rectangle' || tool === 'circle') && (
-            <div className={`${isMobile || window.innerWidth <= 1024 ? 'mx-2' : 'my-1'} flex items-center justify-center`}>
-              <Checkbox 
-                id="fill-shapes" 
-                checked={fill} 
-                onCheckedChange={(checked) => setFill(!!checked)}
-                className="h-4 w-4"
-                title="Fill Shape" 
-              />
-            </div>
-          )}
-          
-          {/* Divider with adaptive orientation */}
-          <div className={`${isMobile || window.innerWidth <= 1024 ? 'border-l h-8 mx-2' : 'border-t w-full my-2'} border-gray-100`}></div>
-          
-          {/* Action buttons with adaptive layout */}
-          <div className={`flex ${isMobile || window.innerWidth <= 1024 ? 'flex-row gap-2' : 'flex-col gap-1.5'}`}>
-            {/* Theme button */}
-            <button 
-              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-              onClick={() => setShowThemeSelector(prev => !prev)}
-              title="Theme"
-            >
-              <Palette className="h-4 w-4" />
-            </button>
-            
-            {/* Clear button */}
-            <button 
-              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-              onClick={clearCanvas}
-              title="Clear Canvas"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-            
-            {/* Frame button */}
-            <button 
-              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-              onClick={saveCurrentFrame}
-              title="Save Frame"
-            >
-              <PlusSquare className="h-4 w-4" />
-            </button>
-            
-            {/* Frames button */}
-            <button 
-              className={`flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors ${showFramesPanel ? "bg-gray-100" : ""}`}
-              onClick={() => setShowFramesPanel(prev => !prev)}
-              title="Show Frames"
-            >
-              <Layers className="h-4 w-4" />
-            </button>
-            
-            {/* Share button */}
-            <button 
-              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-              onClick={handleShare}
-              title="Share"
-            >
-              <Share className="h-4 w-4" />
-            </button>
-          </div>
-          
-          {/* Publish button with adaptive placement */}
-          <div className={`${isMobile || window.innerWidth <= 1024 ? 'ml-3' : 'mt-auto pt-3'}`}>
-            <Button 
-              onClick={handlePublish} 
-              disabled={isPublishing}
-              size="sm"
-              className={`${isMobile || window.innerWidth <= 1024 ? 'px-3' : 'w-full'} text-xs`}
-            >
-              {isPublishing ? "..." : "Publish"}
-            </Button>
-          </div>
-        </div>
-        
-        {/* Canvas container with improved responsive sizing */}
-        <div className="order-1 lg:order-2 flex-1 relative border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        {/* Canvas container - now comes first on mobile and tablet for better visibility */}
+        <div className="order-1 flex-1 relative border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           <canvas
             ref={canvasRef}
             onMouseDown={startDrawing}
@@ -1109,20 +979,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             onTouchEnd={stopDrawing}
             className="touch-none bg-white w-full h-auto max-h-screen"
           />
-          
-          {/* Render text elements */}
-          {textElements.map((element, index) => (
-            <div 
-              key={index}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
-            />
-          ))}
           
           {/* Text editing popover for selected text */}
           {selectedTextIndex !== null && (
@@ -1136,10 +992,136 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </div>
           )}
         </div>
+
+        {/* Tools panel - now appears below canvas on mobile and tablet for better access */}
+        <div className="order-2 flex flex-row flex-wrap justify-center md:justify-start md:w-auto bg-white rounded-lg shadow-sm p-2 border border-gray-100 gap-2">
+          {/* Drawing Tools in a more compact layout */}
+          <div className="flex flex-row gap-2 flex-wrap justify-center items-center">
+            <ToggleGroup 
+              type="single" 
+              value={tool} 
+              onValueChange={(value) => value && setTool(value as any)} 
+              className="flex flex-row gap-1 flex-wrap"
+            >
+              <ToggleGroupItem value="pen" className="h-10 w-10 p-0" title="Pen">
+                <Pen className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="eraser" className="h-10 w-10 p-0" title="Eraser">
+                <Eraser className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="text" className="h-10 w-10 p-0" title="Text">
+                <Type className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="rectangle" className="h-10 w-10 p-0" title="Rectangle">
+                <Square className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="circle" className="h-10 w-10 p-0" title="Circle">
+                <CircleIcon className="h-5 w-5" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          
+          {/* Color picker */}
+          <div className="mx-1">
+            <input 
+              type="color" 
+              value={color} 
+              onChange={(e) => setColor(e.target.value)} 
+              className="w-10 h-10 cursor-pointer rounded-sm" 
+              title="Color"
+            />
+          </div>
+          
+          {/* Width slider */}
+          <div className="mx-1 w-32">
+            <Slider 
+              defaultValue={width} 
+              max={30} 
+              min={1} 
+              step={1} 
+              onValueChange={setWidth}
+              className="w-full"
+              title="Width"
+            />
+          </div>
+          
+          {/* Fill option */}
+          {(tool === 'rectangle' || tool === 'circle') && (
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-1.5">
+                <Checkbox 
+                  id="fill-shapes" 
+                  checked={fill} 
+                  onCheckedChange={(checked) => setFill(!!checked)}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="fill-shapes" className="text-xs">Fill</Label>
+              </div>
+            </div>
+          )}
+          
+          {/* Action buttons */}
+          <div className="flex flex-row gap-2 items-center">
+            {/* Theme button */}
+            <button 
+              className="flex items-center justify-center h-10 w-10 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={() => setShowThemeSelector(prev => !prev)}
+              title="Theme"
+            >
+              <Palette className="h-5 w-5" />
+            </button>
+            
+            {/* Clear button */}
+            <button 
+              className="flex items-center justify-center h-10 w-10 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={clearCanvas}
+              title="Clear Canvas"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+            
+            {/* Frame button */}
+            <button 
+              className="flex items-center justify-center h-10 w-10 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={saveCurrentFrame}
+              title="Save Frame"
+            >
+              <PlusSquare className="h-5 w-5" />
+            </button>
+            
+            {/* Frames button */}
+            <button 
+              className={`flex items-center justify-center h-10 w-10 text-gray-600 hover:bg-gray-100 rounded-md transition-colors ${showFramesPanel ? "bg-gray-100" : ""}`}
+              onClick={() => setShowFramesPanel(prev => !prev)}
+              title="Show Frames"
+            >
+              <Layers className="h-5 w-5" />
+            </button>
+            
+            {/* Share button */}
+            <button 
+              className="flex items-center justify-center h-10 w-10 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={handleShare}
+              title="Share"
+            >
+              <Share className="h-5 w-5" />
+            </button>
+            
+            {/* Publish button */}
+            <Button 
+              onClick={handlePublish} 
+              disabled={isPublishing}
+              size="sm"
+              className="px-3 text-sm h-10"
+            >
+              {isPublishing ? "..." : "Publish"}
+            </Button>
+          </div>
+        </div>
         
         {/* Frames panel with adaptive positioning */}
         {showFramesPanel && (
-          <div className={`${isMobile || window.innerWidth <= 1024 ? 'order-3' : 'order-3 lg:w-40'} bg-white rounded-lg shadow-sm p-2 border border-gray-100`}>
+          <div className="order-3 bg-white rounded-lg shadow-sm p-2 border border-gray-100 mt-2 md:mt-0">
             <div className="flex justify-between items-center mb-1">
               <h3 className="text-xs font-medium">Frames</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowFramesPanel(false)} className="h-5 w-5 p-0">
@@ -1150,11 +1132,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             {frames.length === 0 ? (
               <p className="text-gray-400 text-xs">No frames yet</p>
             ) : (
-              <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
+              <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-y-auto max-h-60 md:max-w-40">
                 {frames.map((frame, index) => (
                   <div 
                     key={frame.id}
-                    className={`relative p-1 border ${index === currentFrameIndex ? 'border-purple-400' : 'border-gray-100'} rounded cursor-pointer`}
+                    className={`relative p-1 border ${index === currentFrameIndex ? 'border-purple-400' : 'border-gray-100'} rounded cursor-pointer min-w-20`}
                     onClick={() => loadFrame(index)}
                   >
                     <img src={frame.imageData} alt={`Frame ${index + 1}`} className="w-full h-auto" />
