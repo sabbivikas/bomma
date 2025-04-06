@@ -2,18 +2,14 @@
 import React from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeConfig } from '@/utils/themeConfig';
-import { VisualTheme, SeasonalTheme, ThemeState } from '@/types/theme';
+import { VisualTheme, SeasonalTheme } from '@/types/theme';
 
 interface ThemePreviewProps {
   className?: string;
-  theme?: ThemeState; // Make theme optional
 }
 
-const ThemePreview: React.FC<ThemePreviewProps> = ({ className = '', theme: propTheme }) => {
-  const contextTheme = useTheme().theme;
-  // Use provided theme prop if available, otherwise use theme from context
-  const theme = propTheme || contextTheme;
-  
+const ThemePreview: React.FC<ThemePreviewProps> = ({ className = '' }) => {
+  const { theme } = useTheme();
   const visualThemeConfig = getThemeConfig(theme.visualTheme);
   const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
   
