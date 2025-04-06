@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -240,45 +239,9 @@ const Create = () => {
           </div>
         ) : (
           <div className="flex flex-col">
-            {/* Drawing container with fixed layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
-              {/* Main drawing area - takes up most of the space */}
-              <div className="lg:col-span-4 order-2 lg:order-1">
-                <div className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-purple-200">
-                  <DrawingCanvas onSave={handleSave} prompt={prompt} />
-                </div>
-                
-                {/* Canvas control buttons */}
-                <div className="mt-4 flex justify-between items-center">
-                  <Button 
-                    variant="outline"
-                    className="gap-2 border-2 border-gray-300"
-                    onClick={() => {
-                      const clearButton = document.querySelector('[aria-label="Clear"]');
-                      if (clearButton) {
-                        (clearButton as HTMLButtonElement).click();
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" /> Clear Canvas
-                  </Button>
-                  
-                  <Button 
-                    variant="success"
-                    className="gap-2"
-                    onClick={() => {
-                      const canvas = document.querySelector('canvas');
-                      if (canvas) handleSave(canvas as HTMLCanvasElement);
-                    }}
-                    disabled={isPublishing}
-                  >
-                    {isPublishing ? 'Publishing...' : 'Publish Doodle'}
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Right sidebar with prompt, tips, options */}
-              <div className="lg:col-span-2 order-1 lg:order-2 space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Sidebar with prompt, tips, options - positioned on the right side */}
+              <div className="lg:col-span-3 lg:order-2 space-y-4">
                 {/* Prompt card with clear visual styling */}
                 <div className="p-4 bg-white/90 rounded-lg border-2 border-purple-200 shadow-md">
                   <div className="flex items-center gap-2">
@@ -331,12 +294,47 @@ const Create = () => {
                   </Button>
                 </div>
               </div>
+              
+              {/* Main drawing area - takes up most of the space */}
+              <div className="lg:col-span-9 lg:order-1">
+                <div className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-purple-200">
+                  <DrawingCanvas onSave={handleSave} prompt={prompt} />
+                </div>
+                
+                {/* Single set of canvas control buttons */}
+                <div className="mt-4 flex justify-between items-center">
+                  <Button 
+                    variant="outline"
+                    className="gap-2 border-2 border-gray-300"
+                    onClick={() => {
+                      const clearButton = document.querySelector('[aria-label="Clear"]');
+                      if (clearButton) {
+                        (clearButton as HTMLButtonElement).click();
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" /> Clear Canvas
+                  </Button>
+                  
+                  <Button 
+                    variant="success"
+                    className="gap-2"
+                    onClick={() => {
+                      const canvas = document.querySelector('canvas');
+                      if (canvas) handleSave(canvas as HTMLCanvasElement);
+                    }}
+                    disabled={isPublishing}
+                  >
+                    {isPublishing ? 'Publishing...' : 'Publish Doodle'}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </main>
       
-      {/* Add CSS for enhanced dreamy effects */}
+      {/* Add CSS for enhanced dreamy effects and improved canvas styling */}
       <style>
         {`
         .ghibli-sparkle {
@@ -390,7 +388,7 @@ const Create = () => {
           background-color: white;
           width: 100%;
           height: auto;
-          aspect-ratio: 16/9;
+          aspect-ratio: 16/10;
           display: block;
         }
         
