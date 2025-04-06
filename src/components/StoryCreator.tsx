@@ -1,35 +1,34 @@
 
-import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import DrawingCanvas from '@/components/DrawingCanvas';
+import React, { useState, useRef, useEffect } from 'react';
 import { createStory, addFrameToStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { StoryFrame } from '@/types/doodle';
-import { Trash2, Plus, BookOpen, Eye, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/contexts/ThemeContext';
-import { getThemeConfig } from '@/utils/themeConfig';
+
+// Import our new components
+import StoryForm from './story/StoryForm';
+import FramePreview from './story/FramePreview';
+import DrawingSection from './story/DrawingSection';
+import StoryActions from './story/StoryActions';
 
 const StoryCreator: React.FC = () => {
   const [title, setTitle] = useState('');
   const [frames, setFrames] = useState<StoryFrame[]>([]);
   const [isCreatingStory, setIsCreatingStory] = useState(false);
   const [isAddingFrame, setIsAddingFrame] = useState(false);
-  const { theme } = useTheme();
   const navigate = useNavigate();
 
-  // Get theme configuration
-  const visualThemeConfig = getThemeConfig(theme.visualTheme);
-  const seasonalThemeConfig = theme.seasonalTheme !== 'none' ? getThemeConfig(theme.seasonalTheme) : null;
+  // Calculate states for validation
+  const isTitleEmpty = title.trim() === '';
+  const hasNoFrames = frames.length === 0;
+  const canCreateStory = !isTitleEmpty && !hasNoFrames && !isCreatingStory;
 
   // Ref for scrolling to the bottom of the frames list
   const framesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when new frame is added
-  React.useEffect(() => {
+  useEffect(() => {
     if (frames.length > 0) {
       framesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -154,17 +153,6 @@ const StoryCreator: React.FC = () => {
     }
   };
 
-  // Check if we can create the story
-  const isTitleEmpty = title.trim() === '';
-  const hasNoFrames = frames.length === 0;
-  const canCreateStory = !isTitleEmpty && !hasNoFrames && !isCreatingStory;
-
-  // Generate theme-based background style for frames
-  const getThemeBackgroundStyle = () => {
-    let style = visualThemeConfig?.backgroundStyle || '';
-    return style;
-  };
-
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -175,124 +163,32 @@ const StoryCreator: React.FC = () => {
       </div>
       
       <div className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="title" className="flex items-center gap-2">
-            Story Title
-            {isTitleEmpty && (
-              <span className="text-xs text-red-500 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" /> Required
-              </span>
-            )}
-          </Label>
-          <Input 
-            id="title" 
-            value={title} 
-            onChange={e => setTitle(e.target.value)} 
-            placeholder="My Amazing Story"
-            className={isTitleEmpty ? "border-red-300 focus-visible:ring-red-300" : ""}
-          />
-        </div>
+        <StoryForm 
+          title={title} 
+          setTitle={setTitle} 
+          isTitleEmpty={isTitleEmpty} 
+        />
         
-        {/* Frame preview area */}
-        {frames.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-lg font-medium mb-2">Story Frames ({frames.length})</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-md">
-              {frames.map((frame, index) => (
-                <div key={index} className="relative group">
-                  <div className={`aspect-square border rounded-md overflow-hidden ${getThemeBackgroundStyle()}`}>
-                    <img 
-                      src={frame.imageUrl} 
-                      alt={`Frame ${index + 1}`} 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div className="absolute top-0 right-0 p-1">
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleRemoveFrame(index)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1">
-                    Frame {index + 1}
-                  </div>
-                </div>
-              ))}
-              <div ref={framesEndRef} />
-            </div>
-          </div>
-        )}
+        <FramePreview 
+          frames={frames} 
+          onRemoveFrame={handleRemoveFrame} 
+        />
         
-        <div className="mt-4">
-          <h3 className="text-lg font-medium mb-2">
-            {frames.length === 0 ? "Create your first frame" : "Add next frame"}
-            {hasNoFrames && (
-              <span className="text-xs text-red-500 ml-2">
-                (You need at least one frame to create a story)
-              </span>
-            )}
-          </h3>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 mb-4">
-            <p className="text-sm text-blue-600 mb-4 font-medium bg-blue-50 p-3 rounded-md border border-blue-100 flex items-start">
-              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-600 shrink-0" />
-              <span>Draw your frame below, then click the <strong>"Publish to Frame"</strong> button to add it to your story.</span>
-            </p>
-            <DrawingCanvas onSave={handleSaveFrame} />
-          </div>
-          
-          <div className="mt-4 flex justify-between">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => navigate('/stories')}
-            >
-              <Eye className="h-4 w-4" />
-              View All Stories
-            </Button>
-            
-            <div className="space-x-4">
-              {frames.length > 0 && (
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={handleClearAllFrames}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Clear All Frames
-                </Button>
-              )}
-              
-              <Button
-                className="flex items-center gap-2"
-                disabled={!canCreateStory}
-                onClick={handleCreateStory}
-                title={isTitleEmpty ? "Please enter a title" : hasNoFrames ? "Add at least one frame" : ""}
-              >
-                <BookOpen className="h-4 w-4" />
-                Create Story
-              </Button>
-            </div>
-          </div>
-          
-          {/* Validation message */}
-          {!canCreateStory && (
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700">
-              <span className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                To create your story, you need:
-              </span>
-              <ul className="list-disc ml-6 mt-1">
-                {isTitleEmpty && <li>A title for your story</li>}
-                {hasNoFrames && <li>At least one frame (drawing)</li>}
-              </ul>
-            </div>
-          )}
-        </div>
+        <DrawingSection 
+          framesCount={frames.length} 
+          hasNoFrames={hasNoFrames} 
+          onSaveFrame={handleSaveFrame} 
+        />
+        
+        <StoryActions 
+          canCreateStory={canCreateStory}
+          hasFrames={frames.length > 0}
+          isCreatingStory={isCreatingStory}
+          onClearFrames={handleClearAllFrames}
+          onCreateStory={handleCreateStory}
+          isTitleEmpty={isTitleEmpty}
+          hasNoFrames={hasNoFrames}
+        />
       </div>
     </div>
   );
