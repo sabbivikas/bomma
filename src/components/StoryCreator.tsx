@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { createStory, addFrameToStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
@@ -152,7 +151,7 @@ const StoryCreator: React.FC = () => {
       });
     }
   };
-
+  
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
