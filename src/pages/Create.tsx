@@ -6,7 +6,7 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { createDoodle, getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { getTodaysPrompt } from '@/data/prompts';
-import { Lightbulb, CheckCircle2, Eye } from 'lucide-react';
+import { Lightbulb, CheckCircle2, Eye, Trash2 } from 'lucide-react';
 import FunkyText from '@/components/FunkyText';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
@@ -201,20 +201,12 @@ const Create = () => {
       {!isMobile && <Cloud />}
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-8 relative z-10">
-        <div className="mb-6 animate-pop-in">
+      <main className="flex-1 container mx-auto px-4 py-6 relative z-10">
+        <div className="mb-4 animate-pop-in">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 sketchy-text inline-block font-funky">
             <FunkyText text={publishedDoodle ? "Your Published Doodle" : "Create Your Doodle"} />
           </h1>
           <div className="sketchy-divider mb-3"></div>
-          <div className="flex items-center gap-2">
-            <Lightbulb className="text-black animate-pulse-light" />
-            <p className="text-sm md:text-base text-muted-foreground">
-              {publishedDoodle 
-                ? "Amazing! Your creation is now part of our wonderful community." 
-                : "Let your creativity flow and create something wonderful!"}
-            </p>
-          </div>
         </div>
 
         {successMessage && (
@@ -248,22 +240,53 @@ const Create = () => {
           </div>
         ) : (
           <div className="flex flex-col">
-            <div className="mb-4 p-3 bg-white/80 rounded-lg border border-blue-100 shadow-sm w-full max-w-3xl mx-auto">
+            {/* Prompt card at the top */}
+            <div className="mb-6 p-4 bg-white/80 rounded-lg border border-blue-200 shadow-sm w-full mx-auto">
               <h3 className="font-medium text-gray-800">Today's prompt:</h3>
               <p className="font-medium text-gray-900 text-lg">{prompt}</p>
             </div>
             
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="w-full md:w-3/4">
-                <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Main canvas area - takes up most of the space */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border-4 border-gray-200">
                   <DrawingCanvas onSave={handleSave} prompt={prompt} />
+                </div>
+                
+                {/* Canvas controls below drawing area */}
+                <div className="mt-4 flex justify-between items-center">
+                  <Button 
+                    variant="outline"
+                    className="gap-2 border-2 border-gray-300"
+                    onClick={() => {
+                      const clearButton = document.querySelector('[aria-label="Clear"]');
+                      if (clearButton) {
+                        (clearButton as HTMLButtonElement).click();
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" /> Clear Canvas
+                  </Button>
+                  
+                  <Button 
+                    variant="success"
+                    className="gap-2 bg-black text-white hover:bg-black/90"
+                    onClick={() => {
+                      const canvas = document.querySelector('canvas');
+                      if (canvas) handleSave(canvas as HTMLCanvasElement);
+                    }}
+                    disabled={isPublishing}
+                  >
+                    {isPublishing ? 'Publishing...' : 'Publish Doodle'}
+                  </Button>
                 </div>
               </div>
               
-              <div className="w-full md:w-1/4 space-y-4">
-                <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-                  <h3 className="font-medium text-gray-800 mb-2">Tips:</h3>
-                  <ul className="space-y-2 text-sm text-gray-600">
+              {/* Side panel with tips and options */}
+              <div className="space-y-5">
+                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                  <h3 className="font-medium text-gray-800 mb-3 text-lg">Tips:</h3>
+                  <ul className="space-y-3 text-gray-600">
                     <li className="flex items-start gap-2">
                       <span className="text-blue-500 font-bold">•</span>
                       Use the toolbar to select different drawing tools
@@ -279,37 +302,27 @@ const Create = () => {
                   </ul>
                 </div>
                 
-                <div className="flex flex-col gap-4 mt-4">
-                  <Button 
-                    variant="default"
-                    className="bg-black hover:bg-black/90 text-white"
-                    onClick={() => {
-                      const canvas = document.querySelector('canvas');
-                      if (canvas) handleSave(canvas as HTMLCanvasElement);
-                    }}
-                    disabled={isPublishing}
-                  >
-                    {isPublishing ? 'Publishing...' : 'Publish Doodle'}
-                  </Button>
+                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                  <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
+                  
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox 
+                      id="stay-on-page" 
+                      checked={stayOnPage} 
+                      onCheckedChange={(checked) => setStayOnPage(checked === true)}
+                    />
+                    <Label htmlFor="stay-on-page" className="text-gray-600">
+                      Stay on this page after publishing
+                    </Label>
+                  </div>
                   
                   <Button 
                     variant="outline"
                     onClick={() => navigate('/')}
-                    className="border border-gray-200"
+                    className="w-full border border-gray-300"
                   >
                     Cancel
                   </Button>
-                </div>
-                
-                <div className="flex items-center space-x-2 mt-2">
-                  <Checkbox 
-                    id="stay-on-page" 
-                    checked={stayOnPage} 
-                    onCheckedChange={(checked) => setStayOnPage(checked === true)}
-                  />
-                  <Label htmlFor="stay-on-page" className="text-sm text-gray-600">
-                    Stay on this page after publishing
-                  </Label>
                 </div>
               </div>
             </div>
@@ -363,6 +376,13 @@ const Create = () => {
         @keyframes float {
           0%, 100% { transform: translateY(0) translateX(0); }
           50% { transform: translateY(-20px) translateX(10px); }
+        }
+        
+        /* Add a nicer frame for the drawing canvas */
+        canvas {
+          border-radius: 8px;
+          box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+          background-color: white;
         }
         
         /* iPad-specific styles */
