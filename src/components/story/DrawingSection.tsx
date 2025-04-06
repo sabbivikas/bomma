@@ -32,7 +32,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
     <div className="space-y-3 md:space-y-4 w-full">
       {/* Display prompt at the top if available */}
       {prompt && (
-        <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
             <Lightbulb className="h-4 w-4 text-amber-500" />
             <h3 className="font-medium text-gray-800 text-sm">Today's prompt:</h3>
@@ -49,7 +49,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="bg-white rounded-xl border border-gray-200 shadow p-0 overflow-hidden">
+      <div className="rounded-xl border border-gray-200 shadow overflow-hidden bg-gradient-to-b from-blue-50/80 to-purple-50/80 backdrop-blur-sm">
         {showSuccess && (
           <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center px-3 pt-2">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />

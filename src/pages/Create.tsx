@@ -249,7 +249,7 @@ const Create = () => {
             />
             
             {/* Options below the canvas */}
-            <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="mt-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200 p-4">
               <h3 className="font-semibold text-gray-800 mb-3">Options:</h3>
               
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -328,13 +328,20 @@ const Create = () => {
         /* Canvas styling - improved to match design */
         canvas {
           border-radius: 0;
-          background-color: white;
+          background: linear-gradient(180deg, rgba(230, 242, 255, 0.8) 0%, rgba(240, 235, 255, 0.8) 100%);
           width: 100%;
           height: auto;
           aspect-ratio: 16/10;
           display: block;
           border: none !important;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        /* Drawing tools container styling */
+        .drawing-tools-container {
+          background-color: rgba(255, 255, 255, 0.7) !important;
+          backdrop-filter: blur(4px);
+          border-top: 1px solid rgba(209, 213, 219, 0.5);
         }
         
         /* iPad-specific styles */
