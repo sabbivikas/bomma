@@ -223,7 +223,6 @@ const Create = () => {
           </div>
         )}
         
-        {/* Increase max-width to allow more space for the canvas */}
         <div className={`mx-auto ${isIpad ? 'w-full' : 'max-w-6xl'}`}>
           {publishedDoodle ? (
             <div className="flex flex-col items-center">
@@ -314,32 +313,28 @@ const Create = () => {
           50% { transform: translateY(-20px) translateX(10px); }
         }
         
-        /* Additional iPad-specific styles */
+        /* iPad-specific styles */
         @media (min-width: 768px) and (max-width: 1024px) {
-          .order-1 {
-            order: 1 !important;
-          }
-          .order-2 {
-            order: 2 !important;
-          }
-          .order-3 {
-            order: 3 !important;
-          }
-          
-          /* Increase touch targets for iPad */
+          /* Ensure touch targets are large enough */
           button, .toggle-group-item {
-            min-height: 40px;
-            min-width: 40px;
+            min-height: 44px;
+            min-width: 44px;
           }
           
-          /* Ensure proper spacing on iPad */
+          /* Better spacing for iPad */
           .gap-2 {
             gap: 0.75rem !important;
           }
           
-          /* Improve canvas container on iPad */
+          /* Improve canvas container */
           canvas {
             max-height: 70vh !important;
+          }
+          
+          /* Ensure colors selector is easy to tap */
+          input[type="color"] {
+            min-width: 44px;
+            min-height: 44px;
           }
         }
         `}
