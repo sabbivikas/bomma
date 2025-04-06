@@ -240,16 +240,21 @@ const Create = () => {
           </div>
         ) : (
           <div className="flex flex-col">
-            {/* Prompt card at the top */}
-            <div className="mb-6 p-4 bg-white/80 rounded-lg border border-blue-200 shadow-sm w-full mx-auto">
-              <h3 className="font-medium text-gray-800">Today's prompt:</h3>
-              <p className="font-medium text-gray-900 text-lg">{prompt}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Main canvas area - takes up most of the space */}
-              <div className="lg:col-span-3">
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden border-4 border-gray-200">
+            {/* Main content area with single prompt and canvas */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              {/* Drawing area - takes up most of the space */}
+              <div className="lg:col-span-4">
+                {/* Prompt card with clear visual styling at the top */}
+                <div className="mb-6 p-4 bg-white/90 rounded-lg border-2 border-purple-200 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-amber-500" />
+                    <h3 className="font-medium text-gray-800">Today's prompt:</h3>
+                  </div>
+                  <p className="font-medium text-gray-900 text-lg mt-1">{prompt}</p>
+                </div>
+                
+                {/* Main canvas with proper styling */}
+                <div className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-purple-200">
                   <DrawingCanvas onSave={handleSave} prompt={prompt} />
                 </div>
                 
@@ -270,7 +275,7 @@ const Create = () => {
                   
                   <Button 
                     variant="success"
-                    className="gap-2 bg-black text-white hover:bg-black/90"
+                    className="gap-2"
                     onClick={() => {
                       const canvas = document.querySelector('canvas');
                       if (canvas) handleSave(canvas as HTMLCanvasElement);
@@ -283,8 +288,8 @@ const Create = () => {
               </div>
               
               {/* Side panel with tips and options */}
-              <div className="space-y-5">
-                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+              <div className="space-y-4">
+                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
                   <h3 className="font-medium text-gray-800 mb-3 text-lg">Tips:</h3>
                   <ul className="space-y-3 text-gray-600">
                     <li className="flex items-start gap-2">
@@ -302,7 +307,7 @@ const Create = () => {
                   </ul>
                 </div>
                 
-                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
                   <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
                   
                   <div className="flex items-center space-x-2 mb-4">
@@ -381,7 +386,6 @@ const Create = () => {
         /* Add a nicer frame for the drawing canvas */
         canvas {
           border-radius: 8px;
-          box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
           background-color: white;
         }
         
