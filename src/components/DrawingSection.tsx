@@ -29,7 +29,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   };
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-3 md:space-y-4 w-full">
       {/* Display prompt at the top if available */}
       {prompt && (
         <div className="p-3 bg-white/90 rounded-lg border border-purple-200 shadow-sm">

@@ -239,48 +239,43 @@ const Create = () => {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col">
-            {/* Restructured layout with prompt on top, canvas in middle, options at bottom */}
-            <DrawingSection 
-              framesCount={0}
-              hasNoFrames={true}
-              onSaveFrame={handleSave}
-              prompt={prompt}
-            />
+          <div className="flex flex-col md:flex-row md:gap-6 max-w-7xl mx-auto">
+            {/* Drawing section - using max-w-2xl to limit canvas width */}
+            <div className="flex-1">
+              {/* Modified to display the prompt at the top and options at the bottom */}
+              <DrawingSection 
+                framesCount={0}
+                hasNoFrames={true}
+                onSaveFrame={handleSave}
+                prompt={prompt}
+              />
+            </div>
             
-            {/* Options card at the bottom */}
-            <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200 mt-4">
-              <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
-              
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox 
-                  id="stay-on-page" 
-                  checked={stayOnPage} 
-                  onCheckedChange={(checked) => setStayOnPage(checked === true)}
-                />
-                <Label htmlFor="stay-on-page" className="text-gray-600">
-                  Stay on this page after publishing
-                </Label>
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                  className="border border-gray-300"
-                >
-                  Cancel
-                </Button>
+            {/* Right sidebar for additional options */}
+            <div className="md:w-1/4 mt-4 md:mt-0">
+              <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200 sticky top-20">
+                <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
                 
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => {
-                    // This button is just for visual representation
-                    // The actual save is handled in the DrawingCanvas component
-                  }}
-                >
-                  View All Doodles
-                </Button>
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox 
+                    id="stay-on-page" 
+                    checked={stayOnPage} 
+                    onCheckedChange={(checked) => setStayOnPage(checked === true)}
+                  />
+                  <Label htmlFor="stay-on-page" className="text-gray-600">
+                    Stay on this page after publishing
+                  </Label>
+                </div>
+                
+                <div className="space-y-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/')}
+                    className="border border-gray-300 w-full"
+                  >
+                    <Eye className="h-4 w-4 mr-2" /> View All Doodles
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
