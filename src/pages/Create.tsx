@@ -297,36 +297,8 @@ const Create = () => {
               
               {/* Main drawing area - takes up most of the space */}
               <div className="lg:col-span-9 lg:order-1">
-                <div className="bg-white rounded-xl shadow-xl overflow-hidden border-4 border-purple-200">
+                <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                   <DrawingCanvas onSave={handleSave} prompt={prompt} />
-                </div>
-                
-                {/* Single set of canvas control buttons */}
-                <div className="mt-4 flex justify-between items-center">
-                  <Button 
-                    variant="outline"
-                    className="gap-2 border-2 border-gray-300"
-                    onClick={() => {
-                      const clearButton = document.querySelector('[aria-label="Clear"]');
-                      if (clearButton) {
-                        (clearButton as HTMLButtonElement).click();
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" /> Clear Canvas
-                  </Button>
-                  
-                  <Button 
-                    variant="success"
-                    className="gap-2"
-                    onClick={() => {
-                      const canvas = document.querySelector('canvas');
-                      if (canvas) handleSave(canvas as HTMLCanvasElement);
-                    }}
-                    disabled={isPublishing}
-                  >
-                    {isPublishing ? 'Publishing...' : 'Publish Doodle'}
-                  </Button>
                 </div>
               </div>
             </div>
@@ -382,14 +354,15 @@ const Create = () => {
           50% { transform: translateY(-20px) translateX(10px); }
         }
         
-        /* Canvas styling */
+        /* Canvas styling - removed borders */
         canvas {
-          border-radius: 8px;
+          border-radius: 0;
           background-color: white;
           width: 100%;
           height: auto;
           aspect-ratio: 16/10;
           display: block;
+          border: none !important;
         }
         
         /* iPad-specific styles */
