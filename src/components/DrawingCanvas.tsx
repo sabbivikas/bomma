@@ -831,4 +831,479 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       // Update canvas display size
       canvas.style.width = `${newWidth}px`;
-      canvas.style.height =
+      canvas.style.height = `${newHeight}px`;
+      
+      // Store the scale factor for coordinate calculations
+      setCanvasScale(canvas.width / newWidth);
+      
+      // Update offset
+      const rect = canvas.getBoundingClientRect();
+      setCanvasOffset({ x: rect.left, y: rect.top });
+    };
+    
+    // Initial resize
+    handleResize();
+    
+    // Add resize event listener
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [canvasSize]);
+  
+  // Save current state as a frame
+  const saveCurrentFrame = () => {
+    if (!canvasRef.current) return;
+    
+    // Create a unique ID for the frame
+    const frameId = Date.now().toString();
+    
+    // Get the canvas image data
+    const imageData = canvasRef.current.toDataURL('image/png');
+    
+    // Create new frame
+    const newFrame: Frame = {
+      id: frameId,
+      imageData: imageData,
+      timestamp: Date.now()
+    };
+    
+    // Add to frames list
+    setFrames(prev => [...prev, newFrame]);
+    
+    // Set current frame index to the new frame
+    setCurrentFrameIndex(frames.length);
+    
+    // Show toast notification
+    toast({
+      title: "Frame saved",
+      description: `Frame #${frames.length + 1} has been saved.`,
+    });
+  };
+  
+  // Load a specific frame
+  const loadFrame = (index: number) => {
+    if (index < 0 || index >= frames.length || !canvasRef.current || !contextRef.current) return;
+    
+    const frame = frames[index];
+    const image = new Image();
+    image.onload = () => {
+      // Clear canvas first
+      contextRef.current?.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+      
+      // Draw the image
+      contextRef.current?.drawImage(image, 0, 0);
+      
+      // Update current frame index
+      setCurrentFrameIndex(index);
+    };
+    image.src = frame.imageData;
+  };
+  
+  // Delete a frame
+  const deleteFrame = (index: number) => {
+    setFrames(prev => {
+      const newFrames = [...prev];
+      newFrames.splice(index, 1);
+      
+      // Update current frame index if needed
+      if (currentFrameIndex >= index) {
+        setCurrentFrameIndex(Math.max(currentFrameIndex - 1, 0));
+      }
+      
+      return newFrames;
+    });
+  };
+  
+  // Handle sharing with caption
+  const handleShare = () => {
+    setShowCaptionDialog(true);
+  };
+  
+  // Complete share with caption
+  const completeShare = () => {
+    if (!canvasRef.current) return;
+    
+    // Just save the canvas with the caption
+    handlePublish();
+    
+    // Close dialog
+    setShowCaptionDialog(false);
+    setCaption('');
+    
+    // Show success notification
+    toast({
+      title: "Shared successfully!",
+      description: "Your doodle has been shared with your caption.",
+    });
+  };
+  
+  // Render the drawing canvas and tools
+  return (
+    <div className="flex flex-col w-full">
+      {/* Prompt display if available */}
+      {prompt && (
+        <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
+          <div className="flex items-center">
+            <Lightbulb className="h-5 w-5 text-purple-500 mr-2" />
+            <p className="text-sm font-medium text-purple-700">Today's prompt: {prompt}</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Main drawing area container */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Tools panel - vertical on desktop, horizontal on mobile */}
+        <div className={`${isMobile ? 'order-2' : 'order-1 w-16'} flex flex-col bg-white rounded-lg shadow-md p-2 border border-gray-200`}>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium text-gray-500 mb-1">Tools</p>
+            <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
+              <ToggleGroupItem value="pen" className="h-10 w-10 p-0" title="Pen">
+                <Pen className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="eraser" className="h-10 w-10 p-0" title="Eraser">
+                <Eraser className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="text" className="h-10 w-10 p-0" title="Add Text">
+                <Type className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="rectangle" className="h-10 w-10 p-0" title="Rectangle">
+                <Square className="h-5 w-5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="circle" className="h-10 w-10 p-0" title="Circle">
+                <CircleIcon className="h-5 w-5" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+            
+            {/* Color and width controls */}
+            <div className="mt-4 flex flex-col gap-2">
+              <p className="text-xs font-medium text-gray-500">Color</p>
+              <input 
+                type="color" 
+                value={color} 
+                onChange={(e) => setColor(e.target.value)} 
+                className="w-full h-8 cursor-pointer" 
+              />
+            </div>
+            
+            <div className="mt-4 flex flex-col gap-2">
+              <p className="text-xs font-medium text-gray-500">Width</p>
+              <Slider 
+                defaultValue={width} 
+                max={30} 
+                min={1} 
+                step={1} 
+                onValueChange={setWidth} 
+              />
+            </div>
+            
+            {/* Fill option for shapes */}
+            {(tool === 'rectangle' || tool === 'circle') && (
+              <div className="mt-2 flex items-center">
+                <Checkbox 
+                  id="fill-shapes" 
+                  checked={fill} 
+                  onCheckedChange={(checked) => setFill(!!checked)} 
+                />
+                <Label htmlFor="fill-shapes" className="ml-2 text-xs">Fill Shape</Label>
+              </div>
+            )}
+            
+            {/* Theme selector button */}
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-xs"
+                onClick={() => setShowThemeSelector(prev => !prev)}
+              >
+                <Palette className="h-4 w-4 mr-1" />
+                Theme
+              </Button>
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="mt-4 flex flex-col gap-2">
+            <Button variant="outline" size="sm" onClick={clearCanvas} title="Clear Canvas">
+              <Trash2 className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={saveCurrentFrame} title="Save Frame">
+              <PlusSquare className="h-4 w-4 mr-1" />
+              Frame
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowFramesPanel(prev => !prev)} 
+              title="Show Frames"
+              className={showFramesPanel ? "bg-gray-100" : ""}
+            >
+              <ImageIcon className="h-4 w-4 mr-1" />
+              Frames
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={handleShare} title="Share">
+              <Share className="h-4 w-4 mr-1" />
+              Share
+            </Button>
+          </div>
+          
+          <div className="mt-auto pt-4">
+            <Button 
+              onClick={handlePublish} 
+              disabled={isPublishing}
+              className="w-full"
+            >
+              {isPublishing ? "Saving..." : "Publish"}
+            </Button>
+          </div>
+        </div>
+        
+        {/* Canvas container */}
+        <div className="order-1 lg:order-2 flex-1 relative border border-gray-300 rounded-lg overflow-hidden shadow-md">
+          <canvas
+            ref={canvasRef}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            className="touch-none bg-white w-full h-auto"
+          />
+          
+          {/* Render text elements */}
+          {textElements.map((element, index) => (
+            <div 
+              key={index}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}
+            />
+          ))}
+          
+          {/* Text editing popover for selected text */}
+          {selectedTextIndex !== null && (
+            <div className="absolute top-2 right-2 z-20 bg-white rounded-md shadow-md p-2 flex gap-2">
+              <Button size="sm" variant="outline" onClick={handleEditText}>
+                <Pen className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleRemoveText}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Frames panel */}
+        {showFramesPanel && (
+          <div className="order-3 lg:w-48 bg-white rounded-lg shadow-md p-3 border border-gray-200">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-medium">Frames</h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowFramesPanel(false)}>
+                ×
+              </Button>
+            </div>
+            
+            {frames.length === 0 ? (
+              <p className="text-gray-500 text-xs">No saved frames. Draw something and click "Frame" to save it.</p>
+            ) : (
+              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                {frames.map((frame, index) => (
+                  <div 
+                    key={frame.id}
+                    className={`relative p-1 border ${index === currentFrameIndex ? 'border-purple-500' : 'border-gray-200'} rounded cursor-pointer`}
+                    onClick={() => loadFrame(index)}
+                  >
+                    <img src={frame.imageData} alt={`Frame ${index + 1}`} className="w-full h-auto" />
+                    <div className="absolute top-1 right-1">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-6 w-6 p-0" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteFrame(index);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-xs mt-1">Frame {index + 1}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Theme selector dialog */}
+      <Dialog open={showThemeSelector} onOpenChange={setShowThemeSelector}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Choose a Theme</DialogTitle>
+            <DialogDescription>
+              Select a visual theme and optional seasonal overlay for your canvas.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="block mb-2">Visual Theme</Label>
+              <Select 
+                value={theme.visualTheme} 
+                onValueChange={(value) => setVisualTheme(value as VisualTheme)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select visual theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {visualThemes.map(theme => (
+                    <SelectItem key={theme.id} value={theme.id}>
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label className="block mb-2">Seasonal Overlay</Label>
+              <Select 
+                value={theme.seasonalTheme} 
+                onValueChange={(value) => setSeasonalTheme(value as SeasonalTheme)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select seasonal theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalThemes.map(theme => (
+                    <SelectItem key={theme.id} value={theme.id}>
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <Label className="block mb-2">Preview</Label>
+            <ThemePreview className="w-full" />
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setShowThemeSelector(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Text input dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="text-input">Text Content</Label>
+              <Input 
+                id="text-input" 
+                value={textInput} 
+                onChange={(e) => setTextInput(e.target.value)} 
+                autoFocus
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="text-color">Color</Label>
+              <input 
+                id="text-color"
+                type="color" 
+                value={color} 
+                onChange={(e) => setColor(e.target.value)} 
+                className="w-full h-10 cursor-pointer" 
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="text-size">Size</Label>
+              <Slider 
+                id="text-size"
+                defaultValue={textSize} 
+                max={72} 
+                min={8} 
+                step={1} 
+                onValueChange={setTextSize} 
+              />
+              <div className="text-right text-sm text-gray-500">{textSize[0]}px</div>
+            </div>
+            
+            <div>
+              <Label htmlFor="text-font">Font</Label>
+              <Select value={textFont} onValueChange={setTextFont}>
+                <SelectTrigger id="text-font">
+                  <SelectValue placeholder="Select a font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Arial">Arial</SelectItem>
+                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                  <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
+                  <SelectItem value="Courier New">Courier New</SelectItem>
+                  <SelectItem value="Impact">Impact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddText}>Add Text</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Caption dialog for sharing */}
+      <Dialog open={showCaptionDialog} onOpenChange={setShowCaptionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add a Caption</DialogTitle>
+            <DialogDescription>
+              Add a caption to your doodle before sharing.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div>
+            <Label htmlFor="caption">Caption</Label>
+            <Textarea 
+              id="caption"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="What's on your mind?"
+              rows={3}
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCaptionDialog(false)}>Cancel</Button>
+            <Button onClick={completeShare}>Share</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
