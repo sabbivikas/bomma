@@ -247,69 +247,70 @@ const Create = () => {
             </div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
-                <DrawingCanvas onSave={handleSave} prompt={prompt} />
-              </div>
+          <div className="flex flex-col">
+            <div className="mb-4 p-3 bg-white/80 rounded-lg border border-blue-100 shadow-sm w-full max-w-3xl mx-auto">
+              <h3 className="font-medium text-gray-800">Today's prompt:</h3>
+              <p className="font-medium text-gray-900 text-lg">{prompt}</p>
             </div>
             
-            <div className="space-y-4">
-              <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-                <h3 className="font-medium text-gray-800 mb-2">Today's prompt:</h3>
-                <div className="p-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-                  <p className="font-medium text-gray-900">{prompt}</p>
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="w-full md:w-3/4">
+                <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+                  <DrawingCanvas onSave={handleSave} prompt={prompt} />
                 </div>
               </div>
               
-              <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-                <h3 className="font-medium text-gray-800 mb-2">Tips:</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 font-bold">•</span>
-                    Use the toolbar to select different drawing tools
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 font-bold">•</span>
-                    You can change colors and line thickness
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 font-bold">•</span>
-                    Let your imagination guide you!
-                  </li>
-                </ul>
-              </div>
-              
-              <div className="flex gap-2 mt-4 justify-end">
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                  className="border border-gray-200"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  variant="default"
-                  className="bg-black hover:bg-black/90 text-white"
-                  onClick={() => {
-                    const canvas = document.querySelector('canvas');
-                    if (canvas) handleSave(canvas as HTMLCanvasElement);
-                  }}
-                  disabled={isPublishing}
-                >
-                  {isPublishing ? 'Publishing...' : 'Publish Doodle'}
-                </Button>
-              </div>
-              
-              <div className="flex items-center space-x-2 mt-2">
-                <Checkbox 
-                  id="stay-on-page" 
-                  checked={stayOnPage} 
-                  onCheckedChange={(checked) => setStayOnPage(checked === true)}
-                />
-                <Label htmlFor="stay-on-page" className="text-sm text-gray-600">
-                  Stay on this page after publishing
-                </Label>
+              <div className="w-full md:w-1/4 space-y-4">
+                <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                  <h3 className="font-medium text-gray-800 mb-2">Tips:</h3>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500 font-bold">•</span>
+                      Use the toolbar to select different drawing tools
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500 font-bold">•</span>
+                      You can change colors and line thickness
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500 font-bold">•</span>
+                      Let your imagination guide you!
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="flex flex-col gap-4 mt-4">
+                  <Button 
+                    variant="default"
+                    className="bg-black hover:bg-black/90 text-white"
+                    onClick={() => {
+                      const canvas = document.querySelector('canvas');
+                      if (canvas) handleSave(canvas as HTMLCanvasElement);
+                    }}
+                    disabled={isPublishing}
+                  >
+                    {isPublishing ? 'Publishing...' : 'Publish Doodle'}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/')}
+                    className="border border-gray-200"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                
+                <div className="flex items-center space-x-2 mt-2">
+                  <Checkbox 
+                    id="stay-on-page" 
+                    checked={stayOnPage} 
+                    onCheckedChange={(checked) => setStayOnPage(checked === true)}
+                  />
+                  <Label htmlFor="stay-on-page" className="text-sm text-gray-600">
+                    Stay on this page after publishing
+                  </Label>
+                </div>
               </div>
             </div>
           </div>
