@@ -4,22 +4,33 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeConfig } from '@/utils/themeConfig';
 import ThemeBackgroundPreview from './theme/ThemeBackgroundPreview';
 import ThemeLabel from './theme/ThemeLabel';
+import { VisualTheme, SeasonalTheme } from '@/types/theme';
 
 interface ThemePreviewProps {
+  visualTheme: VisualTheme;
+  seasonalTheme: SeasonalTheme;
   className?: string;
+  onClick?: () => void;
 }
 
-const ThemePreview: React.FC<ThemePreviewProps> = ({ className = '' }) => {
-  const { theme } = useTheme();
-  const visualThemeConfig = getThemeConfig(theme.visualTheme);
+const ThemePreview: React.FC<ThemePreviewProps> = ({ 
+  visualTheme,
+  seasonalTheme,
+  className = '',
+  onClick
+}) => {
+  const visualThemeConfig = getThemeConfig(visualTheme);
   
   if (!visualThemeConfig) return null;
   
   return (
-    <div className={`rounded-lg overflow-hidden shadow-md ${className}`}>
+    <div 
+      className={`rounded-lg overflow-hidden shadow-md ${className}`}
+      onClick={onClick}
+    >
       <ThemeBackgroundPreview 
-        visualTheme={theme.visualTheme}
-        seasonalTheme={theme.seasonalTheme}
+        visualTheme={visualTheme}
+        seasonalTheme={seasonalTheme}
         className="p-4 h-24"
       >
         <h4 className={`font-bold ${visualThemeConfig.textStyle}`}>Theme Preview</h4>
@@ -30,8 +41,8 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ className = '' }) => {
       
       <div className="bg-white p-4 border-t border-gray-200">
         <ThemeLabel 
-          visualTheme={theme.visualTheme}
-          seasonalTheme={theme.seasonalTheme}
+          visualTheme={visualTheme}
+          seasonalTheme={seasonalTheme}
         />
       </div>
     </div>
