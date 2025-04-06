@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -16,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Doodle } from '@/types/doodle';
 import DoodleCard from '@/components/DoodleCard';
+import DrawingSection from '@/components/DrawingSection';
 
 // Helper function to detect if the device is an iPad
 const useIsIpad = () => {
@@ -240,67 +240,47 @@ const Create = () => {
           </div>
         ) : (
           <div className="flex flex-col">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Sidebar with prompt, tips, options - positioned on the right side */}
-              <div className="lg:col-span-3 lg:order-2 space-y-4">
-                {/* Prompt card with clear visual styling */}
-                <div className="p-4 bg-white/90 rounded-lg border-2 border-purple-200 shadow-md">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="h-5 w-5 text-amber-500" />
-                    <h3 className="font-medium text-gray-800">Today's prompt:</h3>
-                  </div>
-                  <p className="font-medium text-gray-900 text-lg mt-2">{prompt}</p>
-                </div>
-                
-                {/* Tips card */}
-                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
-                  <h3 className="font-medium text-gray-800 mb-3 text-lg">Tips:</h3>
-                  <ul className="space-y-3 text-gray-600">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 font-bold">•</span>
-                      Use the toolbar to select different drawing tools
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 font-bold">•</span>
-                      You can change colors and line thickness
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 font-bold">•</span>
-                      Let your imagination guide you!
-                    </li>
-                  </ul>
-                </div>
-                
-                {/* Options card */}
-                <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
-                  <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
-                  
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Checkbox 
-                      id="stay-on-page" 
-                      checked={stayOnPage} 
-                      onCheckedChange={(checked) => setStayOnPage(checked === true)}
-                    />
-                    <Label htmlFor="stay-on-page" className="text-gray-600">
-                      Stay on this page after publishing
-                    </Label>
-                  </div>
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate('/')}
-                    className="w-full border border-gray-300"
-                  >
-                    Cancel
-                  </Button>
-                </div>
+            {/* Restructured layout with prompt on top, canvas in middle, options at bottom */}
+            <DrawingSection 
+              framesCount={0}
+              hasNoFrames={true}
+              onSaveFrame={handleSave}
+              prompt={prompt}
+            />
+            
+            {/* Options card at the bottom */}
+            <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200 mt-4">
+              <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
+              
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox 
+                  id="stay-on-page" 
+                  checked={stayOnPage} 
+                  onCheckedChange={(checked) => setStayOnPage(checked === true)}
+                />
+                <Label htmlFor="stay-on-page" className="text-gray-600">
+                  Stay on this page after publishing
+                </Label>
               </div>
               
-              {/* Main drawing area - takes up most of the space */}
-              <div className="lg:col-span-9 lg:order-1">
-                <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                  <DrawingCanvas onSave={handleSave} prompt={prompt} />
-                </div>
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="border border-gray-300"
+                >
+                  Cancel
+                </Button>
+                
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    // This button is just for visual representation
+                    // The actual save is handled in the DrawingCanvas component
+                  }}
+                >
+                  View All Doodles
+                </Button>
               </div>
             </div>
           </div>

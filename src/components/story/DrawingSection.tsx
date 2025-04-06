@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Lightbulb } from 'lucide-react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import FrameCounter from './FrameCounter';
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="bg-white rounded-xl shadow-sm p-2 mb-3">
+      <div className="bg-white rounded-xl shadow p-2 mb-3">
         {showSuccess && (
           <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
