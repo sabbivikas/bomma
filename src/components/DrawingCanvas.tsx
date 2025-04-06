@@ -1,12 +1,10 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Download, Share, 
   Paintbrush, Palette, PlusSquare, Type,
-  Square, Circle as CircleIcon, Sparkles, Lightbulb,
-  Image as ImageIcon, Heart, MessageSquare, Smile
+  Square, Circle as CircleIcon, Layers
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -945,128 +943,142 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     <div className="flex flex-col w-full">
       {/* Prompt display if available */}
       {prompt && (
-        <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
+        <div className="mb-3 p-2 bg-purple-50 border border-purple-100 rounded-md">
           <div className="flex items-center">
-            <Lightbulb className="h-5 w-5 text-purple-500 mr-2" />
-            <p className="text-sm font-medium text-purple-700">Today's prompt: {prompt}</p>
+            <p className="text-xs text-purple-700">{prompt}</p>
           </div>
         </div>
       )}
       
       {/* Main drawing area container */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-3">
         {/* Tools panel - vertical on desktop, horizontal on mobile */}
-        <div className={`${isMobile ? 'order-2' : 'order-1 w-16'} flex flex-col bg-white rounded-lg shadow-md p-2 border border-gray-200`}>
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-gray-500 mb-1">Tools</p>
-            <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
-              <ToggleGroupItem value="pen" className="h-10 w-10 p-0" title="Pen">
-                <Pen className="h-5 w-5" />
+        <div className={`${isMobile ? 'order-2' : 'order-1 w-12'} flex flex-col bg-white rounded-lg shadow-sm p-1.5 border border-gray-100`}>
+          {/* Drawing Tools */}
+          <div className="flex flex-col gap-1.5 mb-3">
+            <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)} className="flex flex-col gap-1">
+              <ToggleGroupItem value="pen" className="h-8 w-8 p-0" title="Pen">
+                <Pen className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="eraser" className="h-10 w-10 p-0" title="Eraser">
-                <Eraser className="h-5 w-5" />
+              <ToggleGroupItem value="eraser" className="h-8 w-8 p-0" title="Eraser">
+                <Eraser className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="text" className="h-10 w-10 p-0" title="Add Text">
-                <Type className="h-5 w-5" />
+              <ToggleGroupItem value="text" className="h-8 w-8 p-0" title="Text">
+                <Type className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="rectangle" className="h-10 w-10 p-0" title="Rectangle">
-                <Square className="h-5 w-5" />
+              <ToggleGroupItem value="rectangle" className="h-8 w-8 p-0" title="Rectangle">
+                <Square className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="circle" className="h-10 w-10 p-0" title="Circle">
-                <CircleIcon className="h-5 w-5" />
+              <ToggleGroupItem value="circle" className="h-8 w-8 p-0" title="Circle">
+                <CircleIcon className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
-            
-            {/* Color and width controls */}
-            <div className="mt-4 flex flex-col gap-2">
-              <p className="text-xs font-medium text-gray-500">Color</p>
-              <input 
-                type="color" 
-                value={color} 
-                onChange={(e) => setColor(e.target.value)} 
-                className="w-full h-8 cursor-pointer" 
-              />
-            </div>
-            
-            <div className="mt-4 flex flex-col gap-2">
-              <p className="text-xs font-medium text-gray-500">Width</p>
-              <Slider 
-                defaultValue={width} 
-                max={30} 
-                min={1} 
-                step={1} 
-                onValueChange={setWidth} 
-              />
-            </div>
-            
-            {/* Fill option for shapes */}
-            {(tool === 'rectangle' || tool === 'circle') && (
-              <div className="mt-2 flex items-center">
-                <Checkbox 
-                  id="fill-shapes" 
-                  checked={fill} 
-                  onCheckedChange={(checked) => setFill(!!checked)} 
-                />
-                <Label htmlFor="fill-shapes" className="ml-2 text-xs">Fill Shape</Label>
-              </div>
-            )}
-            
-            {/* Theme selector button */}
-            <div className="mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full text-xs"
-                onClick={() => setShowThemeSelector(prev => !prev)}
-              >
-                <Palette className="h-4 w-4 mr-1" />
-                Theme
-              </Button>
-            </div>
           </div>
           
-          {/* Action buttons */}
-          <div className="mt-4 flex flex-col gap-2">
-            <Button variant="outline" size="sm" onClick={clearCanvas} title="Clear Canvas">
-              <Trash2 className="h-4 w-4 mr-1" />
-              Clear
-            </Button>
-            
-            <Button variant="outline" size="sm" onClick={saveCurrentFrame} title="Save Frame">
-              <PlusSquare className="h-4 w-4 mr-1" />
-              Frame
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowFramesPanel(prev => !prev)} 
-              title="Show Frames"
-              className={showFramesPanel ? "bg-gray-100" : ""}
+          {/* Color picker - simplified */}
+          <div className="my-1">
+            <input 
+              type="color" 
+              value={color} 
+              onChange={(e) => setColor(e.target.value)} 
+              className="w-full h-6 cursor-pointer rounded-sm" 
+              title="Color"
+            />
+          </div>
+          
+          {/* Width slider - vertical and simplified */}
+          <div className="my-2">
+            <Slider 
+              defaultValue={width} 
+              max={30} 
+              min={1} 
+              step={1} 
+              onValueChange={setWidth}
+              orientation="vertical"
+              className="h-20"
+              title="Width"
+            />
+          </div>
+          
+          {/* Fill option only shows when shape tool is selected */}
+          {(tool === 'rectangle' || tool === 'circle') && (
+            <div className="my-1 flex items-center justify-center">
+              <Checkbox 
+                id="fill-shapes" 
+                checked={fill} 
+                onCheckedChange={(checked) => setFill(!!checked)}
+                className="h-4 w-4"
+                title="Fill Shape" 
+              />
+            </div>
+          )}
+          
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-2"></div>
+          
+          {/* Action buttons - compact */}
+          <div className="flex flex-col gap-1.5">
+            {/* Theme button */}
+            <button 
+              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={() => setShowThemeSelector(prev => !prev)}
+              title="Theme"
             >
-              <ImageIcon className="h-4 w-4 mr-1" />
-              Frames
-            </Button>
+              <Palette className="h-4 w-4" />
+            </button>
             
-            <Button variant="outline" size="sm" onClick={handleShare} title="Share">
-              <Share className="h-4 w-4 mr-1" />
-              Share
-            </Button>
+            {/* Clear button */}
+            <button 
+              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={clearCanvas}
+              title="Clear Canvas"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            
+            {/* Frame button */}
+            <button 
+              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={saveCurrentFrame}
+              title="Save Frame"
+            >
+              <PlusSquare className="h-4 w-4" />
+            </button>
+            
+            {/* Frames button */}
+            <button 
+              className={`flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors ${showFramesPanel ? "bg-gray-100" : ""}`}
+              onClick={() => setShowFramesPanel(prev => !prev)}
+              title="Show Frames"
+            >
+              <Layers className="h-4 w-4" />
+            </button>
+            
+            {/* Share button */}
+            <button 
+              className="flex items-center justify-center h-8 w-8 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={handleShare}
+              title="Share"
+            >
+              <Share className="h-4 w-4" />
+            </button>
           </div>
           
-          <div className="mt-auto pt-4">
+          {/* Publish button at the bottom */}
+          <div className="mt-auto pt-3">
             <Button 
               onClick={handlePublish} 
               disabled={isPublishing}
-              className="w-full"
+              size="sm"
+              className="w-full text-xs"
             >
-              {isPublishing ? "Saving..." : "Publish"}
+              {isPublishing ? "..." : "Publish"}
             </Button>
           </div>
         </div>
         
         {/* Canvas container */}
-        <div className="order-1 lg:order-2 flex-1 relative border border-gray-300 rounded-lg overflow-hidden shadow-md">
+        <div className="order-1 lg:order-2 flex-1 relative border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           <canvas
             ref={canvasRef}
             onMouseDown={startDrawing}
@@ -1095,35 +1107,35 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           
           {/* Text editing popover for selected text */}
           {selectedTextIndex !== null && (
-            <div className="absolute top-2 right-2 z-20 bg-white rounded-md shadow-md p-2 flex gap-2">
-              <Button size="sm" variant="outline" onClick={handleEditText}>
-                <Pen className="h-4 w-4" />
+            <div className="absolute top-2 right-2 z-20 bg-white rounded-md shadow-sm p-1 flex gap-1">
+              <Button size="sm" variant="ghost" onClick={handleEditText} className="h-7 w-7 p-0">
+                <Pen className="h-3 w-3" />
               </Button>
-              <Button size="sm" variant="outline" onClick={handleRemoveText}>
-                <Trash2 className="h-4 w-4" />
+              <Button size="sm" variant="ghost" onClick={handleRemoveText} className="h-7 w-7 p-0">
+                <Trash2 className="h-3 w-3" />
               </Button>
             </div>
           )}
         </div>
         
-        {/* Frames panel */}
+        {/* Frames panel - simplified */}
         {showFramesPanel && (
-          <div className="order-3 lg:w-48 bg-white rounded-lg shadow-md p-3 border border-gray-200">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-medium">Frames</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowFramesPanel(false)}>
+          <div className="order-3 lg:w-40 bg-white rounded-lg shadow-sm p-2 border border-gray-100">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-xs font-medium">Frames</h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowFramesPanel(false)} className="h-5 w-5 p-0">
                 ×
               </Button>
             </div>
             
             {frames.length === 0 ? (
-              <p className="text-gray-500 text-xs">No saved frames. Draw something and click "Frame" to save it.</p>
+              <p className="text-gray-400 text-xs">No frames yet</p>
             ) : (
-              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+              <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
                 {frames.map((frame, index) => (
                   <div 
                     key={frame.id}
-                    className={`relative p-1 border ${index === currentFrameIndex ? 'border-purple-500' : 'border-gray-200'} rounded cursor-pointer`}
+                    className={`relative p-1 border ${index === currentFrameIndex ? 'border-purple-400' : 'border-gray-100'} rounded cursor-pointer`}
                     onClick={() => loadFrame(index)}
                   >
                     <img src={frame.imageData} alt={`Frame ${index + 1}`} className="w-full h-auto" />
@@ -1131,7 +1143,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className="h-6 w-6 p-0" 
+                        className="h-5 w-5 p-0 bg-white bg-opacity-70" 
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteFrame(index);
@@ -1140,7 +1152,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
-                    <p className="text-xs mt-1">Frame {index + 1}</p>
+                    <p className="text-[10px] mt-0.5">Frame {index + 1}</p>
                   </div>
                 ))}
               </div>
@@ -1151,22 +1163,22 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       {/* Theme selector dialog */}
       <Dialog open={showThemeSelector} onOpenChange={setShowThemeSelector}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Choose a Theme</DialogTitle>
-            <DialogDescription>
-              Select a visual theme and optional seasonal overlay for your canvas.
+            <DialogTitle>Canvas Theme</DialogTitle>
+            <DialogDescription className="text-xs">
+              Choose a visual style for your canvas
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             <div>
-              <Label className="block mb-2">Visual Theme</Label>
+              <Label className="text-xs">Visual Theme</Label>
               <Select 
                 value={theme.visualTheme} 
                 onValueChange={(value) => setVisualTheme(value as VisualTheme)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-1 h-8 text-xs">
                   <SelectValue placeholder="Select visual theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1180,12 +1192,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </div>
             
             <div>
-              <Label className="block mb-2">Seasonal Overlay</Label>
+              <Label className="text-xs">Seasonal Overlay</Label>
               <Select 
                 value={theme.seasonalTheme} 
                 onValueChange={(value) => setSeasonalTheme(value as SeasonalTheme)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-1 h-8 text-xs">
                   <SelectValue placeholder="Select seasonal theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1199,48 +1211,49 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             </div>
           </div>
           
-          <div className="mt-4">
-            <Label className="block mb-2">Preview</Label>
-            <ThemePreview className="w-full" />
+          <div className="mt-2">
+            <Label className="text-xs">Preview</Label>
+            <ThemePreview className="w-full mt-1" />
           </div>
           
           <DialogFooter>
-            <Button onClick={() => setShowThemeSelector(false)}>Done</Button>
+            <Button onClick={() => setShowThemeSelector(false)} size="sm" className="mt-2">Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Text input dialog */}
+      {/* Text input dialog - simplified */}
       <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Add Text</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
-              <Label htmlFor="text-input">Text Content</Label>
+              <Label htmlFor="text-input" className="text-xs">Text Content</Label>
               <Input 
                 id="text-input" 
                 value={textInput} 
                 onChange={(e) => setTextInput(e.target.value)} 
                 autoFocus
+                className="mt-1 h-8"
               />
             </div>
             
             <div>
-              <Label htmlFor="text-color">Color</Label>
+              <Label htmlFor="text-color" className="text-xs">Color</Label>
               <input 
                 id="text-color"
                 type="color" 
                 value={color} 
                 onChange={(e) => setColor(e.target.value)} 
-                className="w-full h-10 cursor-pointer" 
+                className="w-full h-8 mt-1 cursor-pointer" 
               />
             </div>
             
             <div>
-              <Label htmlFor="text-size">Size</Label>
+              <Label htmlFor="text-size" className="text-xs">Size</Label>
               <Slider 
                 id="text-size"
                 defaultValue={textSize} 
@@ -1248,14 +1261,15 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                 min={8} 
                 step={1} 
                 onValueChange={setTextSize} 
+                className="mt-1"
               />
-              <div className="text-right text-sm text-gray-500">{textSize[0]}px</div>
+              <div className="text-right text-xs text-gray-400">{textSize[0]}px</div>
             </div>
             
             <div>
-              <Label htmlFor="text-font">Font</Label>
+              <Label htmlFor="text-font" className="text-xs">Font</Label>
               <Select value={textFont} onValueChange={setTextFont}>
-                <SelectTrigger id="text-font">
+                <SelectTrigger id="text-font" className="mt-1 h-8 text-xs">
                   <SelectValue placeholder="Select a font" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1270,36 +1284,37 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddText}>Add Text</Button>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)} size="sm">Cancel</Button>
+            <Button onClick={handleAddText} size="sm">Add</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Caption dialog for sharing */}
+      {/* Caption dialog for sharing - simplified */}
       <Dialog open={showCaptionDialog} onOpenChange={setShowCaptionDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Add a Caption</DialogTitle>
-            <DialogDescription>
-              Add a caption to your doodle before sharing.
+            <DialogDescription className="text-xs">
+              Add a caption before sharing
             </DialogDescription>
           </DialogHeader>
           
           <div>
-            <Label htmlFor="caption">Caption</Label>
+            <Label htmlFor="caption" className="text-xs">Caption</Label>
             <Textarea 
               id="caption"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="What's on your mind?"
-              rows={3}
+              rows={2}
+              className="mt-1"
             />
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCaptionDialog(false)}>Cancel</Button>
-            <Button onClick={completeShare}>Share</Button>
+            <Button variant="outline" onClick={() => setShowCaptionDialog(false)} size="sm">Cancel</Button>
+            <Button onClick={completeShare} size="sm">Share</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
