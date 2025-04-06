@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -189,7 +188,11 @@ const Index = () => {
                     </div>
                     
                     <div className="p-4">
-                      <ThemePreview className="mb-6" />
+                      <ThemePreview 
+                        className="mb-6" 
+                        visualTheme={theme.visualTheme}
+                        seasonalTheme={theme.seasonalTheme}
+                      />
                       <ThemeSelector />
                     </div>
                   </div>
