@@ -1127,7 +1127,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                     )}
                     onClick={() => setVisualTheme(vtheme.id as VisualTheme)}
                   >
-                    <ThemePreview theme={vtheme.id as VisualTheme} seasonalTheme="none" />
+                    <ThemePreview visualTheme={vtheme.id as VisualTheme} seasonalTheme="none" />
                     <p className="text-sm mt-1">{vtheme.name}</p>
                   </button>
                 ))}
@@ -1147,7 +1147,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
                     onClick={() => setSeasonalTheme(stheme.id as SeasonalTheme)}
                   >
                     <ThemePreview 
-                      theme={theme.visualTheme} 
+                      visualTheme={theme.visualTheme} 
                       seasonalTheme={stheme.id as SeasonalTheme} 
                     />
                     <p className="text-sm mt-1">{stheme.name}</p>
