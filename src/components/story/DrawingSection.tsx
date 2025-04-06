@@ -9,12 +9,14 @@ interface DrawingSectionProps {
   framesCount: number;
   hasNoFrames: boolean;
   onSaveFrame: (canvas: HTMLCanvasElement) => void;
+  prompt?: string;
 }
 
 const DrawingSection: React.FC<DrawingSectionProps> = ({ 
   framesCount, 
   hasNoFrames, 
-  onSaveFrame 
+  onSaveFrame,
+  prompt
 }) => {
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -27,16 +29,27 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   };
 
   return (
-    <div className="mt-3">
-      <div className="flex justify-between items-center mb-1">
-        <h3 className="text-sm font-medium text-gray-700">
+    <div className="space-y-3 md:space-y-4 w-full">
+      {/* Display prompt at the top if available */}
+      {prompt && (
+        <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <Lightbulb className="h-4 w-4 text-amber-500" />
+            <h3 className="font-medium text-gray-800 text-sm">Today's prompt:</h3>
+          </div>
+          <p className="font-medium text-gray-900">{prompt}</p>
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm md:text-base font-medium text-gray-700">
           {framesCount === 0 ? "Create your first frame" : "Add next frame"}
         </h3>
         
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="bg-white rounded-xl shadow p-2 mb-3">
+      <div className="bg-white rounded-xl border border-gray-200 shadow p-2 md:p-3">
         {showSuccess && (
           <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
@@ -44,7 +57,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           </div>
         )}
         
-        <DrawingCanvas onSave={handleSaveFrame} />
+        <DrawingCanvas onSave={handleSaveFrame} prompt={prompt} />
       </div>
     </div>
   );

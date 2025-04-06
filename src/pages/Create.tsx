@@ -239,10 +239,9 @@ const Create = () => {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row md:gap-6 max-w-7xl mx-auto">
-            {/* Drawing section - using max-w-2xl to limit canvas width */}
-            <div className="flex-1">
-              {/* Modified to display the prompt at the top and options at the bottom */}
+          <div className="flex flex-col md:flex-row md:gap-8 max-w-7xl mx-auto">
+            {/* Drawing section - using max-w-xl to limit canvas width */}
+            <div className="flex-1 max-w-3xl">
               <DrawingSection 
                 framesCount={0}
                 hasNoFrames={true}
@@ -252,11 +251,11 @@ const Create = () => {
             </div>
             
             {/* Right sidebar for additional options */}
-            <div className="md:w-1/4 mt-4 md:mt-0">
-              <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200 sticky top-20">
-                <h3 className="font-medium text-gray-800 mb-3 text-lg">Options:</h3>
+            <div className="md:w-80 mt-6 md:mt-0">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 sticky top-20">
+                <h3 className="font-semibold text-gray-800 mb-4 text-lg">Options:</h3>
                 
-                <div className="flex items-center space-x-2 mb-4">
+                <div className="flex items-center space-x-2 mb-6">
                   <Checkbox 
                     id="stay-on-page" 
                     checked={stayOnPage} 
@@ -267,15 +266,13 @@ const Create = () => {
                   </Label>
                 </div>
                 
-                <div className="space-y-3">
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate('/')}
-                    className="border border-gray-300 w-full"
-                  >
-                    <Eye className="h-4 w-4 mr-2" /> View All Doodles
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="w-full flex items-center justify-center gap-2 h-10"
+                >
+                  <Eye className="h-5 w-5" /> View All Doodles
+                </Button>
               </div>
             </div>
           </div>
@@ -330,7 +327,7 @@ const Create = () => {
           50% { transform: translateY(-20px) translateX(10px); }
         }
         
-        /* Canvas styling - removed borders */
+        /* Canvas styling - improved to match design */
         canvas {
           border-radius: 0;
           background-color: white;
@@ -339,6 +336,7 @@ const Create = () => {
           aspect-ratio: 16/10;
           display: block;
           border: none !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         /* iPad-specific styles */
