@@ -20,8 +20,8 @@ const CreateStory = () => {
       <div className="min-h-screen flex flex-col relative">
         <Navbar />
         
-        <main className="flex-1 container mx-auto px-3 md:px-4 py-4 relative z-10 pb-16">
-          <div className="bg-gradient-to-b from-purple-50/80 to-blue-50/80 rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 backdrop-blur-sm">
+        <main className="flex-1 container mx-auto px-2 md:px-4 py-4 relative z-10 pb-16 max-w-6xl">
+          <div className="bg-gradient-to-b from-purple-50/90 to-blue-50/90 rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 backdrop-blur-sm">
             <StoryCreator />
           </div>
         </main>
