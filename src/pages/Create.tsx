@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -16,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Doodle } from '@/types/doodle';
 import DoodleCard from '@/components/DoodleCard';
 import DrawingSection from '@/components/DrawingSection';
+import PublishOptionsDialog from '@/components/PublishOptionsDialog';
 
 // Helper function to detect if the device is an iPad
 const useIsIpad = () => {
@@ -51,6 +53,11 @@ const Create = () => {
   const [isPublishing, setIsPublishing] = useState(false);
   const isMobile = useIsMobile();
   const isIpad = useIsIpad();
+  
+  // New state variables for publishing flow
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [pendingCanvas, setPendingCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string>('');
   
   useEffect(() => {
     // Update the page title when this component mounts
@@ -128,19 +135,44 @@ const Create = () => {
   };
   
   const handleSave = async (canvas: HTMLCanvasElement) => {
+    // Convert canvas to data URL for preview
+    const imageUrl = canvas.toDataURL('image/png');
+    
+    // Store the canvas and image URL for later use
+    setPendingCanvas(canvas);
+    setPendingImageUrl(imageUrl);
+    
+    // Show publish options dialog
+    setShowPublishDialog(true);
+  };
+
+  const handlePublish = async (mode: '2d' | '3d') => {
     // Set publishing state
     setIsPublishing(true);
     
+    if (!pendingCanvas) {
+      toast({
+        title: "Error",
+        description: "Canvas data is missing. Please try again.",
+        variant: "destructive",
+      });
+      setIsPublishing(false);
+      return;
+    }
+    
     // Convert canvas to data URL
-    const imageUrl = canvas.toDataURL('image/png');
+    const imageUrl = pendingCanvas.toDataURL('image/png');
     
     // Save the doodle to Supabase
     const sessionId = getSessionId();
     try {
+      // In a real implementation, you would handle 3D conversion here
+      // For now, we'll just add a flag to indicate the mode
       const newDoodle = await createDoodle({
         imageUrl,
         prompt,
         sessionId,
+        is3D: mode === '3d', // This would need to be added to the DoodleCreateInput type
       });
       
       if (!newDoodle) {
@@ -149,14 +181,14 @@ const Create = () => {
       
       // Show success message
       toast({
-        title: "Doodle published!",
+        title: `Doodle published in ${mode.toUpperCase()} mode!`,
         description: "Your doodle has been added to the feed.",
         variant: "success",
       });
 
       // Set success message to display on page
       if (stayOnPage) {
-        setSuccessMessage("Your doodle was published successfully!");
+        setSuccessMessage(`Your doodle was published successfully in ${mode.toUpperCase()} mode!`);
         setPublishedDoodle(newDoodle);
         
         // Clear success message after 4 seconds
@@ -181,6 +213,9 @@ const Create = () => {
       });
     } finally {
       setIsPublishing(false);
+      setShowPublishDialog(false);
+      setPendingCanvas(null);
+      setPendingImageUrl('');
     }
   };
 
@@ -276,6 +311,15 @@ const Create = () => {
           </div>
         )}
       </main>
+      
+      {/* Publish Options Dialog */}
+      <PublishOptionsDialog
+        open={showPublishDialog}
+        onOpenChange={setShowPublishDialog}
+        imageUrl={pendingImageUrl}
+        onPublish={handlePublish}
+        isPublishing={isPublishing}
+      />
       
       {/* Add CSS for enhanced dreamy effects and improved canvas styling */}
       <style>

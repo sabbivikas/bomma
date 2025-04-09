@@ -61,7 +61,8 @@ export async function createDoodle(input: DoodleCreateInput): Promise<Doodle | n
     image_url: input.imageUrl,
     prompt: input.prompt,
     session_id: input.sessionId,
-    likes: 0
+    likes: 0,
+    is_3d: input.is3D || false, // Add the new is_3d field
   };
   
   const { data, error } = await supabase
@@ -88,7 +89,8 @@ export async function createDoodle(input: DoodleCreateInput): Promise<Doodle | n
     likes: data.likes,
     reported: (data as any).reported || false,
     reportCount: (data as any).report_count || 0,
-    moderationStatus: (data as any).moderation_status || 'approved'
+    moderationStatus: (data as any).moderation_status || 'approved',
+    is3D: (data as any).is_3d || false, // Map the DB field to the client model
   };
 }
 

@@ -9,6 +9,7 @@ export interface Doodle {
   reported?: boolean; // New field to track if content has been reported
   reportCount?: number; // New field to track report count
   moderationStatus?: 'pending' | 'approved' | 'rejected'; // Status of moderation
+  is3D?: boolean; // Whether this doodle should be displayed as a 3D model
 }
 
 export interface Comment {
