@@ -122,8 +122,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     // Set canvas size
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
-    canvas.style.width = `${canvasSize.width}px`;
-    canvas.style.height = `${canvasSize.height}px`;
+    canvas.style.width = `100%`; // Make canvas responsive
+    canvas.style.height = `auto`; // Maintain aspect ratio
     
     const context = canvas.getContext('2d');
     if (context) {
@@ -821,7 +821,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       if (!container) return;
       
       const containerWidth = container.clientWidth;
-      const containerHeight = Math.min(window.innerHeight * 0.6, 600); // Limit height on mobile/tablet
+      const containerHeight = Math.min(window.innerHeight * 0.7, 600); // Increase height on mobile/tablet
       
       // Check if we're on a tablet-sized screen
       const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
@@ -830,35 +830,28 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       let newWidth, newHeight, scaleFactor;
       
       if (isTablet) {
-        // For tablets, use a fixed proportion of the container
+        // For tablets, use the full container width
         newWidth = containerWidth;
         newHeight = containerWidth * 0.75; // 4:3 aspect ratio works well for tablets
-        
-        // Ensure height isn't too tall for the container
-        if (newHeight > containerHeight) {
-          newHeight = containerHeight;
-          newWidth = newHeight * (4/3);
-        }
       } else if (isMobile) {
         // For phones, maximize width and use a taller ratio
         newWidth = containerWidth;
         newHeight = containerWidth * 0.8; // Taller ratio for phones
-        
-        // Ensure height isn't too tall for the container
-        if (newHeight > containerHeight) {
-          newHeight = containerHeight;
-          newWidth = newHeight * 1.25; // 5:4 aspect ratio
-        }
       } else {
-        // For desktop, maintain 16:10 aspect ratio but fit container
-        if (containerWidth / containerHeight > 16/10) {
-          // Container is wider than the target ratio, constrain by height
-          newHeight = containerHeight;
-          newWidth = newHeight * (16/10);
-        } else {
-          // Container is taller than target ratio, constrain by width
+        // For desktop, use full container width
+        newWidth = containerWidth;
+        newHeight = containerWidth * 0.65; // 16:10 aspect ratio approximately
+      }
+      
+      // Ensure height isn't too tall for the container
+      if (newHeight > containerHeight) {
+        newHeight = containerHeight;
+        newWidth = containerHeight / 0.65; // Maintain aspect ratio
+        
+        // Make sure width doesn't exceed container
+        if (newWidth > containerWidth) {
           newWidth = containerWidth;
-          newHeight = newWidth * (10/16);
+          newHeight = containerWidth * 0.65;
         }
       }
       
@@ -892,9 +885,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 
   // Render canvas, tools and UI
   return (
-    <div className="flex flex-col space-y-2">
+    <div className="flex flex-col space-y-2 w-full">
       {/* Canvas container with no borders */}
-      <div className="w-full overflow-hidden relative bg-white">
+      <div className="w-full h-full overflow-hidden relative bg-white rounded-lg shadow-md">
         <canvas
           ref={canvasRef}
           onMouseDown={startDrawing}
@@ -904,7 +897,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           onTouchStart={startDrawing}
           onTouchMove={isDrawing ? draw : undefined}
           onTouchEnd={stopDrawing}
-          className="w-full touch-none cursor-crosshair"
+          className="w-full h-full touch-none cursor-crosshair"
         />
         
         {selectedTextIndex !== null && (
@@ -930,7 +923,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       </div>
       
       {/* Controls and tools */}
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-4 mt-2">
         {/* Drawing tools */}
         <div className={cn(
           "flex items-center justify-between",
