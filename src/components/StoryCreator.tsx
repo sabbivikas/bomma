@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { createStory, addFrameToStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
@@ -155,14 +154,14 @@ const StoryCreator: React.FC = () => {
   
   return (
     <div className="w-full">
-      <div className="mb-4 p-4">
-        <h2 className="text-2xl font-bold mb-2">Create Story</h2>
+      <div className="p-4 pb-2">
+        <h2 className="text-2xl font-bold mb-1">Create Story</h2>
         <p className="text-gray-600">
           Draw frames to create a visual story or comic
         </p>
       </div>
       
-      <div className="space-y-3 px-4 pb-4">
+      <div className="px-4 pb-4">
         <StoryForm 
           title={title} 
           setTitle={setTitle} 
@@ -180,15 +179,17 @@ const StoryCreator: React.FC = () => {
           onSaveFrame={handleSaveFrame} 
         />
         
-        <StoryActions 
-          canCreateStory={canCreateStory}
-          hasFrames={frames.length > 0}
-          isCreatingStory={isCreatingStory}
-          onClearFrames={handleClearAllFrames}
-          onCreateStory={handleCreateStory}
-          isTitleEmpty={isTitleEmpty}
-          hasNoFrames={hasNoFrames}
-        />
+        <div className="mt-4">
+          <StoryActions 
+            canCreateStory={canCreateStory}
+            hasFrames={frames.length > 0}
+            isCreatingStory={isCreatingStory}
+            onClearFrames={handleClearAllFrames}
+            onCreateStory={handleCreateStory}
+            isTitleEmpty={isTitleEmpty}
+            hasNoFrames={hasNoFrames}
+          />
+        </div>
       </div>
     </div>
   );
