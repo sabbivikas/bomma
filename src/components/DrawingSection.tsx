@@ -34,10 +34,10 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   };
 
   return (
-    <div className="space-y-3 md:space-y-4 w-full max-w-full">
+    <div className="w-full">
       {/* Display prompt at the top if available */}
       {prompt && (
-        <div className="p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+        <div className="p-4 mb-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
             <Lightbulb className="h-4 w-4 text-amber-500" />
             <h3 className="font-medium text-gray-800 text-sm">Today's prompt:</h3>
@@ -46,7 +46,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         </div>
       )}
       
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm md:text-base font-medium text-gray-700">
           {framesCount === 0 ? "Create your first frame" : "Add next frame"}
         </h3>
