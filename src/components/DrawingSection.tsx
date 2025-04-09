@@ -4,6 +4,8 @@ import { CheckCircle, Lightbulb } from 'lucide-react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import FrameCounter from '@/components/story/FrameCounter';
 import { Button } from "@/components/ui/button";
+import { useTheme } from '@/contexts/ThemeContext';
+import { getThemeConfig } from '@/utils/themeConfig';
 
 interface DrawingSectionProps {
   framesCount: number;
@@ -19,7 +21,11 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   prompt
 }) => {
   const [showSuccess, setShowSuccess] = useState(false);
-
+  const { theme } = useTheme();
+  
+  // Get theme configuration for styling
+  const visualThemeConfig = getThemeConfig(theme.visualTheme);
+  
   const handleSaveFrame = (canvas: HTMLCanvasElement) => {
     onSaveFrame(canvas);
     
@@ -49,7 +55,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         <FrameCounter count={framesCount} />
       </div>
       
-      <div className="rounded-xl border border-gray-200 shadow overflow-hidden bg-gradient-to-b from-blue-50/80 to-purple-50/80 backdrop-blur-sm w-full">
+      <div className={`rounded-xl border border-gray-200 shadow-md overflow-hidden ${visualThemeConfig?.backgroundStyle || 'bg-gradient-to-b from-blue-50/80 to-purple-50/80'} backdrop-blur-sm w-full`}>
         {showSuccess && (
           <div className="mb-1.5 text-xs text-green-600 font-medium flex items-center px-3 pt-2">
             <CheckCircle className="h-3 w-3 mr-1 text-green-600" />

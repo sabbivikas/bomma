@@ -20,7 +20,7 @@ const FramePreview: React.FC<FramePreviewProps> = ({ frames, onRemoveFrame }) =>
 
   // Generate theme-based background style for frames
   const getThemeBackgroundStyle = () => {
-    return visualThemeConfig?.backgroundStyle || '';
+    return visualThemeConfig?.backgroundStyle || 'bg-gradient-to-b from-blue-50/50 to-purple-50/50';
   };
 
   if (frames.length === 0) {
@@ -28,12 +28,12 @@ const FramePreview: React.FC<FramePreviewProps> = ({ frames, onRemoveFrame }) =>
   }
 
   return (
-    <div className="mt-6">
-      <h3 className="text-lg font-medium mb-2">Story Frames ({frames.length})</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-md">
+    <div className="mt-6 bg-white/80 backdrop-blur-sm p-4 rounded-lg border border-gray-200 shadow-sm">
+      <h3 className="text-lg font-medium mb-3">Story Frames ({frames.length})</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 bg-gray-50/80 rounded-md">
         {frames.map((frame, index) => (
           <div key={index} className="relative group">
-            <div className={`aspect-square border rounded-md overflow-hidden ${getThemeBackgroundStyle()}`}>
+            <div className={`aspect-square border rounded-md overflow-hidden ${getThemeBackgroundStyle()} shadow-sm transition-all duration-200 group-hover:shadow-md`}>
               <img 
                 src={frame.imageUrl} 
                 alt={`Frame ${index + 1}`} 

@@ -20,8 +20,10 @@ const CreateAnimation = () => {
       <div className="min-h-screen flex flex-col relative">
         <Navbar />
         
-        <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
-          <AnimationCreator />
+        <main className="flex-1 container mx-auto px-3 md:px-4 py-4 relative z-10 pb-16">
+          <div className="bg-gradient-to-b from-purple-50/80 to-blue-50/80 rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 backdrop-blur-sm">
+            <AnimationCreator />
+          </div>
         </main>
       </div>
     </ThemedBackground>
