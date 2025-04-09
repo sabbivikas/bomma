@@ -48,7 +48,7 @@ export async function createDoodle(doodleInput: DoodleCreateInput): Promise<Dood
       likes: data.likes || 0,
       reported: data.reported || false,
       reportCount: data.report_count || 0,
-      moderationStatus: data.moderation_status || 'approved',
+      moderationStatus: (data.moderation_status as "approved" | "pending" | "rejected") || "approved",
       is3D: data.metadata?.is_3d || false
     };
     
@@ -84,7 +84,7 @@ export async function getMyDoodles(): Promise<Doodle[]> {
     likes: item.likes,
     reported: item.reported || false,
     reportCount: item.report_count || 0,
-    moderationStatus: item.moderation_status || 'approved',
+    moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
     is3D: item.metadata?.is_3d || false // Get is3D from metadata
   }));
 }
@@ -111,7 +111,7 @@ export async function getAllDoodles(): Promise<Doodle[]> {
     likes: item.likes || 0,
     reported: item.reported || false,
     reportCount: item.report_count || 0,
-    moderationStatus: item.moderation_status || 'approved',
+    moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
     is3D: item.metadata?.is_3d || false // Get is3D from metadata
   }));
 }
@@ -119,13 +119,16 @@ export async function getAllDoodles(): Promise<Doodle[]> {
 // Like a doodle
 export async function likeDoodle(doodleId: string): Promise<Doodle | null> {
   try {
-    // Increment the likes count
-    const { data, error } = await supabase.rpc('increment_doodle_likes', {
-      doodle_id: doodleId
-    });
+    // Update the likes count directly with an update operation
+    // since the RPC function doesn't exist
+    const { data: updateData, error: updateError } = await supabase
+      .from('doodles')
+      .update({ likes: supabase.rpc('increment_integer', { row_id: doodleId, column_name: 'likes' }) })
+      .eq('id', doodleId)
+      .select();
     
-    if (error) {
-      console.error('Error liking doodle:', error);
+    if (updateError) {
+      console.error('Error liking doodle:', updateError);
       return null;
     }
     
@@ -151,7 +154,7 @@ export async function likeDoodle(doodleId: string): Promise<Doodle | null> {
       likes: updatedDoodle.likes,
       reported: updatedDoodle.reported || false,
       reportCount: updatedDoodle.report_count || 0,
-      moderationStatus: updatedDoodle.moderation_status || 'approved',
+      moderationStatus: (updatedDoodle.moderation_status as "approved" | "pending" | "rejected") || "approved",
       is3D: updatedDoodle.metadata?.is_3d || false
     };
   } catch (error) {
