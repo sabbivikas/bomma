@@ -49,7 +49,7 @@ export async function createDoodle(doodleInput: DoodleCreateInput): Promise<Dood
       reported: data.reported || false,
       reportCount: data.report_count || 0,
       moderationStatus: (data.moderation_status as "approved" | "pending" | "rejected") || "approved",
-      is3D: data.metadata ? (typeof data.metadata === 'object' && 'is_3d' in data.metadata ? !!data.metadata.is_3d : false) : false
+      is3D: data.metadata ? (typeof data.metadata === 'object' && 'is_3d' in (data.metadata as any) ? !!(data.metadata as any).is_3d : false) : false
     };
     
     return newDoodle;
@@ -85,7 +85,7 @@ export async function getMyDoodles(): Promise<Doodle[]> {
     reported: item.reported || false,
     reportCount: item.report_count || 0,
     moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
-    is3D: item.metadata ? (typeof item.metadata === 'object' && 'is_3d' in item.metadata ? !!item.metadata.is_3d : false) : false
+    is3D: (item as any).metadata ? (typeof (item as any).metadata === 'object' && 'is_3d' in (item as any).metadata ? !!(item as any).metadata.is_3d : false) : false
   }));
 }
 
@@ -112,7 +112,7 @@ export async function getAllDoodles(): Promise<Doodle[]> {
     reported: item.reported || false,
     reportCount: item.report_count || 0,
     moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
-    is3D: item.metadata ? (typeof item.metadata === 'object' && 'is_3d' in item.metadata ? !!item.metadata.is_3d : false) : false
+    is3D: (item as any).metadata ? (typeof (item as any).metadata === 'object' && 'is_3d' in (item as any).metadata ? !!(item as any).metadata.is_3d : false) : false
   }));
 }
 
@@ -153,7 +153,7 @@ export async function likeDoodle(doodleId: string): Promise<Doodle | null> {
       reported: updatedDoodle.reported || false,
       reportCount: updatedDoodle.report_count || 0,
       moderationStatus: (updatedDoodle.moderation_status as "approved" | "pending" | "rejected") || "approved",
-      is3D: updatedDoodle.metadata ? (typeof updatedDoodle.metadata === 'object' && 'is_3d' in updatedDoodle.metadata ? !!updatedDoodle.metadata.is_3d : false) : false
+      is3D: (updatedDoodle as any).metadata ? (typeof (updatedDoodle as any).metadata === 'object' && 'is_3d' in (updatedDoodle as any).metadata ? !!(updatedDoodle as any).metadata.is_3d : false) : false
     };
   } catch (error) {
     console.error('Error in likeDoodle:', error);
