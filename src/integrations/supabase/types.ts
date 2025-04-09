@@ -199,6 +199,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_integer: {
+        Args: { row_id: string; column_name: string }
+        Returns: number
+      }
       increment_report_count: {
         Args: { row_id: string; table_name: string }
         Returns: number
