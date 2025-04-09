@@ -25,7 +25,12 @@ export async function getAllDoodles(): Promise<Doodle[]> {
     reported: item.reported || false,
     reportCount: item.report_count || 0,
     moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
-    is3D: (item as any).metadata ? (typeof (item as any).metadata === 'object' && 'is_3d' in ((item as any).metadata as any) ? !!((item as any).metadata as any).is_3d : false) : false
+    is3D: item.metadata ? (
+      typeof item.metadata === 'object' && 
+      item.metadata !== null &&
+      'is_3d' in item.metadata && 
+      !!item.metadata.is_3d
+    ) : false
   }));
 }
 
@@ -66,7 +71,12 @@ export async function likeDoodle(doodleId: string): Promise<Doodle | null> {
       reported: updatedDoodle.reported || false,
       reportCount: updatedDoodle.report_count || 0,
       moderationStatus: (updatedDoodle.moderation_status as "approved" | "pending" | "rejected") || "approved",
-      is3D: (updatedDoodle as any).metadata ? (typeof (updatedDoodle as any).metadata === 'object' && 'is_3d' in ((updatedDoodle as any).metadata as any) ? !!((updatedDoodle as any).metadata as any).is_3d : false) : false
+      is3D: updatedDoodle.metadata ? (
+        typeof updatedDoodle.metadata === 'object' && 
+        updatedDoodle.metadata !== null &&
+        'is_3d' in updatedDoodle.metadata && 
+        !!updatedDoodle.metadata.is_3d
+      ) : false
     };
   } catch (error) {
     console.error('Error in likeDoodle:', error);

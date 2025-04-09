@@ -1,16 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert, Box } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert, Box, Cube } from "lucide-react";
 import { Doodle, Comment } from '@/types/doodle';
 import { formatDistanceToNow } from 'date-fns';
-import { likeDoodle, addComment, getCommentsForDoodle, getSessionId } from '@/utils/doodleService';
+import { likeDoodle } from '@/utils/doodleFeedService';
+import { addComment, getCommentsForDoodle } from '@/utils/commentService';
+import { getSessionId } from '@/utils/sessionService';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { getUsernameForSession } from '@/utils/usernameGenerator';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import ReportContent from './ReportContent';
+import DoodleViewer3D from './DoodleViewer3D';
 
 interface DoodleCardProps {
   doodle: Doodle;
@@ -27,6 +31,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
   const [commentCount, setCommentCount] = useState(0);
   const timeAgo = formatDistanceToNow(new Date(doodle.createdAt), { addSuffix: true });
   const sessionId = getSessionId();
+  const [show3DViewer, setShow3DViewer] = useState(false);
   
   // Reference to the card element for scrolling into view
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -225,6 +230,13 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
     setShowReportDialog(true);
   };
   
+  // Handle viewing 3D version
+  const handle3DView = () => {
+    if (doodle.is3D) {
+      setShow3DViewer(true);
+    }
+  };
+  
   return (
     <Card 
       ref={cardRef}
@@ -245,8 +257,12 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
           <div className="flex items-center gap-2">
             <p className="font-medium text-sm">{getDoodleUsername()}</p>
             {doodle.is3D && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 px-2 py-0 h-5">
-                <Box className="h-3 w-3" />
+              <Badge 
+                variant="outline" 
+                className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 px-2 py-0 h-5 cursor-pointer hover:bg-blue-100"
+                onClick={handle3DView}
+              >
+                <Cube className="h-3 w-3" />
                 <span className="text-[10px]">3D</span>
               </Badge>
             )}
@@ -265,6 +281,12 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
               <Share2 className="mr-2 h-4 w-4" />
               <span>Share</span>
             </DropdownMenuItem>
+            {doodle.is3D && (
+              <DropdownMenuItem onClick={handle3DView}>
+                <Cube className="mr-2 h-4 w-4" />
+                <span>View in 3D</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleReportDoodle} className="text-red-600">
               <Flag className="mr-2 h-4 w-4" />
@@ -275,7 +297,10 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
       </div>
       
       {/* Image Content */}
-      <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+      <div 
+        className={`aspect-square bg-gray-50 flex items-center justify-center overflow-hidden ${doodle.is3D ? 'cursor-pointer' : ''}`}
+        onClick={doodle.is3D ? handle3DView : undefined}
+      >
         <img 
           src={doodle.imageUrl} 
           alt={doodle.prompt}
@@ -316,6 +341,18 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
               {commentCount > 0 ? `${commentCount} ${commentCount === 1 ? 'Comment' : 'Comments'}` : 'Comment'}
             </span>
           </Button>
+          
+          {doodle.is3D && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 p-0 hover:bg-transparent hover:text-black"
+              onClick={handle3DView}
+            >
+              <Cube size={18} strokeWidth={2} />
+              <span className="text-sm">3D View</span>
+            </Button>
+          )}
         </div>
         
         <Button
@@ -402,6 +439,13 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
           onClose={() => setShowReportDialog(false)}
         />
       )}
+      
+      {/* 3D Viewer */}
+      <DoodleViewer3D 
+        imageUrl={doodle.imageUrl}
+        isOpen={show3DViewer}
+        onClose={() => setShow3DViewer(false)}
+      />
     </Card>
   );
 };
