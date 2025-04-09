@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Box, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Boxes, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 interface PublishOptionsDialogProps {
   open: boolean;
@@ -188,7 +187,7 @@ const PublishOptionsDialog: React.FC<PublishOptionsDialogProps> = ({
               <span>2D Drawing</span>
             </TabsTrigger>
             <TabsTrigger value="3d" className="flex items-center gap-2">
-              <Box className="h-4 w-4" />
+              <Boxes className="h-4 w-4" />
               <span>3D Model</span>
             </TabsTrigger>
           </TabsList>
