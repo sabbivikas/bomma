@@ -93,6 +93,7 @@ export type Database = {
           id: string
           image_url: string
           likes: number
+          metadata: Json | null
           moderation_status: string | null
           prompt: string
           report_count: number | null
@@ -104,6 +105,7 @@ export type Database = {
           id?: string
           image_url: string
           likes?: number
+          metadata?: Json | null
           moderation_status?: string | null
           prompt: string
           report_count?: number | null
@@ -115,6 +117,7 @@ export type Database = {
           id?: string
           image_url?: string
           likes?: number
+          metadata?: Json | null
           moderation_status?: string | null
           prompt?: string
           report_count?: number | null
