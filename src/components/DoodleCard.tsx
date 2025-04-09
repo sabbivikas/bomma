@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert, Cube } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert, Box } from "lucide-react";
 import { Doodle, Comment } from '@/types/doodle';
 import { formatDistanceToNow } from 'date-fns';
 import { likeDoodle, addComment, getCommentsForDoodle, getSessionId } from '@/utils/doodleService';
@@ -246,7 +246,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
             <p className="font-medium text-sm">{getDoodleUsername()}</p>
             {doodle.is3D && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 px-2 py-0 h-5">
-                <Cube className="h-3 w-3" />
+                <Box className="h-3 w-3" />
                 <span className="text-[10px]">3D</span>
               </Badge>
             )}
