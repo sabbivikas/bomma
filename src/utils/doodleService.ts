@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Doodle, DoodleCreateInput, Comment } from '@/types/doodle';
@@ -85,7 +84,7 @@ export async function getMyDoodles(): Promise<Doodle[]> {
     reported: item.reported || false,
     reportCount: item.report_count || 0,
     moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
-    is3D: item.metadata?.is_3d || false // Get is3D from metadata
+    is3D: (item.metadata as any)?.is_3d || false // Use type assertion and optional chaining
   }));
 }
 
@@ -112,20 +111,18 @@ export async function getAllDoodles(): Promise<Doodle[]> {
     reported: item.reported || false,
     reportCount: item.report_count || 0,
     moderationStatus: (item.moderation_status as "approved" | "pending" | "rejected") || "approved",
-    is3D: item.metadata?.is_3d || false // Get is3D from metadata
+    is3D: (item.metadata as any)?.is_3d || false // Use type assertion and optional chaining
   }));
 }
 
 // Like a doodle
 export async function likeDoodle(doodleId: string): Promise<Doodle | null> {
   try {
-    // Update the likes count directly with an update operation
-    // since the RPC function doesn't exist
-    const { data: updateData, error: updateError } = await supabase
-      .from('doodles')
-      .update({ likes: supabase.rpc('increment_integer', { row_id: doodleId, column_name: 'likes' }) })
-      .eq('id', doodleId)
-      .select();
+    // First increment the likes count
+    const { error: updateError } = await supabase.rpc('increment_integer', {
+      row_id: doodleId,
+      column_name: 'likes'
+    });
     
     if (updateError) {
       console.error('Error liking doodle:', updateError);
@@ -155,7 +152,7 @@ export async function likeDoodle(doodleId: string): Promise<Doodle | null> {
       reported: updatedDoodle.reported || false,
       reportCount: updatedDoodle.report_count || 0,
       moderationStatus: (updatedDoodle.moderation_status as "approved" | "pending" | "rejected") || "approved",
-      is3D: updatedDoodle.metadata?.is_3d || false
+      is3D: (updatedDoodle.metadata as any)?.is_3d || false
     };
   } catch (error) {
     console.error('Error in likeDoodle:', error);
