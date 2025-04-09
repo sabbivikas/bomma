@@ -69,8 +69,8 @@ const PublishOptionsDialog: React.FC<PublishOptionsDialogProps> = ({
             <span className="text-xs text-indigo-600">(Full 3D rendering will be generated when published)</span>
           </p>
           
-          {/* Add custom CSS styles for the 3D effect */}
-          <style jsx>{`
+          {/* Add inline styles instead of jsx style tag */}
+          <style dangerouslySetInnerHTML={{ __html: `
             .perspective-scene {
               perspective: 800px;
               width: 200px;
@@ -165,7 +165,7 @@ const PublishOptionsDialog: React.FC<PublishOptionsDialogProps> = ({
                 transform: rotateY(15deg) rotateX(10deg);
               }
             }
-          `}</style>
+          `}} />
         </div>
       );
     }
