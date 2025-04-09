@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert, Box, Box3D } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, X, Flag, ShieldAlert, Box, Cube3d } from "lucide-react";
 import { Doodle, Comment } from '@/types/doodle';
 import { formatDistanceToNow } from 'date-fns';
 import { likeDoodle } from '@/utils/doodleFeedService';
@@ -262,7 +261,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
                 className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 px-2 py-0 h-5 cursor-pointer hover:bg-blue-100"
                 onClick={handle3DView}
               >
-                <Box3D className="h-3 w-3" />
+                <Cube3d className="h-3 w-3" />
                 <span className="text-[10px]">3D</span>
               </Badge>
             )}
@@ -283,7 +282,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
             </DropdownMenuItem>
             {doodle.is3D && (
               <DropdownMenuItem onClick={handle3DView}>
-                <Box3D className="mr-2 h-4 w-4" />
+                <Cube3d className="mr-2 h-4 w-4" />
                 <span>View in 3D</span>
               </DropdownMenuItem>
             )}
@@ -349,7 +348,7 @@ const DoodleCard: React.FC<DoodleCardProps> = ({ doodle, onLike, highlight = fal
               className="flex items-center gap-1 p-0 hover:bg-transparent hover:text-black"
               onClick={handle3DView}
             >
-              <Box3D size={18} strokeWidth={2} />
+              <Cube3d size={18} strokeWidth={2} />
               <span className="text-sm">3D View</span>
             </Button>
           )}
