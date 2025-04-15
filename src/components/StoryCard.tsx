@@ -3,13 +3,14 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Story } from '@/types/doodle';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Film, BookOpen, MessageCircle, Share2, MoreHorizontal, Flag } from 'lucide-react';
+import { Heart, Film, BookOpen, MessageCircle, Share2, MoreHorizontal, Flag, Download } from 'lucide-react';
 import { likeStory, getCommentCountForStory } from '@/utils/storyService';
 import { getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import ReportContent from './ReportContent';
+import DownloadDialog from './DownloadDialog';
 
 interface StoryCardProps {
   story: Story;
@@ -21,6 +22,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
   const { toast } = useToast();
   const isMyStory = story.sessionId === getSessionId();
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   
@@ -137,6 +139,11 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
     e.stopPropagation(); // Prevent navigation
     setShowReportDialog(true);
   };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
+    setShowDownloadDialog(true);
+  };
   
   // Get the first frame as the thumbnail
   const thumbnailFrame = story.frames[0];
@@ -189,6 +196,10 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
                 <Share2 className="mr-2 h-4 w-4" />
                 <span>Share</span>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleDownload(e);}}>
+                <Download className="mr-2 h-4 w-4" />
+                <span>Download</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleReportStory} className="text-red-600">
                 <Flag className="mr-2 h-4 w-4" />
@@ -232,10 +243,10 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
             variant="ghost"
             size="sm"
             className="flex items-center gap-1 px-2"
-            onClick={handleShare}
-            aria-label="Share story"
+            onClick={handleDownload}
+            aria-label="Download story"
           >
-            <Share2 size={16} />
+            <Download size={16} />
           </Button>
         </div>
       </CardFooter>
@@ -249,6 +260,13 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, onLike }) => {
           onClose={() => setShowReportDialog(false)}
         />
       )}
+
+      {/* Download Dialog */}
+      <DownloadDialog 
+        story={story}
+        isOpen={showDownloadDialog}
+        onClose={() => setShowDownloadDialog(false)}
+      />
     </Card>
   );
 };

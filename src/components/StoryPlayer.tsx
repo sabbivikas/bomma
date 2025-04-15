@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Story } from '@/types/doodle';
 import { Button } from './ui/button';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeConfig } from '@/utils/themeConfig';
+import DownloadDialog from './DownloadDialog';
 
 interface StoryPlayerProps {
   story: Story;
@@ -18,6 +18,7 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
   
@@ -128,6 +129,12 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
     }
   };
   
+  // Open download dialog
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent container click from triggering
+    setShowDownloadDialog(true);
+  };
+  
   // If no frames, show placeholder
   if (story.frames.length === 0) {
     return (
@@ -180,6 +187,20 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
             {currentFrameIndex + 1} / {totalFrames}
           </div>
         )}
+
+        {/* Add download button on top-right corner */}
+        {showControls && (
+          <div className="absolute top-3 right-3 z-20">
+            <Button 
+              size="icon" 
+              variant="secondary" 
+              className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm shadow-md"
+              onClick={handleDownloadClick}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
       
       {/* Controls - hide during animation playback for cleaner experience */}
@@ -221,6 +242,14 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story, autoPlay = false }) =>
           </div>
         </div>
       </div>
+
+      {/* Download Dialog */}
+      <DownloadDialog 
+        story={story}
+        isOpen={showDownloadDialog}
+        onClose={() => setShowDownloadDialog(false)}
+        currentFrameIndex={currentFrameIndex}
+      />
     </div>
   );
 };

@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { getStoryById, likeStory } from '@/utils/storyService';
 import { Story, Comment } from '@/types/doodle';
-import { Heart, ArrowLeft, Trash2, MessageCircle, X, Send } from 'lucide-react';
+import { Heart, ArrowLeft, Trash2, MessageCircle, X, Send, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Cloud from '@/components/Cloud';
@@ -19,6 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import DownloadDialog from '@/components/DownloadDialog';
 
 const ViewStory = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +31,7 @@ const ViewStory = () => {
   const [commentText, setCommentText] = useState('');
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const sessionId = getSessionId();
@@ -176,6 +177,10 @@ const ViewStory = () => {
     }
   };
 
+  const handleDownload = () => {
+    setShowDownloadDialog(true);
+  };
+
   // Get initials for comment avatars
   const getCommentInitials = (comment: Comment) => {
     const username = getUsernameForSession(comment.sessionId);
@@ -239,6 +244,15 @@ const ViewStory = () => {
             </Button>
             
             <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={handleDownload}
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Download</span>
+              </Button>
+              
               <Button 
                 variant="ghost" 
                 className="flex items-center gap-2"
@@ -367,6 +381,13 @@ const ViewStory = () => {
               </div>
             </div>
           )}
+
+          {/* Download Dialog */}
+          <DownloadDialog 
+            story={story}
+            isOpen={showDownloadDialog}
+            onClose={() => setShowDownloadDialog(false)}
+          />
         </div>
       </main>
     </div>
