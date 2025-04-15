@@ -1,4 +1,6 @@
 import { Story } from '@/types/doodle';
+import GIF from 'gif.js';
+import JSZip from 'jszip';
 
 // Different download formats
 export type DownloadFormat = 'original' | 'square' | 'reel' | 'landscape' | 'portrait';
@@ -108,114 +110,225 @@ export const downloadImage = (imageUrl: string, filename: string, format: Downlo
 };
 
 /**
- * Download an animation as GIF or ZIP of frames
+ * Create GIF from animation frames
  */
-export const downloadAnimation = async (story: Story, format: DownloadFormat = 'original', asGif: boolean = true) => {
-  if (!story.frames.length) return;
+const createGif = async (story: Story, format: DownloadFormat): Promise<void> => {
+  const frames = story.frames;
   
-  // If not requesting a GIF, download as a ZIP of images
-  if (!asGif) {
-    // Import JSZip dynamically to keep bundle size small
-    const JSZip = (await import('jszip')).default;
-    const zip = new JSZip();
-    
-    // Create a folder for the frames
-    const folder = zip.folder(`${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_frames`);
-    
-    if (!folder) return;
-    
-    // Process each frame and add to ZIP
-    for (let i = 0; i < story.frames.length; i++) {
-      try {
-        const frame = story.frames[i];
+  return new Promise<void>(async (resolve, reject) => {
+    try {
+      // Set dimensions based on format
+      let width: number, height: number;
+      
+      if (format === 'original') {
+        // For original format, use first frame's dimensions
+        const img = new Image();
+        await new Promise((res, rej) => {
+          img.onload = () => res(null);
+          img.onerror = () => rej(new Error("Failed to load first frame"));
+          img.src = frames[0].imageUrl;
+        });
+        width = img.width;
+        height = img.height;
+      } else {
+        width = FORMAT_DIMENSIONS[format].width;
+        height = FORMAT_DIMENSIONS[format].height;
+      }
+      
+      // Create GIF object
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width,
+        height,
+        workerScript: '/gif.worker.js'
+      });
+      
+      // Process each frame
+      for (const frame of frames) {
+        // Create a canvas for this frame
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
         
-        // Create a promise to process the image
-        const processedImage = await new Promise<string>((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
+        
+        // Fill with white background
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, width, height);
+        
+        // Load the frame image
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        
+        await new Promise((res, rej) => {
           img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            
-            if (!ctx) {
-              reject(new Error("Could not get canvas context"));
-              return;
-            }
-            
-            let targetWidth = img.width;
-            let targetHeight = img.height;
-            
-            // Set canvas size based on format
-            if (format !== 'original') {
-              targetWidth = FORMAT_DIMENSIONS[format].width;
-              targetHeight = FORMAT_DIMENSIONS[format].height;
-            }
-            
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
-            
-            // Fill background with white
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Calculate scaling and positioning
+            // Calculate centering
             const scale = Math.min(
-              targetWidth / img.width,
-              targetHeight / img.height
+              width / img.width,
+              height / img.height
             );
             
             const scaledWidth = img.width * scale;
             const scaledHeight = img.height * scale;
-            const x = (targetWidth - scaledWidth) / 2;
-            const y = (targetHeight - scaledHeight) / 2;
+            const x = (width - scaledWidth) / 2;
+            const y = (height - scaledHeight) / 2;
             
-            // Draw the image centered in the canvas
+            // Draw the image centered in canvas
             ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
             
             // Add watermark
             addWatermark(ctx, canvas);
             
-            // Return processed image data
-            const dataUrl = canvas.toDataURL("image/png");
-            const base64Data = dataUrl.split(',')[1];
-            resolve(base64Data);
+            res(null);
           };
-          
-          img.onerror = () => {
-            reject(new Error("Failed to load image"));
-          };
-          
+          img.onerror = () => rej(new Error(`Failed to load frame: ${frame.imageUrl}`));
           img.src = frame.imageUrl;
         });
         
-        // Add to zip
-        folder.file(`frame_${i+1}.png`, processedImage, { base64: true });
-      } catch (error) {
-        console.error(`Error processing frame ${i+1}:`, error);
+        // Add the frame to the GIF (use frame duration or default to 500ms)
+        gif.addFrame(canvas, { delay: frame.duration || 500 });
       }
+      
+      // Render the GIF
+      gif.on('finished', (blob: Blob) => {
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.gif`;
+        link.click();
+        
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        resolve();
+      });
+      
+      gif.on('progress', (p: number) => {
+        console.log(`GIF rendering progress: ${Math.round(p * 100)}%`);
+      });
+      
+      gif.on('error', (e: Error) => {
+        reject(e);
+      });
+      
+      // Start rendering
+      gif.render();
+      
+    } catch (error) {
+      reject(error);
     }
-    
-    // Generate and download zip
-    const content = await zip.generateAsync({ type: "blob" });
-    const link = document.createElement("a");
-    link.download = `${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_frames.zip`;
-    link.href = URL.createObjectURL(content);
-    link.click();
-    
-    return;
+  });
+};
+
+/**
+ * Download an animation as GIF or ZIP of frames
+ */
+export const downloadAnimation = async (story: Story, format: DownloadFormat = 'original', asGif: boolean = true) => {
+  if (!story.frames.length) return;
+  
+  // If requesting a GIF, try to create it
+  if (asGif) {
+    try {
+      await createGif(story, format);
+      return;
+    } catch (error) {
+      console.error("Error creating GIF:", error);
+      // Fall back to ZIP download
+      alert("GIF creation failed. Downloading as ZIP instead.");
+    }
   }
   
-  // For GIF creation, import the gif.js library dynamically
-  try {
-    // To be implemented when we add gif.js
-    // For now, fall back to ZIP download
-    alert("GIF download is not yet implemented. Downloading as ZIP instead.");
-    await downloadAnimation(story, format, false);
-  } catch (error) {
-    console.error("Error creating GIF:", error);
-    // Fall back to ZIP download
-    await downloadAnimation(story, format, false);
+  // Download as a ZIP of images if not GIF or if GIF creation failed
+  // Import JSZip dynamically to keep bundle size small
+  const zip = new JSZip();
+  
+  // Create a folder for the frames
+  const folder = zip.folder(`${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_frames`);
+  
+  if (!folder) return;
+  
+  // Process each frame and add to ZIP
+  for (let i = 0; i < story.frames.length; i++) {
+    try {
+      const frame = story.frames[i];
+      
+      // Create a promise to process the image
+      const processedImage = await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+          }
+          
+          let targetWidth = img.width;
+          let targetHeight = img.height;
+          
+          // Set canvas size based on format
+          if (format !== 'original') {
+            targetWidth = FORMAT_DIMENSIONS[format].width;
+            targetHeight = FORMAT_DIMENSIONS[format].height;
+          }
+          
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          
+          // Fill background with white
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Calculate scaling and positioning
+          const scale = Math.min(
+            targetWidth / img.width,
+            targetHeight / img.height
+          );
+          
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
+          const x = (targetWidth - scaledWidth) / 2;
+          const y = (targetHeight - scaledHeight) / 2;
+          
+          // Draw the image centered in the canvas
+          ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+          
+          // Add watermark
+          addWatermark(ctx, canvas);
+          
+          // Return processed image data
+          const dataUrl = canvas.toDataURL("image/png");
+          const base64Data = dataUrl.split(',')[1];
+          resolve(base64Data);
+        };
+        
+        img.onerror = () => {
+          reject(new Error("Failed to load image"));
+        };
+        
+        img.src = frame.imageUrl;
+      });
+      
+      // Add to zip
+      folder.file(`frame_${i+1}.png`, processedImage, { base64: true });
+    } catch (error) {
+      console.error(`Error processing frame ${i+1}:`, error);
+    }
   }
+  
+  // Generate and download zip
+  const content = await zip.generateAsync({ type: "blob" });
+  const link = document.createElement("a");
+  link.download = `${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_frames.zip`;
+  link.href = URL.createObjectURL(content);
+  link.click();
 };
 
 /**
@@ -234,7 +347,7 @@ export const downloadStory = async (story: Story, format: DownloadFormat = 'orig
     );
   } else if (story.isAnimation) {
     // Download all frames as animation
-    await downloadAnimation(story, format);
+    await downloadAnimation(story, format, true); // true = download as GIF
   } else {
     // For regular stories, just download each frame
     for (let i = 0; i < story.frames.length; i++) {

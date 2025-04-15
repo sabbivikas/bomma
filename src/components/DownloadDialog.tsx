@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { DownloadFormat, downloadStory } from '@/utils/downloadUtils';
 import { Story } from '@/types/doodle';
-import { Download, FileDown, FileImage, Film } from 'lucide-react';
+import { Download, FileDown, FileImage, Film, FileVideo } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface DownloadDialogProps {
@@ -26,17 +26,31 @@ const DownloadDialog: React.FC<DownloadDialogProps> = ({
   const [downloadType, setDownloadType] = useState<'all' | 'current'>(
     story.frames.length > 1 ? 'all' : 'current'
   );
+  const [fileFormat, setFileFormat] = useState<'gif' | 'zip'>(
+    story.isAnimation ? 'gif' : 'zip'
+  );
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await downloadStory(story, format, downloadType, currentFrameIndex);
-      toast({
-        title: "Download complete",
-        description: `Your ${story.isAnimation ? 'animation' : 'story'} has been downloaded successfully`,
-        variant: "success",
-      });
+      if (story.isAnimation && downloadType === 'all') {
+        // For animations, handle special download with GIF option
+        await downloadStory(story, format, downloadType, currentFrameIndex);
+        toast({
+          title: "Download complete",
+          description: `Your animation has been downloaded successfully as ${fileFormat === 'gif' ? 'a GIF' : 'frame images'}`,
+          variant: "success",
+        });
+      } else {
+        // For regular story or single frame download
+        await downloadStory(story, format, downloadType, currentFrameIndex);
+        toast({
+          title: "Download complete",
+          description: `Your ${story.isAnimation ? 'animation' : 'story'} has been downloaded successfully`,
+          variant: "success",
+        });
+      }
       onClose();
     } catch (error) {
       console.error('Download error:', error);
@@ -122,6 +136,33 @@ const DownloadDialog: React.FC<DownloadDialogProps> = ({
                   <Label htmlFor="type-current" className="flex items-center gap-1">
                     <FileDown className="h-4 w-4" />
                     <span>Current frame</span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {story.isAnimation && downloadType === 'all' && (
+            <div className="space-y-2">
+              <Label htmlFor="file-format">File Format</Label>
+              <RadioGroup 
+                id="file-format" 
+                value={fileFormat} 
+                onValueChange={(value) => setFileFormat(value as 'gif' | 'zip')}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div className="flex items-center space-x-2 border rounded-md p-2">
+                  <RadioGroupItem value="gif" id="format-gif" />
+                  <Label htmlFor="format-gif" className="flex items-center gap-1">
+                    <FileVideo className="h-4 w-4" />
+                    <span>GIF Animation</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-md p-2">
+                  <RadioGroupItem value="zip" id="format-zip" />
+                  <Label htmlFor="format-zip" className="flex items-center gap-1">
+                    <FileImage className="h-4 w-4" />
+                    <span>ZIP of Frames</span>
                   </Label>
                 </div>
               </RadioGroup>
