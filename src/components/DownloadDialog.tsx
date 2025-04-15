@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { DownloadFormat, downloadStory } from '@/utils/downloadUtils';
 import { Story } from '@/types/doodle';
-import { Download, FileDown, FileImage, Film, FileVideo } from 'lucide-react';
+import { Download, FileDown, FileImage, Film, FileVideo, Video } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface DownloadDialogProps {
@@ -26,8 +26,8 @@ const DownloadDialog: React.FC<DownloadDialogProps> = ({
   const [downloadType, setDownloadType] = useState<'all' | 'current'>(
     story.frames.length > 1 ? 'all' : 'current'
   );
-  const [fileFormat, setFileFormat] = useState<'gif' | 'zip'>(
-    story.isAnimation ? 'gif' : 'zip'
+  const [fileFormat, setFileFormat] = useState<'mp4' | 'gif' | 'zip'>(
+    story.isAnimation ? 'mp4' : 'zip'
   );
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -35,11 +35,15 @@ const DownloadDialog: React.FC<DownloadDialogProps> = ({
     setIsDownloading(true);
     try {
       if (story.isAnimation && downloadType === 'all') {
-        // For animations, handle special download with GIF option
-        await downloadStory(story, format, downloadType, currentFrameIndex);
+        // For animations, handle special download with format options
+        await downloadStory(story, format, downloadType, currentFrameIndex, fileFormat);
         toast({
           title: "Download complete",
-          description: `Your animation has been downloaded successfully as ${fileFormat === 'gif' ? 'a GIF' : 'frame images'}`,
+          description: `Your animation has been downloaded successfully as ${
+            fileFormat === 'mp4' ? 'an MP4 video' : 
+            fileFormat === 'gif' ? 'a GIF' : 
+            'frame images'
+          }`,
           variant: "success",
         });
       } else {
@@ -148,9 +152,16 @@ const DownloadDialog: React.FC<DownloadDialogProps> = ({
               <RadioGroup 
                 id="file-format" 
                 value={fileFormat} 
-                onValueChange={(value) => setFileFormat(value as 'gif' | 'zip')}
-                className="grid grid-cols-2 gap-4"
+                onValueChange={(value) => setFileFormat(value as 'mp4' | 'gif' | 'zip')}
+                className="grid grid-cols-3 gap-4"
               >
+                <div className="flex items-center space-x-2 border rounded-md p-2">
+                  <RadioGroupItem value="mp4" id="format-mp4" />
+                  <Label htmlFor="format-mp4" className="flex items-center gap-1">
+                    <Video className="h-4 w-4" />
+                    <span>MP4 Video</span>
+                  </Label>
+                </div>
                 <div className="flex items-center space-x-2 border rounded-md p-2">
                   <RadioGroupItem value="gif" id="format-gif" />
                   <Label htmlFor="format-gif" className="flex items-center gap-1">

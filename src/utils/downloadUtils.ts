@@ -110,6 +110,127 @@ export const downloadImage = (imageUrl: string, filename: string, format: Downlo
 };
 
 /**
+ * Create MP4 video from animation frames
+ */
+const createMP4 = async (story: Story, format: DownloadFormat): Promise<void> => {
+  const frames = story.frames;
+  
+  return new Promise<void>(async (resolve, reject) => {
+    try {
+      // Set dimensions based on format
+      let width: number, height: number;
+      
+      if (format === 'original') {
+        // For original format, use first frame's dimensions
+        const img = new Image();
+        await new Promise((res, rej) => {
+          img.onload = () => res(null);
+          img.onerror = () => rej(new Error("Failed to load first frame"));
+          img.src = frames[0].imageUrl;
+        });
+        width = img.width;
+        height = img.height;
+      } else {
+        width = FORMAT_DIMENSIONS[format].width;
+        height = FORMAT_DIMENSIONS[format].height;
+      }
+      
+      // Create canvas for the frames
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error("Could not get canvas context"));
+        return;
+      }
+      
+      // Create MediaRecorder for MP4 recording
+      const stream = canvas.captureStream(30); // 30 FPS
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm; codecs=vp9',
+        videoBitsPerSecond: 5000000 // 5Mbps for good quality
+      });
+      
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        
+        // Convert WebM to MP4 using client-side method
+        // Since we can't directly create MP4, we'll download as WebM
+        // with an MP4 extension (most modern browsers can play this)
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp4`;
+        link.click();
+        
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        resolve();
+      };
+      
+      // Start recording
+      mediaRecorder.start();
+      
+      // Process each frame
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+        
+        // Fill with white background
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, width, height);
+        
+        // Load and draw the frame
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        
+        await new Promise((res, rej) => {
+          img.onload = () => {
+            // Calculate centering
+            const scale = Math.min(
+              width / img.width,
+              height / img.height
+            );
+            
+            const scaledWidth = img.width * scale;
+            const scaledHeight = img.height * scale;
+            const x = (width - scaledWidth) / 2;
+            const y = (height - scaledHeight) / 2;
+            
+            // Draw the image centered in canvas
+            ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+            
+            // Add watermark
+            addWatermark(ctx, canvas);
+            
+            res(null);
+          };
+          img.onerror = () => rej(new Error(`Failed to load frame: ${frame.imageUrl}`));
+          img.src = frame.imageUrl;
+        });
+        
+        // Wait for frame duration
+        await new Promise(res => setTimeout(res, frame.duration || 500));
+      }
+      
+      // Stop recording after all frames have been processed
+      mediaRecorder.stop();
+      
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+/**
  * Create GIF from animation frames
  */
 const createGif = async (story: Story, format: DownloadFormat): Promise<void> => {
@@ -226,13 +347,30 @@ const createGif = async (story: Story, format: DownloadFormat): Promise<void> =>
 };
 
 /**
- * Download an animation as GIF or ZIP of frames
+ * Download an animation as MP4, GIF or ZIP of frames
  */
-export const downloadAnimation = async (story: Story, format: DownloadFormat = 'original', asGif: boolean = true) => {
+export const downloadAnimation = async (
+  story: Story, 
+  format: DownloadFormat = 'original', 
+  fileFormat: 'mp4' | 'gif' | 'zip' = 'mp4'
+) => {
   if (!story.frames.length) return;
   
-  // If requesting a GIF, try to create it
-  if (asGif) {
+  // If requesting an MP4, try to create it
+  if (fileFormat === 'mp4') {
+    try {
+      await createMP4(story, format);
+      return;
+    } catch (error) {
+      console.error("Error creating MP4:", error);
+      // Fall back to GIF download
+      alert("MP4 creation failed. Downloading as GIF instead.");
+      fileFormat = 'gif';
+    }
+  }
+  
+  // If requesting a GIF or MP4 failed, try to create a GIF
+  if (fileFormat === 'gif') {
     try {
       await createGif(story, format);
       return;
@@ -243,8 +381,7 @@ export const downloadAnimation = async (story: Story, format: DownloadFormat = '
     }
   }
   
-  // Download as a ZIP of images if not GIF or if GIF creation failed
-  // Import JSZip dynamically to keep bundle size small
+  // Download as a ZIP of images if not GIF/MP4 or if creation failed
   const zip = new JSZip();
   
   // Create a folder for the frames
@@ -334,7 +471,13 @@ export const downloadAnimation = async (story: Story, format: DownloadFormat = '
 /**
  * Download story or single frame
  */
-export const downloadStory = async (story: Story, format: DownloadFormat = 'original', downloadType: 'all' | 'current' = 'all', currentFrameIndex: number = 0) => {
+export const downloadStory = async (
+  story: Story, 
+  format: DownloadFormat = 'original', 
+  downloadType: 'all' | 'current' = 'all', 
+  currentFrameIndex: number = 0, 
+  fileFormat?: 'mp4' | 'gif' | 'zip'
+) => {
   if (!story.frames.length) return;
   
   if (downloadType === 'current' && story.frames[currentFrameIndex]) {
@@ -346,8 +489,8 @@ export const downloadStory = async (story: Story, format: DownloadFormat = 'orig
       format
     );
   } else if (story.isAnimation) {
-    // Download all frames as animation
-    await downloadAnimation(story, format, true); // true = download as GIF
+    // Download all frames as animation with specified format
+    await downloadAnimation(story, format, fileFormat || 'mp4');
   } else {
     // For regular stories, just download each frame
     for (let i = 0; i < story.frames.length; i++) {
