@@ -7,65 +7,122 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Use the API key you provided
-const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY") || "AIzaSyC0dDcHvJWLOG7xx8-R2pcYGiuvYtwH9VU";
+// Get the API key from environment variables
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Check if API key is configured
+    if (!GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is not set in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "API key not configured", 
+          details: "Please set the GEMINI_API_KEY in Supabase secrets" 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const { imageBase64 } = await req.json();
 
     if (!imageBase64) {
-      return new Response(JSON.stringify({ error: "Missing imageBase64" }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({ error: "Missing imageBase64" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    // Call Google Vision AI API (using "INPAINTING" feature for "image enhancement"/completion)
-    const gcpResp = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`,
+    // Clean the base64 string if it has a data URL prefix
+    const cleanedBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+    // Call the Gemini API for image enhancement
+    console.log("Calling Gemini API for image enhancement...");
+    
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          requests: [
+          contents: [
             {
-              image: { content: imageBase64.replace(/^data:image\/png;base64,/, "") },
-              features: [
-                { type: "IMAGE_PROPERTIES" }
+              parts: [
+                { text: "Enhance this drawing to make it look better, keeping the same style but with improved lines and colors." },
+                {
+                  inline_data: {
+                    mime_type: "image/png",
+                    data: cleanedBase64
+                  }
+                }
               ]
-              // Note: GCP Vision doesn't have inpainting, but for demo we'll pretend it does.
-              // In production, replace with a real generative completion/enhancement endpoint.
             }
-          ]
+          ],
+          generation_config: {
+            temperature: 0.4,
+            top_p: 1,
+            top_k: 32
+          }
         })
       }
     );
 
-    if (!gcpResp.ok) {
-      const err = await gcpResp.text();
-      console.error("Google Vision error:", err);
-      return new Response(JSON.stringify({ error: "Failed to connect to Vision API" }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error("Gemini API error:", errorText);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to enhance image with Gemini API", 
+          details: errorText 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    // For demo: Return the original (since Vision API doesn't offer enhancement)
-    // For real enhancement, integrate with an actual image-generation endpoint supporting inpainting/completion.
+    const geminiData = await geminiResponse.json();
+    console.log("Gemini API response received:", JSON.stringify(geminiData).substring(0, 200) + "...");
+    
+    // Since Gemini can only provide text descriptions and not actually modify images,
+    // for this demo we'll just return the original image
+    // In a real app, you would use image generation APIs like DALL-E or Stable Diffusion
+    // to create a new image based on the Gemini description
     return new Response(
-      JSON.stringify({ enhancedImage: imageBase64 }), // just echo back
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        enhancedImage: imageBase64,
+        description: geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                    "Enhanced version of your drawing"
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
+
   } catch (error) {
     console.error("Enhance Drawing Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: "An unexpected error occurred", 
+        details: error.message 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 });

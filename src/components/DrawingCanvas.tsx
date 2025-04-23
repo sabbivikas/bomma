@@ -878,10 +878,11 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       );
       
       if (!response.ok) {
-        throw new Error("Failed to enhance drawing");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to enhance drawing");
       }
       
-      const { enhancedImage, error } = await response.json();
+      const { enhancedImage, description, error } = await response.json();
       
       if (error) {
         throw new Error(error);
@@ -900,7 +901,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
             // Success notification
             toast({
               title: "Success!",
-              description: "Your drawing has been enhanced",
+              description: description || "Your drawing has been enhanced",
               variant: "default",
             });
           }
@@ -911,7 +912,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       console.error("Error enhancing drawing:", error);
       toast({
         title: "Enhancement failed",
-        description: "Could not enhance drawing. Please try again.",
+        description: error instanceof Error ? error.message : "Could not enhance drawing. Please try again.",
         variant: "destructive",
       });
     }
