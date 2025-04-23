@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Paintbrush, Palette, 
-  Type, Square, Circle as CircleIcon, Layers,
-  Wand2
+  Type, Square, Circle as CircleIcon, Layers
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -829,354 +828,372 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       // Calculate new dimensions while maintaining aspect ratio
       let newWidth, newHeight;
-
+      
       if (isMobileScreen) {
         // For mobile, maximize width and use a taller ratio
         newWidth = containerWidth;
         newHeight = containerWidth * 0.75; // 4:3 aspect ratio for mobile
       } else {
-        // For desktop, maintain the original aspect ratio
+        // For desktop, maintain the original 16:10 aspect ratio
         newWidth = containerWidth;
-        newHeight = containerWidth * (canvasSize.height / canvasSize.width);
+        newHeight = containerWidth * 0.625; // 16:10 aspect ratio
       }
-
-      // Set the scale factor for coordinate mapping
-      setCanvasScale(canvasSize.width / newWidth);
-
-      // Set the canvas display size
+      
+      // Set the new dimensions for the container
       canvas.style.width = `${newWidth}px`;
       canvas.style.height = `${newHeight}px`;
+      
+      // Calculate and store the scale for coordinate mapping
+      setCanvasScale(canvas.width / newWidth);
+      setCanvasOffset({
+        x: canvas.getBoundingClientRect().left,
+        y: canvas.getBoundingClientRect().top
+      });
     };
-
+    
+    // Initial sizing
     handleResize();
+    
+    // Re-size on window resize
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [canvasSize.height, canvasSize.width]);
-
-  // Enhance drawing with AI
-  const enhanceDrawing = async () => {
-    if (!canvasRef.current) return;
+  }, [canvasSize.width, canvasSize.height]);
+  
+  // Render any active shape while drawing
+  useEffect(() => {
+    if (!currentShape || !contextRef.current || !canvasRef.current) return;
     
-    // Show loading state
-    toast({
-      title: "Processing...",
-      description: "Enhancing your drawing with AI",
+    // Create a temporary canvas to preserve the background and existing drawing
+    const canvas = canvasRef.current;
+    const context = contextRef.current;
+    
+    // Create a temporary canvas to store the current drawing
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempContext = tempCanvas.getContext('2d');
+    
+    if (!tempContext) return;
+    
+    // Copy current canvas content to temp canvas
+    tempContext.drawImage(canvas, 0, 0);
+    
+    // Clear canvas and restore background
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    applyThemeBackground(context, canvas.width, canvas.height);
+    
+    // Restore the drawing
+    context.drawImage(tempCanvas, 0, 0);
+    
+    // Draw the current shape
+    context.strokeStyle = currentShape.color;
+    context.fillStyle = currentShape.color;
+    context.lineWidth = width[0];
+    
+    if (currentShape.type === 'rectangle') {
+      context.beginPath();
+      context.rect(
+        currentShape.x, 
+        currentShape.y, 
+        currentShape.width, 
+        currentShape.height
+      );
+      if (fill) {
+        context.fill();
+      } else {
+        context.stroke();
+      }
+    } else if (currentShape.type === 'circle') {
+      const radius = Math.min(
+        Math.abs(currentShape.width), 
+        Math.abs(currentShape.height)
+      ) / 2;
+      
+      const centerX = currentShape.x + currentShape.width / 2;
+      const centerY = currentShape.y + currentShape.height / 2;
+      
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      if (fill) {
+        context.fill();
+      } else {
+        context.stroke();
+      }
+    }
+    
+  }, [currentShape, fill, width]);
+  
+  // Render text elements
+  useEffect(() => {
+    if (!contextRef.current || !canvasRef.current) return;
+    
+    // Create a temporary canvas to preserve the background and existing drawing
+    const canvas = canvasRef.current;
+    const context = contextRef.current;
+    
+    // Create a temporary canvas to store the current drawing
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempContext = tempCanvas.getContext('2d');
+    
+    if (!tempContext) return;
+    
+    // Copy current canvas content to temp canvas (without text)
+    tempContext.drawImage(canvas, 0, 0);
+    
+    // Clear canvas and restore background
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    applyThemeBackground(context, canvas.width, canvas.height);
+    
+    // Restore the drawing
+    context.drawImage(tempCanvas, 0, 0);
+    
+    // Draw existing shapes
+    shapeElements.forEach(shape => {
+      context.strokeStyle = shape.color;
+      context.fillStyle = shape.color;
+      
+      if (shape.type === 'rectangle') {
+        context.beginPath();
+        context.rect(shape.x, shape.y, shape.width, shape.height);
+        if (shape.fill) {
+          context.fill();
+        } else {
+          context.stroke();
+        }
+      } else if (shape.type === 'circle') {
+        const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
+        const centerX = shape.x + shape.width / 2;
+        const centerY = shape.y + shape.height / 2;
+        
+        context.beginPath();
+        context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        if (shape.fill) {
+          context.fill();
+        } else {
+          context.stroke();
+        }
+      }
     });
     
-    try {
-      // Convert canvas to base64 image data
-      const canvasDataUrl = canvasRef.current.toDataURL("image/png");
+    // Draw text elements
+    textElements.forEach(element => {
+      context.font = `${element.size}px ${element.fontFamily}`;
+      context.fillStyle = element.color;
+      context.fillText(element.text, element.x, element.y);
       
-      // Call the Supabase edge function to enhance the drawing
-      const response = await fetch(
-        "https://yzrmmljdccuotupwgkdh.functions.supabase.co/enhance-drawing", 
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: canvasDataUrl })
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to enhance drawing");
+      // Highlight selected text with a subtle outline
+      if (element.isDragging && selectedTextIndex !== null) {
+        const metrics = context.measureText(element.text);
+        context.strokeStyle = 'rgba(0, 0, 255, 0.5)';
+        context.lineWidth = 1;
+        context.strokeRect(
+          element.x - 5,
+          element.y - element.size - 5,
+          metrics.width + 10,
+          element.size + 10
+        );
       }
-      
-      const { enhancedImage, description, error } = await response.json();
-      
-      if (error) {
-        throw new Error(error);
-      }
-      
-      // Load the enhanced image back to canvas
-      if (enhancedImage && contextRef.current && canvasRef.current) {
-        const img = new Image();
-        img.onload = () => {
-          if (contextRef.current && canvasRef.current) {
-            // Clear canvas first
-            contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-            // Draw the enhanced image
-            contextRef.current.drawImage(img, 0, 0, canvasRef.current.width, canvasRef.current.height);
-            
-            // Success notification
-            toast({
-              title: "Success!",
-              description: description || "Your drawing has been enhanced",
-              variant: "default",
-            });
-          }
-        };
-        img.src = enhancedImage;
-      }
-    } catch (error) {
-      console.error("Error enhancing drawing:", error);
-      toast({
-        title: "Enhancement failed",
-        description: error instanceof Error ? error.message : "Could not enhance drawing. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Render the canvas and tools
+    });
+    
+  }, [textElements, shapeElements, selectedTextIndex]);
+  
   return (
-    <div className="w-full flex flex-col">
-      {/* Canvas and toolbar container */}
-      <div className="flex flex-col border border-gray-200 overflow-hidden rounded-lg">
-        {/* Drawing canvas */}
-        <div 
-          className="relative w-full bg-white touch-none" 
-          style={{ cursor: tool === 'eraser' ? 'cell' : 'crosshair' }}
-        >
-          <canvas
-            ref={canvasRef}
-            className="touch-none w-full h-auto"
-            onMouseDown={startDrawing}
-            onMouseMove={isDrawing ? draw : undefined}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-            onTouchCancel={stopDrawing}
-          />
-          
-          {/* Currently creating shape preview */}
-          {currentShape && (
-            <div 
-              className="absolute top-0 left-0 pointer-events-none border-2 border-dashed"
-              style={{
-                borderColor: currentShape.color,
-                left: `${currentShape.x / canvasSize.width * 100}%`,
-                top: `${currentShape.y / canvasSize.height * 100}%`,
-                width: `${Math.abs(currentShape.width) / canvasSize.width * 100}%`,
-                height: `${Math.abs(currentShape.height) / canvasSize.height * 100}%`,
-                transform: `translate(${currentShape.width < 0 ? '-100%' : '0'}, ${currentShape.height < 0 ? '-100%' : '0'})`,
-                borderRadius: currentShape.type === 'circle' ? '50%' : '0',
-                backgroundColor: currentShape.fill ? `${currentShape.color}40` : 'transparent'
-              }}
-            />
-          )}
-          
-          {/* Text elements overlay */}
-          {textElements.map((el, index) => (
-            <div 
-              key={index}
-              className={cn(
-                "absolute pointer-events-none select-none font-sans",
-                el.isDragging ? "opacity-70" : "opacity-100"
-              )}
-              style={{
-                left: `${el.x / canvasSize.width * 100}%`,
-                top: `${el.y / canvasSize.height * 100}%`,
-                transform: "translate(0, -100%)",
-                color: el.color,
-                fontSize: `${el.size / canvasSize.height * 100}vh`,
-                fontFamily: el.fontFamily
-              }}
-            >
-              {el.text}
-            </div>
-          ))}
-          
-          {/* Text selection tools */}
-          {selectedTextIndex !== null && (
-            <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm rounded-md shadow-sm z-10 p-1 flex space-x-1">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={handleEditText}
-              >
-                <Pen className="h-4 w-4" />
-                <span className="sr-only">Edit Text</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 text-red-500 hover:text-red-700" 
-                onClick={handleRemoveText}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Delete Text</span>
-              </Button>
-            </div>
-          )}
-        </div>
-        
-        {/* Toolbar */}
-        <div className="w-full bg-gray-50 p-2 border-t border-gray-200 flex flex-wrap items-center gap-2">
-          {/* Drawing Tools */}
-          <ToggleGroup 
-            type="single" 
-            value={tool} 
-            onValueChange={(value) => {
-              if (value) setTool(value as any);
-              // Reset any selected text when switching tools
-              setSelectedTextIndex(null);
-            }}
-            className="flex flex-wrap items-center"
-          >
-            <ToggleGroupItem value="pen" className="h-9 w-9 p-0">
+    <div className="flex flex-col w-full h-full">
+      {/* Drawing Tools */}
+      <div className="flex flex-wrap justify-between items-center gap-2 p-2 bg-white/80 backdrop-blur-sm rounded-t-lg border-b border-gray-200">
+        {/* Tool Selection */}
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
+            <ToggleGroupItem value="pen" aria-label="Pen tool" className="h-8 w-8 p-0" disabled={isTouching}>
               <Pen className="h-4 w-4" />
-              <span className="sr-only">Pen</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="eraser" className="h-9 w-9 p-0">
+            <ToggleGroupItem value="eraser" aria-label="Eraser tool" className="h-8 w-8 p-0" disabled={isTouching}>
               <Eraser className="h-4 w-4" />
-              <span className="sr-only">Eraser</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="text" className="h-9 w-9 p-0">
+            <ToggleGroupItem value="text" aria-label="Text tool" className="h-8 w-8 p-0" disabled={isTouching}>
               <Type className="h-4 w-4" />
-              <span className="sr-only">Text</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="rectangle" className="h-9 w-9 p-0">
+            <ToggleGroupItem value="rectangle" aria-label="Rectangle tool" className="h-8 w-8 p-0" disabled={isTouching}>
               <Square className="h-4 w-4" />
-              <span className="sr-only">Rectangle</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="circle" className="h-9 w-9 p-0">
+            <ToggleGroupItem value="circle" aria-label="Circle tool" className="h-8 w-8 p-0" disabled={isTouching}>
               <CircleIcon className="h-4 w-4" />
-              <span className="sr-only">Circle</span>
             </ToggleGroupItem>
           </ToggleGroup>
           
           {/* Color Picker */}
-          <div className="flex items-center gap-1">
-            <input 
-              type="color" 
-              value={color} 
-              onChange={(e) => setColor(e.target.value)}
-              className="w-9 h-9 rounded cursor-pointer"
-              title="Select Color"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="h-8 w-8 p-0 border-2" 
+                style={{ backgroundColor: color }}
+              >
+                <span className="sr-only">Pick a color</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <div className="grid gap-2">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">Color</h4>
+                  <Input 
+                    type="color" 
+                    value={color} 
+                    onChange={(e) => setColor(e.target.value)} 
+                  />
+                </div>
+                <div className="grid grid-cols-6 gap-1">
+                  {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', 
+                    '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#008000', 
+                    '#A52A2A', '#808080'].map((presetColor) => (
+                    <Button
+                      key={presetColor}
+                      variant="outline"
+                      className="h-6 w-6 p-0 border"
+                      style={{ backgroundColor: presetColor }}
+                      onClick={() => setColor(presetColor)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Line Width */}
+          <div className="flex items-center gap-2 min-w-[80px]">
+            <Slider
+              value={width}
+              onValueChange={setWidth}
+              max={30}
+              min={1}
+              step={1}
+              className="w-20"
             />
+            <span className="text-xs">{width}</span>
           </div>
           
-          {/* Width Slider */}
-          <div className="hidden sm:flex items-center gap-2 min-w-[120px]">
-            <div className="w-20 mx-1">
-              <Slider
-                value={width}
-                onValueChange={setWidth}
-                min={1}
-                max={20}
-                step={1}
-              />
-            </div>
-            <span className="text-xs text-gray-500">{width[0]}px</span>
-          </div>
-          
-          {/* Fill Toggle (for shapes) */}
+          {/* Fill option for shapes */}
           {(tool === 'rectangle' || tool === 'circle') && (
             <div className="flex items-center gap-1">
               <Checkbox 
                 id="fill-shape" 
                 checked={fill} 
-                onCheckedChange={(checked) => {
-                  if (typeof checked === 'boolean') setFill(checked);
-                }}
+                onCheckedChange={(checked) => setFill(checked as boolean)} 
               />
-              <Label htmlFor="fill-shape" className="text-xs">Fill</Label>
+              <Label htmlFor="fill-shape" className="text-xs cursor-pointer">Fill</Label>
             </div>
           )}
-          
-          {/* Spacer */}
-          <div className="flex-grow" />
-
-          {/* AI enhance button */}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Clear Canvas Button */}
           <Button 
             variant="outline" 
-            className="flex items-center gap-1"
-            onClick={enhanceDrawing}
-          >
-            <Wand2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Enhance</span>
-          </Button>
-          
-          {/* Clear Canvas */}
-          <Button 
-            variant="outline" 
-            size="icon" 
+            size="sm" 
+            className="h-8" 
             onClick={clearCanvas}
-            className="text-gray-600"
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Clear</span>
+            <Trash2 className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Clear</span>
           </Button>
           
-          {/* Save/Publish */}
+          {/* Save/Publish Button */}
           <Button 
+            size="sm"
+            className="h-8" 
             onClick={handlePublish}
             disabled={isPublishing}
-            className={isPublishing ? "animate-pulse" : ""}
           >
-            {isPublishing ? "Saving..." : "Save"}
+            <Paintbrush className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Save Frame</span>
           </Button>
         </div>
       </div>
       
-      {/* Text Input Dialog */}
+      {/* Canvas Container */}
+      <div className="flex-1 relative bg-white border border-gray-200 overflow-hidden">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={isDrawing ? draw : undefined}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={isDrawing ? draw : undefined}
+          onTouchEnd={stopDrawing}
+          className="touch-none w-full h-auto cursor-crosshair"
+        />
+      </div>
+      
+      {/* Text Entry Dialog */}
       <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Text</DialogTitle>
             <DialogDescription>
-              Enter the text you want to add to your drawing.
+              Enter the text you want to add to your drawing
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="text-input">Text Content</Label>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="text">Text Content</Label>
               <Input
-                id="text-input"
+                id="text"
+                autoFocus
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Enter text..."
-                autoFocus
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="text-size">Text Size</Label>
-                <div className="flex items-center gap-2">
-                  <div className="flex-grow">
-                    <Slider
-                      id="text-size"
-                      value={textSize}
-                      onValueChange={setTextSize}
-                      min={10}
-                      max={64}
-                      step={1}
-                    />
-                  </div>
-                  <span className="text-xs w-8 text-right">{textSize[0]}px</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="text-font">Font</Label>
-                <Select value={textFont} onValueChange={setTextFont}>
-                  <SelectTrigger id="text-font">
-                    <SelectValue placeholder="Select font" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Arial">Arial</SelectItem>
-                    <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                    <SelectItem value="Courier New">Courier New</SelectItem>
-                    <SelectItem value="Georgia">Georgia</SelectItem>
-                    <SelectItem value="Verdana">Verdana</SelectItem>
-                  </SelectContent>
-                </Select>
+            
+            <div className="grid gap-2">
+              <Label>Text Size</Label>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={textSize}
+                  onValueChange={setTextSize}
+                  min={8}
+                  max={72}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="w-12 text-right">{textSize[0]}px</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="text-color">Text Color</Label>
-              <input 
-                type="color" 
-                id="text-color"
-                value={color} 
+            
+            <div className="grid gap-2">
+              <Label htmlFor="font">Font</Label>
+              <Select value={textFont} onValueChange={setTextFont}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Arial">Arial</SelectItem>
+                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                  <SelectItem value="Courier New">Courier New</SelectItem>
+                  <SelectItem value="Georgia">Georgia</SelectItem>
+                  <SelectItem value="Verdana">Verdana</SelectItem>
+                  <SelectItem value="Impact">Impact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="color">Text Color</Label>
+              <Input
+                id="color"
+                type="color"
+                value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-full h-10 rounded cursor-pointer"
               />
             </div>
           </div>
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
               Cancel
@@ -1187,6 +1204,18 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Text Edit Options - appears when text is selected */}
+      {selectedTextIndex !== null && !isDraggingTextRef.current && (
+        <div className="absolute top-16 right-4 bg-white border border-gray-200 rounded-md shadow-md p-2 flex flex-col gap-2">
+          <Button size="sm" onClick={handleEditText}>
+            Edit Text
+          </Button>
+          <Button size="sm" variant="destructive" onClick={handleRemoveText}>
+            Remove Text
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

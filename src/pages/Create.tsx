@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -5,7 +6,7 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { createDoodle, getSessionId } from '@/utils/doodleService';
 import { useToast } from '@/hooks/use-toast';
 import { getTodaysPrompt } from '@/data/prompts';
-import { Lightbulb, CheckCircle2, Eye, Trash2, Wand2 } from 'lucide-react';
+import { Lightbulb, CheckCircle2, Eye, Trash2 } from 'lucide-react';
 import FunkyText from '@/components/FunkyText';
 import Cloud from '@/components/Cloud';
 import GhibliAnimations from '@/components/GhibliAnimations';
@@ -306,17 +307,6 @@ const Create = () => {
                   <Eye className="h-4 w-4" /> View All Doodles
                 </Button>
               </div>
-            </div>
-            
-            {/* Add a note about the enhance feature */}
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-700">
-              <p className="flex items-start gap-2">
-                <Wand2 className="h-4 w-4 mt-0.5 text-blue-500" />
-                <span>
-                  <strong>Tip:</strong> Use the "Enhance" button in the drawing tools to improve your artwork with AI. 
-                  If enhancement fails, please try again with a simpler drawing or check your internet connection.
-                </span>
-              </p>
             </div>
           </div>
         )}

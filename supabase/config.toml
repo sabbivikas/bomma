@@ -1,5 +1,1 @@
-
 project_id = "yzrmmljdccuotupwgkdh"
-
-[functions.enhance-drawing]
-verify_jwt = false
