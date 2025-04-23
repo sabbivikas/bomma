@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
   Pen, Eraser, Trash2, Paintbrush, Palette, 
-  Type, Square, Circle as CircleIcon, Layers
+  Type, Square, Circle as CircleIcon, Layers,
+  Wand2
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -832,3 +833,361 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       if (isMobileScreen) {
         // For mobile, maximize width and use a taller ratio
         newWidth = containerWidth;
+        newHeight = containerWidth * 0.75; // 4:3 aspect ratio for mobile
+      } else {
+        // For desktop, maintain the original aspect ratio
+        newWidth = containerWidth;
+        newHeight = containerWidth * (canvasSize.height / canvasSize.width);
+      }
+      
+      // Set the scale factor for coordinate mapping
+      setCanvasScale(canvasSize.width / newWidth);
+      
+      // Set the canvas display size
+      canvas.style.width = `${newWidth}px`;
+      canvas.style.height = `${newHeight}px`;
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [canvasSize.height, canvasSize.width]);
+
+  // Enhance drawing with AI
+  const enhanceDrawing = async () => {
+    if (!canvasRef.current) return;
+    
+    // Show loading state
+    toast({
+      title: "Processing...",
+      description: "Enhancing your drawing with AI",
+    });
+    
+    try {
+      // Convert canvas to base64 image data
+      const canvasDataUrl = canvasRef.current.toDataURL("image/png");
+      
+      // Call the Supabase edge function to enhance the drawing
+      const response = await fetch(
+        "https://yzrmmljdccuotupwgkdh.functions.supabase.co/enhance-drawing", 
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64: canvasDataUrl })
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to enhance drawing");
+      }
+      
+      const { enhancedImage, error } = await response.json();
+      
+      if (error) {
+        throw new Error(error);
+      }
+      
+      // Load the enhanced image back to canvas
+      if (enhancedImage && contextRef.current && canvasRef.current) {
+        const img = new Image();
+        img.onload = () => {
+          if (contextRef.current && canvasRef.current) {
+            // Clear canvas first
+            contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+            // Draw the enhanced image
+            contextRef.current.drawImage(img, 0, 0, canvasRef.current.width, canvasRef.current.height);
+            
+            // Success notification
+            toast({
+              title: "Success!",
+              description: "Your drawing has been enhanced",
+              variant: "default",
+            });
+          }
+        };
+        img.src = enhancedImage;
+      }
+    } catch (error) {
+      console.error("Error enhancing drawing:", error);
+      toast({
+        title: "Enhancement failed",
+        description: "Could not enhance drawing. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Render the canvas and tools
+  return (
+    <div className="w-full flex flex-col">
+      {/* Canvas and toolbar container */}
+      <div className="flex flex-col border border-gray-200 overflow-hidden rounded-lg">
+        {/* Drawing canvas */}
+        <div 
+          className="relative w-full bg-white touch-none" 
+          style={{ cursor: tool === 'eraser' ? 'cell' : 'crosshair' }}
+        >
+          <canvas
+            ref={canvasRef}
+            className="touch-none w-full h-auto"
+            onMouseDown={startDrawing}
+            onMouseMove={isDrawing ? draw : undefined}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            onTouchCancel={stopDrawing}
+          />
+          
+          {/* Currently creating shape preview */}
+          {currentShape && (
+            <div 
+              className="absolute top-0 left-0 pointer-events-none border-2 border-dashed"
+              style={{
+                borderColor: currentShape.color,
+                left: `${currentShape.x / canvasSize.width * 100}%`,
+                top: `${currentShape.y / canvasSize.height * 100}%`,
+                width: `${Math.abs(currentShape.width) / canvasSize.width * 100}%`,
+                height: `${Math.abs(currentShape.height) / canvasSize.height * 100}%`,
+                transform: `translate(${currentShape.width < 0 ? '-100%' : '0'}, ${currentShape.height < 0 ? '-100%' : '0'})`,
+                borderRadius: currentShape.type === 'circle' ? '50%' : '0',
+                backgroundColor: currentShape.fill ? `${currentShape.color}40` : 'transparent'
+              }}
+            />
+          )}
+          
+          {/* Text elements overlay */}
+          {textElements.map((el, index) => (
+            <div 
+              key={index}
+              className={cn(
+                "absolute pointer-events-none select-none font-sans",
+                el.isDragging ? "opacity-70" : "opacity-100"
+              )}
+              style={{
+                left: `${el.x / canvasSize.width * 100}%`,
+                top: `${el.y / canvasSize.height * 100}%`,
+                transform: "translate(0, -100%)",
+                color: el.color,
+                fontSize: `${el.size / canvasSize.height * 100}vh`,
+                fontFamily: el.fontFamily
+              }}
+            >
+              {el.text}
+            </div>
+          ))}
+          
+          {/* Text selection tools */}
+          {selectedTextIndex !== null && (
+            <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm rounded-md shadow-sm z-10 p-1 flex space-x-1">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={handleEditText}
+              >
+                <Pen className="h-4 w-4" />
+                <span className="sr-only">Edit Text</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8 text-red-500 hover:text-red-700" 
+                onClick={handleRemoveText}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete Text</span>
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Toolbar */}
+        <div className="w-full bg-gray-50 p-2 border-t border-gray-200 flex flex-wrap items-center gap-2">
+          {/* Drawing Tools */}
+          <ToggleGroup 
+            type="single" 
+            value={tool} 
+            onValueChange={(value) => {
+              if (value) setTool(value as any);
+              // Reset any selected text when switching tools
+              setSelectedTextIndex(null);
+            }}
+            className="flex flex-wrap items-center"
+          >
+            <ToggleGroupItem value="pen" className="h-9 w-9 p-0">
+              <Pen className="h-4 w-4" />
+              <span className="sr-only">Pen</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="eraser" className="h-9 w-9 p-0">
+              <Eraser className="h-4 w-4" />
+              <span className="sr-only">Eraser</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="text" className="h-9 w-9 p-0">
+              <Type className="h-4 w-4" />
+              <span className="sr-only">Text</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="rectangle" className="h-9 w-9 p-0">
+              <Square className="h-4 w-4" />
+              <span className="sr-only">Rectangle</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="circle" className="h-9 w-9 p-0">
+              <CircleIcon className="h-4 w-4" />
+              <span className="sr-only">Circle</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+          
+          {/* Color Picker */}
+          <div className="flex items-center gap-1">
+            <input 
+              type="color" 
+              value={color} 
+              onChange={(e) => setColor(e.target.value)}
+              className="w-9 h-9 rounded cursor-pointer"
+              title="Select Color"
+            />
+          </div>
+          
+          {/* Width Slider */}
+          <div className="hidden sm:flex items-center gap-2 min-w-[120px]">
+            <div className="w-20 mx-1">
+              <Slider
+                value={width}
+                onValueChange={setWidth}
+                min={1}
+                max={20}
+                step={1}
+              />
+            </div>
+            <span className="text-xs text-gray-500">{width[0]}px</span>
+          </div>
+          
+          {/* Fill Toggle (for shapes) */}
+          {(tool === 'rectangle' || tool === 'circle') && (
+            <div className="flex items-center gap-1">
+              <Checkbox 
+                id="fill-shape" 
+                checked={fill} 
+                onCheckedChange={(checked) => {
+                  if (typeof checked === 'boolean') setFill(checked);
+                }}
+              />
+              <Label htmlFor="fill-shape" className="text-xs">Fill</Label>
+            </div>
+          )}
+          
+          {/* Spacer */}
+          <div className="flex-grow" />
+
+          {/* AI enhance button */}
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={enhanceDrawing}
+          >
+            <Wand2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Enhance</span>
+          </Button>
+          
+          {/* Clear Canvas */}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={clearCanvas}
+            className="text-gray-600"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Clear</span>
+          </Button>
+          
+          {/* Save/Publish */}
+          <Button 
+            onClick={handlePublish}
+            disabled={isPublishing}
+            className={isPublishing ? "animate-pulse" : ""}
+          >
+            {isPublishing ? "Saving..." : "Save"}
+          </Button>
+        </div>
+      </div>
+      
+      {/* Text Input Dialog */}
+      <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Text</DialogTitle>
+            <DialogDescription>
+              Enter the text you want to add to your drawing.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="text-input">Text Content</Label>
+              <Input
+                id="text-input"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Enter text..."
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="text-size">Text Size</Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-grow">
+                    <Slider
+                      id="text-size"
+                      value={textSize}
+                      onValueChange={setTextSize}
+                      min={10}
+                      max={64}
+                      step={1}
+                    />
+                  </div>
+                  <span className="text-xs w-8 text-right">{textSize[0]}px</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="text-font">Font</Label>
+                <Select value={textFont} onValueChange={setTextFont}>
+                  <SelectTrigger id="text-font">
+                    <SelectValue placeholder="Select font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Arial">Arial</SelectItem>
+                    <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                    <SelectItem value="Courier New">Courier New</SelectItem>
+                    <SelectItem value="Georgia">Georgia</SelectItem>
+                    <SelectItem value="Verdana">Verdana</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="text-color">Text Color</Label>
+              <input 
+                type="color" 
+                id="text-color"
+                value={color} 
+                onChange={(e) => setColor(e.target.value)}
+                className="w-full h-10 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddText}>
+              Add Text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DrawingCanvas;
