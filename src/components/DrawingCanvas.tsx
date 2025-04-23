@@ -829,7 +829,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       
       // Calculate new dimensions while maintaining aspect ratio
       let newWidth, newHeight;
-      
+
       if (isMobileScreen) {
         // For mobile, maximize width and use a taller ratio
         newWidth = containerWidth;
@@ -839,15 +839,15 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         newWidth = containerWidth;
         newHeight = containerWidth * (canvasSize.height / canvasSize.width);
       }
-      
+
       // Set the scale factor for coordinate mapping
       setCanvasScale(canvasSize.width / newWidth);
-      
+
       // Set the canvas display size
       canvas.style.width = `${newWidth}px`;
       canvas.style.height = `${newHeight}px`;
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
