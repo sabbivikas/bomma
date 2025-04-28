@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 
 export interface Game {
   id: string;
@@ -17,19 +16,10 @@ interface GameCardProps {
   game: Game;
   characterImage: string;
   characterName: string;
+  onPlayGame: () => void;
 }
 
-const GameCard: React.FC<GameCardProps> = ({ game, characterImage, characterName }) => {
-  const { toast } = useToast();
-  
-  const handlePlayGame = () => {
-    toast({
-      title: 'Coming Soon!',
-      description: `${characterName} will be ready to play in ${game.title} very soon!`,
-      variant: 'default',
-    });
-  };
-  
+const GameCard: React.FC<GameCardProps> = ({ game, characterImage, characterName, onPlayGame }) => {
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg border-2 hover:border-purple-400">
       <div className="relative h-48 overflow-hidden">
@@ -69,7 +59,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, characterImage, characterName
       
       <CardFooter>
         <Button 
-          onClick={handlePlayGame} 
+          onClick={onPlayGame} 
           className="w-full bg-purple-600 hover:bg-purple-700"
         >
           Play Now

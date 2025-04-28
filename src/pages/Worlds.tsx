@@ -5,12 +5,15 @@ import { CharacterProvider, useCharacter, Character } from '@/contexts/Character
 import CharacterCanvas from '@/components/CharacterCanvas';
 import CharacterSelect from '@/components/CharacterSelect';
 import GameCard from '@/components/GameCard';
+import GameInterface from '@/components/GameInterface';
 import { Globe, Gamepad2 } from 'lucide-react';
 import { games } from '@/data/games';
 import ThemedBackground from '@/components/ThemedBackground';
+import { Game } from '@/components/GameCard';
 
 const WorldsContent = () => {
-  const [mode, setMode] = useState<'select' | 'create' | 'games'>('select');
+  const [mode, setMode] = useState<'select' | 'create' | 'games' | 'playing'>('select');
+  const [currentGame, setCurrentGame] = useState<Game | null>(null);
   const { character, setCharacter, savedCharacters } = useCharacter();
   
   const handleCreateNew = () => {
@@ -27,6 +30,16 @@ const WorldsContent = () => {
   
   const handleSelectCharacter = (selectedCharacter: Character) => {
     setCharacter(selectedCharacter);
+    setMode('games');
+  };
+
+  const handlePlayGame = (game: Game) => {
+    setCurrentGame(game);
+    setMode('playing');
+  };
+
+  const handleExitGame = () => {
+    setCurrentGame(null);
     setMode('games');
   };
   
@@ -84,10 +97,20 @@ const WorldsContent = () => {
                 game={game}
                 characterImage={character.imageUrl}
                 characterName={character.name}
+                onPlayGame={() => handlePlayGame(game)}
               />
             ))}
           </div>
         </div>
+      )}
+
+      {mode === 'playing' && character && currentGame && (
+        <GameInterface
+          game={currentGame}
+          characterName={character.name}
+          characterImage={character.imageUrl}
+          onExit={handleExitGame}
+        />
       )}
     </div>
   );
