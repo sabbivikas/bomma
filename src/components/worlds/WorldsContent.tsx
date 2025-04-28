@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import CharacterCanvas from '@/components/CharacterCanvas';
@@ -10,6 +9,7 @@ import CharacterHeader from './CharacterHeader';
 import { games } from '@/data/games';
 import NoCharacters from './NoCharacters';
 import { Loader2 } from 'lucide-react';
+import { Character } from '@/services/characterService';
 
 const WorldsContent = () => {
   const [mode, setMode] = useState<'select' | 'create' | 'games' | 'playing'>('select');
