@@ -19,20 +19,34 @@ const GameArea: React.FC<GameAreaProps> = ({
 }) => {
   return (
     <div 
-      className="w-full h-[350px] relative bg-black rounded-lg border border-purple-400 mb-4 cursor-crosshair overflow-hidden" 
+      className="w-full h-[350px] relative overflow-hidden rounded-lg border border-teal-400 mb-4 cursor-pointer"
       onClick={onAreaClick}
       style={{
-        backgroundImage: 'radial-gradient(circle at center, rgba(76, 29, 149, 0.3) 0%, rgba(0, 0, 0, 0.9) 100%)',
+        backgroundImage: 'linear-gradient(to bottom, #33C3F0, #7BD6F4)',
       }}
     >
-      {/* Game grid background */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: 'linear-gradient(rgba(76, 29, 149, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(76, 29, 149, 0.1) 1px, transparent 1px)',
-        backgroundSize: '20px 20px',
-      }} />
+      {/* Stars */}
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={`star-${i}`}
+          className="absolute text-yellow-300 text-2xl animate-pulse"
+          style={{
+            left: `${Math.random() * 80 + 10}%`,
+            top: `${Math.random() * 60 + 10}%`,
+          }}
+        >
+          ⭐
+        </div>
+      ))}
       
+      {/* Platforms */}
+      <div className="absolute bottom-0 w-full h-16 bg-teal-500" />
+      <div className="absolute bottom-32 left-1/4 w-32 h-8 bg-teal-500" />
+      <div className="absolute bottom-64 right-1/4 w-32 h-8 bg-teal-500" />
+      
+      {/* Player Character */}
       <div 
-        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-200"
         style={{ 
           left: `${playerPosition.x}%`, 
           top: `${playerPosition.y}%`,
@@ -45,6 +59,7 @@ const GameArea: React.FC<GameAreaProps> = ({
         />
       </div>
       
+      {/* Enemies/Obstacles */}
       {enemies.map((enemy) => (
         <div 
           key={enemy.id}
@@ -52,18 +67,30 @@ const GameArea: React.FC<GameAreaProps> = ({
           style={{ 
             left: `${enemy.x}%`, 
             top: `${enemy.y}%`,
-            width: `${enemy.size}px`,
-            height: `${enemy.size}px`,
           }}
         >
-          <div className="w-full h-full rounded-full bg-red-500 border-2 border-red-300 flex items-center justify-center text-white text-xs animate-pulse shadow-lg shadow-red-500/50">
-            {enemy.type === 'plane' ? '✈️' : enemy.type === 'asteroid' ? '☄️' : '👾'}
-          </div>
+          <div className="w-8 h-8 bg-red-500 rotate-45 transform origin-center" />
         </div>
       ))}
       
-      <div className="absolute bottom-2 left-2 text-xs text-purple-300">
-        Move & Attack
+      {/* Score Display */}
+      <div className="absolute top-4 left-4 text-white font-bold text-xl">
+        Score: 10
+      </div>
+      
+      {/* Stars Counter */}
+      <div className="absolute top-12 left-4 text-white font-bold">
+        Stars: 1/6
+      </div>
+      
+      {/* Game Controls */}
+      <div className="absolute bottom-4 left-4 flex gap-2">
+        <button className="w-12 h-12 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40">
+          ←
+        </button>
+        <button className="w-12 h-12 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/40">
+          →
+        </button>
       </div>
     </div>
   );
