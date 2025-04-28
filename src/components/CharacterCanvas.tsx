@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,17 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const { addCharacter } = useCharacter();
 
+  // Track when the DrawingCanvas saves to our ref
+  useEffect(() => {
+    console.log("Canvas ready state:", isCanvasReady);
+    console.log("Canvas ref exists:", canvasRef.current !== null);
+  }, [isCanvasReady]);
+
   const handleSaveCharacter = async () => {
+    console.log("Save character clicked");
+    console.log("Canvas ready:", isCanvasReady);
+    console.log("Canvas ref:", canvasRef.current);
+
     if (!canvasRef.current || !isCanvasReady) {
       toast({
         title: "Error",
@@ -43,6 +53,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
     try {
       // Get image data from canvas
       const imageUrl = canvasRef.current.toDataURL('image/png');
+      console.log("Image URL generated successfully");
 
       // Create new character
       const newCharacter = {
@@ -77,8 +88,14 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
   // Handle saving from DrawingCanvas
   const handleCanvasSave = (canvas: HTMLCanvasElement) => {
-    canvasRef.current = canvas;
-    setIsCanvasReady(true);
+    console.log("Canvas saved callback received");
+    if (canvas) {
+      console.log("Canvas element received:", canvas);
+      canvasRef.current = canvas;
+      setIsCanvasReady(true);
+    } else {
+      console.error("Received null canvas in handleCanvasSave");
+    }
   };
 
   return (
@@ -102,7 +119,9 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       </div>
 
       <div className="mb-6 border-2 border-purple-200 rounded-lg overflow-hidden">
+        {/* Force a key to ensure proper re-rendering */}
         <DrawingCanvas 
+          key="character-drawing-canvas"
           onSave={handleCanvasSave}
           prompt={null}
         />
@@ -111,10 +130,10 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       <div className="flex justify-center">
         <Button
           onClick={handleSaveCharacter}
-          disabled={isCreating}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-2"
+          disabled={isCreating || !isCanvasReady}
+          className={`bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 ${!isCanvasReady ? 'opacity-50' : ''}`}
         >
-          {isCreating ? 'Creating...' : 'Save Character'}
+          {isCreating ? 'Creating...' : isCanvasReady ? 'Save Character' : 'Draw Something First'}
         </Button>
       </div>
     </div>
