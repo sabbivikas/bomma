@@ -12,7 +12,7 @@ import NoCharacters from './NoCharacters';
 import { Loader2 } from 'lucide-react';
 import { Character } from '@/services/characterService';
 import { useToast } from '@/hooks/use-toast';
-import { initializeSessionId } from '@/utils/sessionService';
+import { initializeSessionId, getSessionId } from '@/utils/sessionService';
 
 const WorldsContent = () => {
   const [mode, setMode] = useState<'select' | 'create' | 'games' | 'playing'>('select');
@@ -23,30 +23,32 @@ const WorldsContent = () => {
   
   // Initialize session on component mount
   useEffect(() => {
-    // Ensure session ID is initialized before loading characters
-    initializeSessionId();
+    // Initialize session ID and force a new one if there are issues
+    const sessionId = initializeSessionId();
+    console.log("WorldsContent: Session ID initialized:", sessionId);
+    
+    // Immediately load characters after session is initialized
+    loadCharacters();
   }, []);
   
-  // Load characters on mount and visibility change
+  // Function to load characters
+  const loadCharacters = async () => {
+    try {
+      console.log("Loading characters with session ID:", getSessionId());
+      await refetchCharacters();
+      setInitialLoadDone(true);
+    } catch (error) {
+      console.error("Error fetching characters:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your characters. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Also refresh when tab becomes visible again
   useEffect(() => {
-    const loadCharacters = async () => {
-      try {
-        console.log("Loading characters...");
-        await refetchCharacters();
-        setInitialLoadDone(true);
-      } catch (error) {
-        console.error("Error fetching characters:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load your characters. Please refresh the page.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    loadCharacters();
-
-    // Also refresh when tab becomes visible again
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log("Page became visible, refreshing characters");

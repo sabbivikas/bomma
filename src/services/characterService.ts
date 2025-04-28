@@ -17,6 +17,7 @@ async function setSessionIdForRLS(): Promise<void> {
     const sessionId = getSessionId();
     console.log("Setting session ID for RLS:", sessionId);
     
+    // Set the session_id for RLS policies
     const { error } = await supabase.rpc('set_session_id', { 
       session_id: sessionId 
     });
@@ -67,7 +68,7 @@ export async function fetchCharacters(): Promise<Character[]> {
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
   try {
-    // Make sure we have a valid session ID and it's set before creating
+    // Make sure we have a valid session ID
     const sessionId = getSessionId();
     if (!sessionId) {
       throw new Error('No session ID available');
@@ -89,12 +90,13 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
     }
     
     // Insert the character with explicit session_id
+    // IMPORTANT: Directly insert without using RPC to avoid RLS issues
     const { data, error } = await supabase
       .from('characters')
       .insert([{
         name,
         image_url: imageUrl,
-        session_id: sessionId // Explicitly set the session_id
+        session_id: sessionId
       }])
       .select()
       .single();
