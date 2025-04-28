@@ -29,6 +29,18 @@ export async function fetchCharacters(): Promise<Character[]> {
 }
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
+  // Set the session_id header for RLS policies
+  const { data: configData, error: configError } = await supabase.rpc(
+    'set_session_id',
+    { session_id: getSessionId() }
+  ).select('set_config');
+
+  if (configError) {
+    console.error('Error setting session ID:', configError);
+    throw configError;
+  }
+
+  // Now insert the character
   const { data, error } = await supabase
     .from('characters')
     .insert([{
@@ -53,6 +65,17 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
+  // Set the session_id header for RLS policies
+  const { error: configError } = await supabase.rpc(
+    'set_session_id',
+    { session_id: getSessionId() }
+  );
+
+  if (configError) {
+    console.error('Error setting session ID:', configError);
+    throw configError;
+  }
+
   const { error } = await supabase
     .from('characters')
     .delete()
