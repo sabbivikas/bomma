@@ -1,12 +1,27 @@
 
 import React from 'react';
-import { Target } from 'lucide-react';
+import { Skull, Ghost, Spider, Sword, Target } from 'lucide-react';
 import { Enemy, PlayerPosition } from '@/types/game';
 
 interface EnemiesProps {
   enemies: Enemy[];
   playerPosition: PlayerPosition;
 }
+
+const getEnemyIcon = (type: string) => {
+  switch(type) {
+    case 'drone':
+      return <Ghost className="w-12 h-12 text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]" />;
+    case 'robot':
+      return <Spider className="w-12 h-12 text-red-400 drop-shadow-[0_0_10px_rgba(239,68,68,0.4)]" />;
+    case 'fighter':
+      return <Sword className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.4)]" />;
+    case 'alien':
+      return <Skull className="w-12 h-12 text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.4)]" />;
+    default:
+      return <Target className="w-12 h-12 text-red-500" />;
+  }
+};
 
 const Enemies: React.FC<EnemiesProps> = ({ enemies, playerPosition }) => {
   return (
@@ -31,13 +46,13 @@ const Enemies: React.FC<EnemiesProps> = ({ enemies, playerPosition }) => {
       {enemies.map((enemy) => (
         <div 
           key={enemy.id}
-          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+          className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-pulse hover:scale-110 transition-transform"
           style={{ 
             left: `${enemy.x}%`, 
             top: `${enemy.y}%`,
           }}
         >
-          <Target className="w-12 h-12 text-red-500 animate-pulse" />
+          {getEnemyIcon(enemy.type)}
           <div className="h-1 w-12 bg-gray-800 rounded-full mt-1">
             <div 
               className="h-full bg-red-500 rounded-full transition-all duration-200"
