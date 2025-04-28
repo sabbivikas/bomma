@@ -34,7 +34,7 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
   const [character, setCharacter] = useState<Character | null>(null);
   const [savedCharacters, setSavedCharacters] = useState<Character[]>([]);
 
-  // Load saved characters from localStorage on initial mount only
+  // Load saved characters and current character from localStorage on initial mount only
   useEffect(() => {
     const loadSavedCharacters = () => {
       const saved = localStorage.getItem('savedCharacters');
@@ -50,6 +50,16 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
             }));
             console.log("Loaded characters:", characters);
             setSavedCharacters(characters);
+            
+            // Check if there's a current character saved
+            const currentCharId = localStorage.getItem('currentCharacterId');
+            if (currentCharId) {
+              const currentChar = characters.find(c => c.id === currentCharId);
+              if (currentChar) {
+                console.log("Setting current character from localStorage:", currentChar);
+                setCharacter(currentChar);
+              }
+            }
           }
         } catch (e) {
           console.error("Error parsing saved characters:", e);
@@ -59,6 +69,16 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
 
     loadSavedCharacters();
   }, []);
+
+  // Save current character ID to localStorage whenever it changes
+  useEffect(() => {
+    if (character) {
+      console.log("Saving current character to localStorage:", character.id);
+      localStorage.setItem('currentCharacterId', character.id);
+    } else {
+      localStorage.removeItem('currentCharacterId');
+    }
+  }, [character]);
 
   const addCharacter = (newCharacter: Character) => {
     console.log("Adding new character:", newCharacter);

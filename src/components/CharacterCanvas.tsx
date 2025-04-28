@@ -65,11 +65,14 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         createdAt: new Date(),
       };
 
+      console.log("Created new character:", newCharacter);
+
       // Add to saved characters
       addCharacter(newCharacter);
       
       // Set as current character
       setCharacter(newCharacter);
+      console.log("Set current character:", newCharacter);
 
       toast({
         title: "Character created!",
@@ -82,11 +85,12 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         onCharacterCreated(newCharacter.id);
       }
       
-      // Navigate to worlds page
-      console.log("Navigating to /worlds page");
+      // Force a delay before navigation to ensure state is updated
+      console.log("Waiting before navigating to /worlds page");
       setTimeout(() => {
+        console.log("Now navigating to /worlds page");
         navigate('/worlds');
-      }, 500);
+      }, 800);
       
     } catch (error) {
       console.error('Error saving character:', error);

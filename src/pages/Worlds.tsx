@@ -18,11 +18,14 @@ const WorldsContent = () => {
   
   // When component loads and we have a character but are in select mode, go to games mode
   useEffect(() => {
-    if (character && mode === 'select') {
+    if (character) {
       console.log("Character found, switching to games mode:", character);
       setMode('games');
+    } else {
+      console.log("No character found, staying in select mode");
+      setMode('select');
     }
-  }, [character, mode]);
+  }, [character]);
   
   const handleCreateNew = () => {
     setMode('create');
@@ -52,6 +55,10 @@ const WorldsContent = () => {
     setCurrentGame(null);
     setMode('games');
   };
+
+  console.log("Current mode:", mode);
+  console.log("Current character:", character);
+  console.log("Saved characters:", savedCharacters);
   
   return (
     <div className="container mx-auto px-4 py-8">
