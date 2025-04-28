@@ -25,7 +25,9 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
   // Initialize session ID when component mounts
   useEffect(() => {
-    initializeSessionId();
+    // Ensure session ID is properly initialized
+    const sessionId = initializeSessionId();
+    console.log("CharacterCanvas: Session ID initialized:", sessionId);
   }, []);
 
   useEffect(() => {

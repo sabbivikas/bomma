@@ -77,11 +77,15 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
     await setSessionIdForRLS();
     
     console.log("Creating character with session ID:", sessionId);
-    console.log("Image URL length:", imageUrl?.length || 0);
     
-    // Verify image URL is not empty
-    if (!imageUrl || imageUrl.trim().length === 0) {
-      throw new Error('Invalid image URL');
+    // Check the image URL length is reasonable
+    if (!imageUrl) {
+      throw new Error('Invalid image URL - image data is missing');
+    }
+    
+    console.log("Image URL length:", imageUrl.length);
+    if (imageUrl.length < 100) {
+      throw new Error('Invalid image URL - image data appears too small');
     }
     
     // Insert the character with explicit session_id
