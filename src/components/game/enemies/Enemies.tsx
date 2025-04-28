@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Skull, Ghost, Spider, Sword, Target } from 'lucide-react';
+import { Skull, Ghost, ArrowDownToLine, Swords, Target } from 'lucide-react';
 import { Enemy, PlayerPosition } from '@/types/game';
 
 interface EnemiesProps {
@@ -13,9 +13,9 @@ const getEnemyIcon = (type: string) => {
     case 'drone':
       return <Ghost className="w-12 h-12 text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]" />;
     case 'robot':
-      return <Spider className="w-12 h-12 text-red-400 drop-shadow-[0_0_10px_rgba(239,68,68,0.4)]" />;
+      return <ArrowDownToLine className="w-12 h-12 text-red-400 drop-shadow-[0_0_10px_rgba(239,68,68,0.4)]" />;
     case 'fighter':
-      return <Sword className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.4)]" />;
+      return <Swords className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.4)]" />;
     case 'alien':
       return <Skull className="w-12 h-12 text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.4)]" />;
     default:
