@@ -10,22 +10,29 @@ import { Globe, Gamepad2 } from 'lucide-react';
 import { games } from '@/data/games';
 import ThemedBackground from '@/components/ThemedBackground';
 import { Game } from '@/components/GameCard';
+import { useToast } from '@/hooks/use-toast';
 
 const WorldsContent = () => {
   const [mode, setMode] = useState<'select' | 'create' | 'games' | 'playing'>('select');
   const [currentGame, setCurrentGame] = useState<Game | null>(null);
   const { character, setCharacter, savedCharacters } = useCharacter();
+  const { toast } = useToast();
   
-  // When component loads and we have a character but are in select mode, go to games mode
+  // When component loads, check if we have a character
   useEffect(() => {
     if (character) {
       console.log("Character found, switching to games mode:", character);
       setMode('games');
     } else {
       console.log("No character found, staying in select mode");
+      if (savedCharacters.length > 0) {
+        console.log("But we have saved characters, so showing select screen");
+      } else {
+        console.log("No saved characters either");
+      }
       setMode('select');
     }
-  }, [character]);
+  }, [character, savedCharacters]);
   
   const handleCreateNew = () => {
     setMode('create');
@@ -36,6 +43,11 @@ const WorldsContent = () => {
     if (newCharacter) {
       console.log("Character created, setting current character:", newCharacter);
       setCharacter(newCharacter);
+      toast({
+        title: "Character Selected",
+        description: `${newCharacter.name} is ready for adventure!`,
+        variant: "success",
+      });
       setMode('games');
     }
   };
@@ -43,6 +55,11 @@ const WorldsContent = () => {
   const handleSelectCharacter = (selectedCharacter: Character) => {
     console.log("Selected character:", selectedCharacter);
     setCharacter(selectedCharacter);
+    toast({
+      title: "Character Selected",
+      description: `${selectedCharacter.name} is ready for adventure!`,
+      variant: "success",
+    });
     setMode('games');
   };
 
@@ -58,7 +75,7 @@ const WorldsContent = () => {
 
   console.log("Current mode:", mode);
   console.log("Current character:", character);
-  console.log("Saved characters:", savedCharacters);
+  console.log("Saved characters count:", savedCharacters.length);
   
   return (
     <div className="container mx-auto px-4 py-8">

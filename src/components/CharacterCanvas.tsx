@@ -85,12 +85,12 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         onCharacterCreated(newCharacter.id);
       }
       
-      // Force a delay before navigation to ensure state is updated
+      // Wait for a second to ensure all state updates are processed
       console.log("Waiting before navigating to /worlds page");
       setTimeout(() => {
         console.log("Now navigating to /worlds page");
         navigate('/worlds');
-      }, 800);
+      }, 1000);
       
     } catch (error) {
       console.error('Error saving character:', error);
