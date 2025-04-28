@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useCharacter } from '@/contexts/CharacterContext';
+import { useCharacter, Character } from '@/contexts/CharacterContext';
 import CharacterCanvas from '@/components/CharacterCanvas';
 import CharacterSelect from '@/components/CharacterSelect';
 import GameCard from '@/components/GameCard';
