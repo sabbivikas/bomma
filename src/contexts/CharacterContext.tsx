@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Character, fetchCharacters, createCharacter as createCharacterService, deleteCharacter as deleteCharacterService } from '@/services/characterService';
 import { useToast } from '@/hooks/use-toast';
-import { initializeSessionId } from '@/utils/sessionService';
+import { v4 as uuidv4 } from 'uuid';
+import { getSessionId } from '@/utils/sessionService';
 
 type CharacterContextType = {
   character: Character | null;
@@ -36,20 +37,10 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  // Initialize session ID on provider mount and ensure it's set properly
-  useEffect(() => {
-    const sessionId = initializeSessionId();
-    console.log("CharacterProvider: Session ID initialized:", sessionId);
-  }, []);
-
   const refetchCharacters = async () => {
     setIsLoading(true);
     try {
       console.log("Fetching characters...");
-      // Ensure we have a session ID
-      const sessionId = initializeSessionId();
-      console.log("Using session ID:", sessionId);
-      
       const characters = await fetchCharacters();
       console.log("Characters fetched:", characters);
       setSavedCharacters(characters);
@@ -71,16 +62,12 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
 
   const addCharacter = async (newCharacter: Character): Promise<Character | null> => {
     try {
-      // Ensure we have a session ID
-      const sessionId = initializeSessionId();
-      console.log("Adding character with session ID:", sessionId);
-      
       console.log("Adding character:", newCharacter);
       const character = await createCharacterService(newCharacter.name, newCharacter.imageUrl);
       console.log("Character added:", character);
       
       // Add to local state
-      setSavedCharacters(prev => [character, ...prev]);
+      setSavedCharacters(prev => [...prev, character]);
       
       toast({
         title: "Character created",
@@ -93,7 +80,7 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
       console.error('Failed to save character:', error);
       toast({
         title: "Error",
-        description: `Failed to save character: ${error.message || 'Please try again.'}`,
+        description: "Failed to save character. Please try again.",
         variant: "destructive",
       });
       return null;

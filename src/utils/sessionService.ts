@@ -10,20 +10,6 @@ export function getSessionId(): string {
   if (!sessionId) {
     sessionId = uuidv4();
     localStorage.setItem(SESSION_ID_KEY, sessionId);
-    console.log("Created new session ID:", sessionId);
-  } else {
-    console.log("Using existing session ID:", sessionId);
   }
   return sessionId;
-}
-
-// Ensure session ID is properly initialized on page load
-export function initializeSessionId(): string {
-  return getSessionId();
-}
-
-// Clear session ID (for testing purposes)
-export function clearSessionId(): void {
-  localStorage.removeItem(SESSION_ID_KEY);
-  console.log("Session ID cleared");
 }

@@ -17,7 +17,6 @@ async function setSessionIdForRLS(): Promise<void> {
     const sessionId = getSessionId();
     console.log("Setting session ID for RLS:", sessionId);
     
-    // Set the session_id for RLS policies
     const { error } = await supabase.rpc('set_session_id', { 
       session_id: sessionId 
     });
@@ -45,16 +44,15 @@ export async function fetchCharacters(): Promise<Character[]> {
     const { data, error } = await supabase
       .from('characters')
       .select('*')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: false }); // Order by creation date, newest first
+      .eq('session_id', sessionId); // Explicitly filter by session_id
 
     if (error) {
       console.error('Error fetching characters:', error);
       throw error;
     }
 
-    console.log("Characters fetched:", data?.length || 0);
-    return (data || []).map(char => ({
+    console.log("Characters fetched:", data);
+    return data.map(char => ({
       id: char.id,
       name: char.name,
       imageUrl: char.image_url,
@@ -68,35 +66,19 @@ export async function fetchCharacters(): Promise<Character[]> {
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
   try {
-    // Make sure we have a valid session ID
-    const sessionId = getSessionId();
-    if (!sessionId) {
-      throw new Error('No session ID available');
-    }
-    
     // Set the session ID for RLS before creating
     await setSessionIdForRLS();
     
+    const sessionId = getSessionId();
     console.log("Creating character with session ID:", sessionId);
     
-    // Check the image URL length is reasonable
-    if (!imageUrl) {
-      throw new Error('Invalid image URL - image data is missing');
-    }
-    
-    console.log("Image URL length:", imageUrl.length);
-    if (imageUrl.length < 100) {
-      throw new Error('Invalid image URL - image data appears too small');
-    }
-    
     // Insert the character with explicit session_id
-    // IMPORTANT: Directly insert without using RPC to avoid RLS issues
     const { data, error } = await supabase
       .from('characters')
       .insert([{
         name,
         image_url: imageUrl,
-        session_id: sessionId
+        session_id: sessionId // Explicitly set the session_id
       }])
       .select()
       .single();
