@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '@/contexts/CharacterContext';
 import CharacterCanvas from '@/components/CharacterCanvas';
@@ -10,13 +11,53 @@ import { games } from '@/data/games';
 import NoCharacters from './NoCharacters';
 import { Loader2 } from 'lucide-react';
 import { Character } from '@/services/characterService';
+import { useToast } from '@/hooks/use-toast';
 
 const WorldsContent = () => {
   const [mode, setMode] = useState<'select' | 'create' | 'games' | 'playing'>('select');
   const [currentGame, setCurrentGame] = useState<Game | null>(null);
   const { character, setCharacter, savedCharacters, isLoading, refetchCharacters } = useCharacter();
+  const { toast } = useToast();
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
+  // Additional refresh on component mount and visibility change
   useEffect(() => {
+    const loadCharacters = async () => {
+      try {
+        console.log("Loading characters...");
+        await refetchCharacters();
+        setInitialLoadDone(true);
+      } catch (error) {
+        console.error("Error fetching characters:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your characters. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadCharacters();
+
+    // Also refresh when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Page became visible, refreshing characters");
+        loadCharacters();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+  
+  // Set mode based on character and savedCharacters state
+  useEffect(() => {
+    if (!initialLoadDone) return;
+
     if (character) {
       setMode('games');
     } else if (savedCharacters.length > 0) {
@@ -24,12 +65,7 @@ const WorldsContent = () => {
     } else {
       setMode('select');
     }
-  }, [character, savedCharacters]);
-
-  // Additional refresh on component mount
-  useEffect(() => {
-    refetchCharacters();
-  }, []);
+  }, [character, savedCharacters, initialLoadDone]);
   
   const handleCreateNew = () => {
     setMode('create');
