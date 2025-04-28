@@ -74,14 +74,14 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         variant: "success",
       });
 
-      // First call the callback if provided
+      // Call callback if provided
       if (onCharacterCreated) {
         onCharacterCreated(newCharacter.id);
       }
       
-      // Then navigate to /worlds
+      // Always navigate to worlds page
       navigate('/worlds');
-
+      
     } catch (error) {
       console.error('Error saving character:', error);
       toast({
