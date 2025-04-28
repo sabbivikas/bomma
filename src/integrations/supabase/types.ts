@@ -234,6 +234,10 @@ export type Database = {
         Args: { row_id: string; table_name: string }
         Returns: number
       }
+      set_session_id: {
+        Args: { session_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

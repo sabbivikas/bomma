@@ -9,11 +9,26 @@ export interface Character {
   createdAt: Date;
 }
 
+/**
+ * Sets the session ID in the database connection for Row Level Security
+ */
+async function setSessionIdForRLS(): Promise<void> {
+  const sessionId = getSessionId();
+  const { error } = await supabase.rpc('set_session_id', { session_id: sessionId });
+  
+  if (error) {
+    console.error('Error setting session ID:', error);
+    throw error;
+  }
+}
+
 export async function fetchCharacters(): Promise<Character[]> {
+  // Set the session ID for RLS before fetching
+  await setSessionIdForRLS();
+
   const { data, error } = await supabase
     .from('characters')
-    .select('*')
-    .eq('session_id', getSessionId());
+    .select('*');
 
   if (error) {
     console.error('Error fetching characters:', error);
@@ -29,16 +44,16 @@ export async function fetchCharacters(): Promise<Character[]> {
 }
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
-  // Instead of using the RPC, we'll directly include the session_id in the insert
-  const sessionId = getSessionId();
+  // Set the session ID for RLS before creating
+  await setSessionIdForRLS();
   
-  // Insert the character with the session_id
+  // Insert the character
   const { data, error } = await supabase
     .from('characters')
     .insert([{
       name,
       image_url: imageUrl,
-      session_id: sessionId
+      session_id: getSessionId() // Still include this for the database record
     }])
     .select()
     .single();
@@ -57,14 +72,13 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
-  // Instead of using the RPC, we'll directly filter by session_id
-  const sessionId = getSessionId();
+  // Set the session ID for RLS before deleting
+  await setSessionIdForRLS();
   
   const { error } = await supabase
     .from('characters')
     .delete()
-    .eq('id', id)
-    .eq('session_id', sessionId);
+    .eq('id', id);
 
   if (error) {
     console.error('Error deleting character:', error);
