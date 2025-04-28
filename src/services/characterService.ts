@@ -29,24 +29,16 @@ export async function fetchCharacters(): Promise<Character[]> {
 }
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
-  // Set the session_id header for RLS policies
-  const { data: configData, error: configError } = await supabase.rpc(
-    'set_session_id',
-    { session_id: getSessionId() }
-  ).select('set_config');
-
-  if (configError) {
-    console.error('Error setting session ID:', configError);
-    throw configError;
-  }
-
-  // Now insert the character
+  // Instead of using the RPC, we'll directly include the session_id in the insert
+  const sessionId = getSessionId();
+  
+  // Insert the character with the session_id
   const { data, error } = await supabase
     .from('characters')
     .insert([{
       name,
       image_url: imageUrl,
-      session_id: getSessionId()
+      session_id: sessionId
     }])
     .select()
     .single();
@@ -65,22 +57,14 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
-  // Set the session_id header for RLS policies
-  const { error: configError } = await supabase.rpc(
-    'set_session_id',
-    { session_id: getSessionId() }
-  );
-
-  if (configError) {
-    console.error('Error setting session ID:', configError);
-    throw configError;
-  }
-
+  // Instead of using the RPC, we'll directly filter by session_id
+  const sessionId = getSessionId();
+  
   const { error } = await supabase
     .from('characters')
     .delete()
     .eq('id', id)
-    .eq('session_id', getSessionId());
+    .eq('session_id', sessionId);
 
   if (error) {
     console.error('Error deleting character:', error);
