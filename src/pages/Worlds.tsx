@@ -5,7 +5,7 @@ import { CharacterProvider, useCharacter, Character } from '@/contexts/Character
 import CharacterCanvas from '@/components/CharacterCanvas';
 import CharacterSelect from '@/components/CharacterSelect';
 import GameCard from '@/components/GameCard';
-import { World, Gamepad2 } from 'lucide-react';
+import { Globe, Gamepad2 } from 'lucide-react';
 import { games } from '@/data/games';
 import ThemedBackground from '@/components/ThemedBackground';
 
@@ -34,7 +34,7 @@ const WorldsContent = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 text-center">
         <h1 className="text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
-          <World className="h-8 w-8 text-purple-600" />
+          <Globe className="h-8 w-8 text-purple-600" />
           <span>Character Worlds</span>
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
@@ -104,7 +104,8 @@ const Worlds = () => {
           </main>
           
           {/* Dreamy particles for background effect */}
-          <style jsx global>{`
+          <style>
+            {`
             .dreamy-dust {
               position: absolute;
               background-color: white;
@@ -132,7 +133,8 @@ const Worlds = () => {
               0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
               50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
             }
-          `}</style>
+            `}
+          </style>
         </div>
       </ThemedBackground>
     </CharacterProvider>

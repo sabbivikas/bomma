@@ -13,6 +13,7 @@ type CharacterContextType = {
   setCharacter: (character: Character | null) => void;
   savedCharacters: Character[];
   addCharacter: (character: Character) => void;
+  removeCharacter?: (id: string) => void;
 };
 
 const CharacterContext = createContext<CharacterContextType | undefined>(undefined);
@@ -34,7 +35,17 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
   const [savedCharacters, setSavedCharacters] = useState<Character[]>(() => {
     // Load saved characters from local storage
     const saved = localStorage.getItem('savedCharacters');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      try {
+        // Parse the saved data and ensure it's in the right format
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error("Error parsing saved characters:", e);
+        return [];
+      }
+    }
+    return [];
   });
 
   const addCharacter = (newCharacter: Character) => {
@@ -43,8 +54,25 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
     localStorage.setItem('savedCharacters', JSON.stringify(updatedCharacters));
   };
 
+  const removeCharacter = (id: string) => {
+    const updatedCharacters = savedCharacters.filter(c => c.id !== id);
+    setSavedCharacters(updatedCharacters);
+    localStorage.setItem('savedCharacters', JSON.stringify(updatedCharacters));
+    
+    // If the currently selected character is removed, deselect it
+    if (character && character.id === id) {
+      setCharacter(null);
+    }
+  };
+
   return (
-    <CharacterContext.Provider value={{ character, setCharacter, savedCharacters, addCharacter }}>
+    <CharacterContext.Provider value={{ 
+      character, 
+      setCharacter, 
+      savedCharacters, 
+      addCharacter,
+      removeCharacter
+    }}>
       {children}
     </CharacterContext.Provider>
   );

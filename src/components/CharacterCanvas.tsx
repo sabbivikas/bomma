@@ -74,7 +74,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
     }
   };
 
-  const handleCanvasSave = (canvas: HTMLCanvasElement) => {
+  const handleCanvasReady = (canvas: HTMLCanvasElement) => {
     canvasRef.current = canvas;
   };
 
@@ -100,12 +100,11 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
       <div className="mb-6 border-2 border-purple-200 rounded-lg overflow-hidden">
         <DrawingCanvas 
-          onSaveCanvas={handleCanvasSave}
+          onCanvasReady={handleCanvasReady}
           height={400}
           width={400}
           strokeWidth={5}
           toolbarPosition="bottom"
-          showPrompt={false}
         />
       </div>
 
