@@ -7,6 +7,7 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useNavigate } from 'react-router-dom';
+import { initializeSessionId } from '@/utils/sessionService';
 
 type CharacterCanvasProps = {
   onCharacterCreated?: (characterId: string) => void;
@@ -19,7 +20,13 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const [characterName, setCharacterName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [hasDrawnSomething, setHasDrawnSomething] = useState(false);
   const { addCharacter, setCharacter, refetchCharacters } = useCharacter();
+
+  // Initialize session ID when component mounts
+  useEffect(() => {
+    initializeSessionId();
+  }, []);
 
   useEffect(() => {
     console.log("Canvas ready state:", isCanvasReady);
@@ -47,11 +54,24 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       return;
     }
 
+    if (!hasDrawnSomething) {
+      toast({
+        title: "Drawing required",
+        description: "Please draw something for your character.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
     try {
       // Get image data from canvas
       const imageUrl = canvasRef.current.toDataURL('image/png');
-      console.log("Image URL generated successfully");
+      console.log("Image URL generated, length:", imageUrl.length);
+
+      if (!imageUrl || imageUrl.length < 100) {
+        throw new Error("Failed to generate valid image data");
+      }
 
       // Create character object
       const newCharacter = {
@@ -71,6 +91,12 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       // Set as current character
       setCharacter(savedCharacter);
       
+      toast({
+        title: "Character created",
+        description: "Your character has been saved successfully!",
+        variant: "success",
+      });
+      
       // Refresh characters list to ensure we have the latest data
       await refetchCharacters();
 
@@ -86,7 +112,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       console.error('Error saving character:', error);
       toast({
         title: "Error",
-        description: "Failed to save your character. Please try again.",
+        description: `Failed to save your character: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
@@ -101,6 +127,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       console.log("Canvas element received:", canvas);
       canvasRef.current = canvas;
       setIsCanvasReady(true);
+      setHasDrawnSomething(true);
     } else {
       console.error("Received null canvas in handleCanvasSave");
     }
@@ -137,10 +164,12 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       <div className="flex justify-center">
         <Button
           onClick={handleSaveCharacter}
-          disabled={isCreating || !isCanvasReady}
-          className={`bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 ${!isCanvasReady ? 'opacity-50' : ''}`}
+          disabled={isCreating || !isCanvasReady || !hasDrawnSomething}
+          className={`bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 ${
+            !isCanvasReady || !hasDrawnSomething ? 'opacity-50' : ''
+          }`}
         >
-          {isCreating ? 'Creating...' : isCanvasReady ? 'Save Character' : 'Draw Something First'}
+          {isCreating ? 'Creating...' : isCanvasReady && hasDrawnSomething ? 'Save Character' : 'Draw Something First'}
         </Button>
       </div>
     </div>

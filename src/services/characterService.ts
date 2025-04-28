@@ -52,8 +52,8 @@ export async function fetchCharacters(): Promise<Character[]> {
       throw error;
     }
 
-    console.log("Characters fetched:", data);
-    return data.map(char => ({
+    console.log("Characters fetched:", data?.length || 0);
+    return (data || []).map(char => ({
       id: char.id,
       name: char.name,
       imageUrl: char.image_url,
@@ -67,11 +67,22 @@ export async function fetchCharacters(): Promise<Character[]> {
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
   try {
+    // Make sure we have a valid session ID and it's set before creating
+    const sessionId = getSessionId();
+    if (!sessionId) {
+      throw new Error('No session ID available');
+    }
+    
     // Set the session ID for RLS before creating
     await setSessionIdForRLS();
     
-    const sessionId = getSessionId();
     console.log("Creating character with session ID:", sessionId);
+    console.log("Image URL length:", imageUrl?.length || 0);
+    
+    // Verify image URL is not empty
+    if (!imageUrl || imageUrl.trim().length === 0) {
+      throw new Error('Invalid image URL');
+    }
     
     // Insert the character with explicit session_id
     const { data, error } = await supabase
