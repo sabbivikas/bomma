@@ -14,6 +14,7 @@ export interface Character {
  */
 async function setSessionIdForRLS(): Promise<void> {
   const sessionId = getSessionId();
+  // Using the correct parameter name and ensuring proper error handling
   const { error } = await supabase.rpc('set_session_id', { session_id: sessionId });
   
   if (error) {
@@ -47,13 +48,15 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
   // Set the session ID for RLS before creating
   await setSessionIdForRLS();
   
-  // Insert the character
+  const sessionId = getSessionId(); // Get session ID explicitly
+  
+  // Insert the character with explicit session_id
   const { data, error } = await supabase
     .from('characters')
     .insert([{
       name,
       image_url: imageUrl,
-      session_id: getSessionId() // Still include this for the database record
+      session_id: sessionId // Explicitly set the session_id
     }])
     .select()
     .single();
