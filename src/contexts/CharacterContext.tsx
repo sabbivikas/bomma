@@ -1,12 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-export type Character = {
-  id: string;
-  name: string;
-  imageUrl: string;
-  createdAt: Date;
-};
+import { Character, fetchCharacters, createCharacter as createCharacterService, deleteCharacter as deleteCharacterService } from '@/services/characterService';
+import { useToast } from '@/hooks/use-toast';
 
 type CharacterContextType = {
   character: Character | null;
@@ -26,6 +21,8 @@ export const useCharacter = (): CharacterContextType => {
   return context;
 };
 
+export type { Character };
+
 type CharacterProviderProps = {
   children: ReactNode;
 };
@@ -33,74 +30,54 @@ type CharacterProviderProps = {
 export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [savedCharacters, setSavedCharacters] = useState<Character[]>([]);
+  const { toast } = useToast();
 
-  // Load saved characters and current character from localStorage on initial mount only
   useEffect(() => {
-    const loadSavedCharacters = () => {
-      const saved = localStorage.getItem('savedCharacters');
-      if (saved) {
-        try {
-          // Parse the saved data and ensure it's in the right format
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            // Convert date strings back to Date objects
-            const characters = parsed.map(char => ({
-              ...char,
-              createdAt: new Date(char.createdAt)
-            }));
-            console.log("Loaded characters:", characters);
-            setSavedCharacters(characters);
-            
-            // Check if there's a current character saved
-            const currentCharId = localStorage.getItem('currentCharacterId');
-            if (currentCharId) {
-              const currentChar = characters.find(c => c.id === currentCharId);
-              if (currentChar) {
-                console.log("Setting current character from localStorage:", currentChar);
-                setCharacter(currentChar);
-              }
-            }
-          }
-        } catch (e) {
-          console.error("Error parsing saved characters:", e);
-        }
+    const loadCharacters = async () => {
+      try {
+        const characters = await fetchCharacters();
+        setSavedCharacters(characters);
+      } catch (error) {
+        console.error('Failed to load characters:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load characters. Please try again.",
+          variant: "destructive",
+        });
       }
     };
 
-    loadSavedCharacters();
-  }, []);
+    loadCharacters();
+  }, [toast]);
 
-  // Save current character ID to localStorage whenever it changes
-  useEffect(() => {
-    if (character) {
-      console.log("Saving current character to localStorage:", character.id);
-      localStorage.setItem('currentCharacterId', character.id);
-    } else {
-      localStorage.removeItem('currentCharacterId');
+  const addCharacter = async (newCharacter: Character) => {
+    try {
+      const character = await createCharacterService(newCharacter.name, newCharacter.imageUrl);
+      setSavedCharacters(prev => [...prev, character]);
+    } catch (error) {
+      console.error('Failed to save character:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save character. Please try again.",
+        variant: "destructive",
+      });
     }
-  }, [character]);
-
-  const addCharacter = (newCharacter: Character) => {
-    console.log("Adding new character:", newCharacter);
-    setSavedCharacters(prev => {
-      const updated = [...prev, newCharacter];
-      // Save to localStorage
-      localStorage.setItem('savedCharacters', JSON.stringify(updated));
-      return updated;
-    });
   };
 
-  const removeCharacter = (id: string) => {
-    setSavedCharacters(prev => {
-      const updated = prev.filter(c => c.id !== id);
-      // Save to localStorage
-      localStorage.setItem('savedCharacters', JSON.stringify(updated));
-      return updated;
-    });
-    
-    // If the currently selected character is removed, deselect it
-    if (character && character.id === id) {
-      setCharacter(null);
+  const removeCharacter = async (id: string) => {
+    try {
+      await deleteCharacterService(id);
+      setSavedCharacters(prev => prev.filter(c => c.id !== id));
+      if (character?.id === id) {
+        setCharacter(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete character:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete character. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
