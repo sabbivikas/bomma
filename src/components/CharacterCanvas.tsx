@@ -7,13 +7,15 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from 'react-router-dom';
 
 type CharacterCanvasProps = {
-  onCharacterCreated: (characterId: string) => void;
+  onCharacterCreated?: (characterId: string) => void;
 };
 
 const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [characterName, setCharacterName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -72,8 +74,14 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         variant: "success",
       });
 
-      // Notify parent
-      onCharacterCreated(newCharacter.id);
+      // First call the callback if provided
+      if (onCharacterCreated) {
+        onCharacterCreated(newCharacter.id);
+      }
+      
+      // Then navigate to /worlds
+      navigate('/worlds');
+
     } catch (error) {
       console.error('Error saving character:', error);
       toast({
