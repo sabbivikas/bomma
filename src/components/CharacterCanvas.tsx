@@ -20,7 +20,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const [characterName, setCharacterName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
-  const { addCharacter } = useCharacter();
+  const { addCharacter, setCharacter } = useCharacter();
 
   // Track when the DrawingCanvas saves to our ref
   useEffect(() => {
@@ -67,6 +67,9 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
       // Add to saved characters
       addCharacter(newCharacter);
+      
+      // Set as current character
+      setCharacter(newCharacter);
 
       toast({
         title: "Character created!",
@@ -79,9 +82,11 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         onCharacterCreated(newCharacter.id);
       }
       
-      // Make sure we navigate to games page regardless of callback
+      // Navigate to worlds page
       console.log("Navigating to /worlds page");
-      navigate('/worlds');
+      setTimeout(() => {
+        navigate('/worlds');
+      }, 500);
       
     } catch (error) {
       console.error('Error saving character:', error);

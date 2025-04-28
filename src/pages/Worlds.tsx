@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { CharacterProvider, useCharacter, Character } from '@/contexts/CharacterContext';
 import CharacterCanvas from '@/components/CharacterCanvas';
@@ -16,6 +16,14 @@ const WorldsContent = () => {
   const [currentGame, setCurrentGame] = useState<Game | null>(null);
   const { character, setCharacter, savedCharacters } = useCharacter();
   
+  // When component loads and we have a character but are in select mode, go to games mode
+  useEffect(() => {
+    if (character && mode === 'select') {
+      console.log("Character found, switching to games mode:", character);
+      setMode('games');
+    }
+  }, [character, mode]);
+  
   const handleCreateNew = () => {
     setMode('create');
   };
@@ -23,12 +31,14 @@ const WorldsContent = () => {
   const handleCharacterCreated = (characterId: string) => {
     const newCharacter = savedCharacters.find(c => c.id === characterId);
     if (newCharacter) {
+      console.log("Character created, setting current character:", newCharacter);
       setCharacter(newCharacter);
       setMode('games');
     }
   };
   
   const handleSelectCharacter = (selectedCharacter: Character) => {
+    console.log("Selected character:", selectedCharacter);
     setCharacter(selectedCharacter);
     setMode('games');
   };
