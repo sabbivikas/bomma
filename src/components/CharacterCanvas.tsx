@@ -17,10 +17,11 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [characterName, setCharacterName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
   const { addCharacter } = useCharacter();
 
   const handleSaveCharacter = async () => {
-    if (!canvasRef.current) {
+    if (!canvasRef.current || !isCanvasReady) {
       toast({
         title: "Error",
         description: "Canvas is not ready. Please try again.",
@@ -77,6 +78,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   // Handle saving from DrawingCanvas
   const handleCanvasSave = (canvas: HTMLCanvasElement) => {
     canvasRef.current = canvas;
+    setIsCanvasReady(true);
   };
 
   return (

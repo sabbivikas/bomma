@@ -39,7 +39,14 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
       try {
         // Parse the saved data and ensure it's in the right format
         const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : [];
+        if (Array.isArray(parsed)) {
+          // Convert date strings back to Date objects
+          return parsed.map(char => ({
+            ...char,
+            createdAt: new Date(char.createdAt)
+          }));
+        }
+        return [];
       } catch (e) {
         console.error("Error parsing saved characters:", e);
         return [];
