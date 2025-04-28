@@ -15,15 +15,10 @@ export const useGameLogic = (game: Game, characterName: string) => {
 
   const getEnemyTypeForGame = (genre: string) => {
     switch(genre) {
-      case 'Dungeon Crawler': return 'monster';
-      case 'Flying Action': return 'plane';
-      case 'Street Fighting': return 'fighter';
-      case 'Fantasy RPG': return 'dragon';
+      case 'Action Shooter': return 'drone';
       case 'Mech Combat': return 'robot';
-      case 'Stealth Action': return 'guard';
-      case 'Platformer': return 'goomba';
-      case 'Runner': return 'robot';
-      case 'Tower Defense': return 'invader';
+      case 'Beat-em-up': return 'fighter';
+      case 'FPS': return 'alien';
       default: return 'enemy';
     }
   };
@@ -67,55 +62,71 @@ export const useGameLogic = (game: Game, characterName: string) => {
     
     const points = game.difficulty === 'easy' ? 5 : game.difficulty === 'medium' ? 10 : 15;
     
-    const updatedEnemies = enemies.map(enemy => {
+    // Find closest enemy to shoot
+    let closestEnemy = null;
+    let closestDistance = Infinity;
+    
+    enemies.forEach(enemy => {
       const distance = Math.sqrt(
         Math.pow(playerPosition.x - enemy.x, 2) + 
         Math.pow(playerPosition.y - enemy.y, 2)
       );
       
-      if (distance < 30) {
-        return { ...enemy, health: enemy.health - 1 };
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestEnemy = enemy;
       }
-      return enemy;
     });
     
-    const remainingEnemies = updatedEnemies.filter(enemy => enemy.health > 0);
-    const defeatedCount = updatedEnemies.length - remainingEnemies.length;
-    
-    if (defeatedCount > 0) {
-      const earnedPoints = points * defeatedCount;
-      setScore(prevScore => prevScore + earnedPoints);
-      
-      const enemyName = getEnemyNameForGame(game.genre);
-      const message = defeatedCount === 1
-        ? `${characterName} defeated a ${enemyName}! +${earnedPoints} points`
-        : `${characterName} defeated ${defeatedCount} ${enemyName}s! +${earnedPoints} points`;
-      
-      toast({
-        title: 'Game Action',
-        description: message,
-        variant: 'success',
+    if (closestEnemy) {
+      const updatedEnemies = enemies.map(enemy => {
+        if (enemy.id === closestEnemy!.id) {
+          return { ...enemy, health: enemy.health - 1 };
+        }
+        return enemy;
       });
-    }
-    
-    setEnemies(remainingEnemies);
-    
-    if (remainingEnemies.length === 0) {
-      spawnEnemies();
+      
+      const remainingEnemies = updatedEnemies.filter(enemy => enemy.health > 0);
+      const defeatedCount = updatedEnemies.length - remainingEnemies.length;
+      
+      if (defeatedCount > 0) {
+        const earnedPoints = points * defeatedCount;
+        setScore(prevScore => prevScore + earnedPoints);
+        
+        const enemyName = getEnemyNameForGame(game.genre);
+        const message = defeatedCount === 1
+          ? `${characterName} shot down a ${enemyName}! +${earnedPoints} points`
+          : `${characterName} defeated ${defeatedCount} ${enemyName}s! +${earnedPoints} points`;
+        
+        toast({
+          title: 'Target Eliminated',
+          description: message,
+          variant: 'success',
+        });
+      }
+      
+      setEnemies(remainingEnemies);
+      
+      if (remainingEnemies.length === 0) {
+        toast({
+          title: 'Wave Cleared',
+          description: `All enemies eliminated! Next wave incoming...`,
+          variant: 'success',
+        });
+        
+        setTimeout(() => {
+          spawnEnemies();
+        }, 2000);
+      }
     }
   };
 
   const getEnemyNameForGame = (genre: string) => {
     switch(genre) {
-      case 'Dungeon Crawler': return 'monster';
-      case 'Flying Action': return 'enemy plane';
-      case 'Street Fighting': return 'rival';
-      case 'Fantasy RPG': return 'creature';
-      case 'Mech Combat': return 'robot';
-      case 'Stealth Action': return 'guard';
-      case 'Platformer': return 'goomba';
-      case 'Runner': return 'robot';
-      case 'Tower Defense': return 'invader';
+      case 'Action Shooter': return 'drone';
+      case 'Mech Combat': return 'enemy mech';
+      case 'Beat-em-up': return 'fighter';
+      case 'FPS': return 'alien';
       default: return 'enemy';
     }
   };
