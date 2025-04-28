@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Enemy, PlayerPosition } from '@/types/game';
@@ -12,6 +11,7 @@ export const useGameLogic = (game: Game, characterName: string) => {
   const [playerPosition, setPlayerPosition] = useState<PlayerPosition>({ x: 50, y: 50 });
   const [health, setHealth] = useState(100);
   const [gameOver, setGameOver] = useState(false);
+  const [lastShotTime, setLastShotTime] = useState(0);
 
   const getEnemyTypeForGame = (genre: string) => {
     switch(genre) {
@@ -59,6 +59,26 @@ export const useGameLogic = (game: Game, characterName: string) => {
 
   const handleAction = () => {
     if (gameOver) return;
+    shootAtClosestEnemy();
+  };
+
+  const getEnemyNameForGame = (genre: string) => {
+    switch(genre) {
+      case 'Action Shooter': return 'drone';
+      case 'Mech Combat': return 'enemy mech';
+      case 'Beat-em-up': return 'fighter';
+      case 'FPS': return 'alien';
+      default: return 'enemy';
+    }
+  };
+
+  // New function to shoot at enemies and score points
+  const shootAtClosestEnemy = () => {
+    if (gameOver || !gameStarted || enemies.length === 0) return;
+    
+    // Rate limiting to prevent too rapid shooting
+    if (Date.now() - lastShotTime < 300) return;
+    setLastShotTime(Date.now());
     
     const points = game.difficulty === 'easy' ? 5 : game.difficulty === 'medium' ? 10 : 15;
     
@@ -98,6 +118,11 @@ export const useGameLogic = (game: Game, characterName: string) => {
           ? `${characterName} shot down a ${enemyName}! +${earnedPoints} points`
           : `${characterName} defeated ${defeatedCount} ${enemyName}s! +${earnedPoints} points`;
         
+        // Play sound effect for successful hit
+        const audio = new Audio('/laser.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(() => {}); // Ignore autoplay errors
+        
         toast({
           title: 'Target Eliminated',
           description: message,
@@ -118,16 +143,6 @@ export const useGameLogic = (game: Game, characterName: string) => {
           spawnEnemies();
         }, 2000);
       }
-    }
-  };
-
-  const getEnemyNameForGame = (genre: string) => {
-    switch(genre) {
-      case 'Action Shooter': return 'drone';
-      case 'Mech Combat': return 'enemy mech';
-      case 'Beat-em-up': return 'fighter';
-      case 'FPS': return 'alien';
-      default: return 'enemy';
     }
   };
 
@@ -186,6 +201,7 @@ export const useGameLogic = (game: Game, characterName: string) => {
     gameOver,
     startGame,
     handleAction,
-    setPlayerPosition
+    setPlayerPosition,
+    shootAtClosestEnemy  // Export the new shooting function
   };
 };

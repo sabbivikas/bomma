@@ -25,7 +25,8 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
     gameOver,
     startGame,
     handleAction,
-    setPlayerPosition
+    setPlayerPosition,
+    shootAtClosestEnemy  // Use the new function
   } = useGameLogic(game, characterName);
 
   const handleGameAreaClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -74,6 +75,8 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
               characterImage={characterImage}
               characterName={characterName}
               onAreaClick={handleGameAreaClick}
+              onShoot={shootAtClosestEnemy}  // Connect the shooting function
+              score={score}  // Pass score for display
             />
             
             <GameControls game={game} onAction={handleAction} />

@@ -9,6 +9,8 @@ interface GameAreaProps {
   characterImage: string;
   characterName: string;
   onAreaClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onShoot: () => void;  // Add the new shooting function prop
+  score: number;  // Add score to show in the HUD
 }
 
 // New types for projectiles
@@ -27,6 +29,8 @@ const GameArea: React.FC<GameAreaProps> = ({
   characterImage,
   characterName,
   onAreaClick,
+  onShoot,  // Added prop
+  score,    // Added prop
 }) => {
   // State for projectiles
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
@@ -51,10 +55,8 @@ const GameArea: React.FC<GameAreaProps> = ({
     setProjectiles([...projectiles, newProjectile]);
     setLastShotTime(Date.now());
     
-    // Play sound effect
-    const audio = new Audio('/laser.mp3');
-    audio.volume = 0.3;
-    audio.play().catch(() => {}); // Ignore autoplay errors
+    // Call the onShoot callback to actually perform the damage and scoring
+    onShoot();
   };
 
   // Find the closest enemy to the player
@@ -214,7 +216,7 @@ const GameArea: React.FC<GameAreaProps> = ({
       
       {/* HUD Elements */}
       <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-lg border border-purple-500/30">
-        <div className="text-purple-300 font-bold text-xl">Score: 10</div>
+        <div className="text-purple-300 font-bold text-xl">Score: {score}</div>
       </div>
       
       {/* Energy Shield */}
