@@ -13,19 +13,19 @@ interface GameHeaderProps {
 
 const GameHeader: React.FC<GameHeaderProps> = ({ game, health, score, onExit }) => {
   return (
-    <div className="bg-purple-900 p-4 flex items-center justify-between">
+    <div className="bg-gradient-to-r from-purple-900 to-purple-800 p-4 flex items-center justify-between rounded-t-lg border-b-2 border-purple-400">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={onExit}>
-          <ArrowLeft className="h-4 w-4" />
+        <Button variant="outline" size="icon" onClick={onExit} className="border-purple-400 hover:bg-purple-700/50">
+          <ArrowLeft className="h-4 w-4 text-purple-200" />
         </Button>
-        <h2 className="text-xl font-bold">{game.title}</h2>
+        <h2 className="text-xl font-bold text-purple-100 tracking-wider">{game.title}</h2>
       </div>
       <div className="flex items-center gap-4">
-        <div className="bg-black/30 px-4 py-2 rounded-lg">
-          Health: {health}%
+        <div className="bg-black/40 px-4 py-2 rounded-lg border border-purple-400/30">
+          <span className="text-purple-300">HP:</span> <span className="text-purple-100 font-bold">{health}%</span>
         </div>
-        <div className="bg-black/30 px-4 py-2 rounded-lg">
-          Score: {score}
+        <div className="bg-black/40 px-4 py-2 rounded-lg border border-purple-400/30">
+          <span className="text-purple-300">SCORE:</span> <span className="text-purple-100 font-bold">{score}</span>
         </div>
       </div>
     </div>
