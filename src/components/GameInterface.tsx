@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +74,9 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
       case 'Fantasy RPG': return 'dragon';
       case 'Mech Combat': return 'robot';
       case 'Stealth Action': return 'guard';
+      case 'Platformer': return 'goomba';
+      case 'Runner': return 'robot';
+      case 'Tower Defense': return 'invader';
       default: return 'enemy';
     }
   };
@@ -134,13 +136,16 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
   };
   
   const getEnemyNameForGame = (genre: string) => {
-    switch(genre) {
+    switch(game.genre) {
       case 'Dungeon Crawler': return 'monster';
       case 'Flying Action': return 'enemy plane';
       case 'Street Fighting': return 'rival';
       case 'Fantasy RPG': return 'creature';
       case 'Mech Combat': return 'robot';
       case 'Stealth Action': return 'guard';
+      case 'Platformer': return 'goomba';
+      case 'Runner': return 'robot';
+      case 'Tower Defense': return 'invader';
       default: return 'enemy';
     }
   };
@@ -214,6 +219,9 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
       case 'Fantasy RPG': return <Target className="h-5 w-5 mr-2" />;
       case 'Mech Combat': return <Crosshair className="h-5 w-5 mr-2" />;
       case 'Stealth Action': return <Shield className="h-5 w-5 mr-2" />;
+      case 'Platformer': return <Gamepad2 className="h-5 w-5 mr-2" />;
+      case 'Runner': return <Gamepad2 className="h-5 w-5 mr-2" />;
+      case 'Tower Defense': return <Shield className="h-5 w-5 mr-2" />;
       default: return <Gamepad2 className="h-5 w-5 mr-2" />;
     }
   };
@@ -227,6 +235,9 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
       case 'Fantasy RPG': return 'Cast Spell';
       case 'Mech Combat': return 'Fire Weapons';
       case 'Stealth Action': return 'Sneak Attack';
+      case 'Platformer': return 'Jump';
+      case 'Runner': return 'Run';
+      case 'Tower Defense': return 'Defend';
       default: return 'Attack';
     }
   };
@@ -291,13 +302,11 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
                   top: `${playerPosition.y}%`,
                 }}
               >
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500 bg-white">
-                  <img 
-                    src={characterImage} 
-                    alt={characterName} 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                <img 
+                  src={characterImage} 
+                  alt={characterName} 
+                  className="w-12 h-12 object-contain"
+                />
               </div>
               
               {/* Enemies */}
@@ -324,6 +333,7 @@ const GameInterface: React.FC<GameInterfaceProps> = ({ game, characterName, char
               </div>
             </div>
             
+            {/* Action buttons */}
             <div className="mt-auto">
               <Button
                 onClick={handleAction}
