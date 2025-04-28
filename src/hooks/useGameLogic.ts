@@ -1,46 +1,37 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Enemy, PlayerPosition } from '@/types/game';
 import { Game } from '@/components/GameCard';
+import { useEnemyLogic } from './game/useEnemyLogic';
+import { usePlayerLogic } from './game/usePlayerLogic';
+import { useScoringLogic } from './game/useScoringLogic';
 
 export const useGameLogic = (game: Game, characterName: string) => {
-  const { toast } = useToast();
-  const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
-  const [enemies, setEnemies] = useState<Enemy[]>([]);
-  const [playerPosition, setPlayerPosition] = useState<PlayerPosition>({ x: 50, y: 50 });
-  const [health, setHealth] = useState(100);
   const [gameOver, setGameOver] = useState(false);
-  const [lastShotTime, setLastShotTime] = useState(0);
+  const { toast } = useToast();
 
-  const getEnemyTypeForGame = (genre: string) => {
-    switch(genre) {
-      case 'Action Shooter': return 'drone';
-      case 'Mech Combat': return 'robot';
-      case 'Beat-em-up': return 'fighter';
-      case 'FPS': return 'alien';
-      default: return 'enemy';
-    }
-  };
+  const { 
+    enemies, 
+    setEnemies, 
+    spawnEnemies 
+  } = useEnemyLogic(game);
 
-  const spawnEnemies = () => {
-    const newEnemies: Enemy[] = [];
-    const count = game.difficulty === 'easy' ? 3 : game.difficulty === 'medium' ? 5 : 7;
-    
-    for (let i = 0; i < count; i++) {
-      const enemyType = getEnemyTypeForGame(game.genre);
-      newEnemies.push({
-        id: Date.now() + i,
-        x: Math.random() * 80 + 10,
-        y: Math.random() * 80 + 10,
-        health: game.difficulty === 'easy' ? 1 : game.difficulty === 'medium' ? 2 : 3,
-        type: enemyType,
-        size: Math.random() * 10 + 20,
-      });
-    }
-    
-    setEnemies(newEnemies);
-  };
+  const {
+    playerPosition,
+    setPlayerPosition,
+    health,
+    setHealth,
+    lastShotTime,
+    setLastShotTime,
+    handleDamage
+  } = usePlayerLogic();
+
+  const {
+    score,
+    setScore,
+    updateScore
+  } = useScoringLogic(game, characterName);
 
   const startGame = () => {
     setGameStarted(true);
@@ -62,27 +53,12 @@ export const useGameLogic = (game: Game, characterName: string) => {
     shootAtClosestEnemy();
   };
 
-  const getEnemyNameForGame = (genre: string) => {
-    switch(genre) {
-      case 'Action Shooter': return 'drone';
-      case 'Mech Combat': return 'enemy mech';
-      case 'Beat-em-up': return 'fighter';
-      case 'FPS': return 'alien';
-      default: return 'enemy';
-    }
-  };
-
-  // New function to shoot at enemies and score points
   const shootAtClosestEnemy = () => {
     if (gameOver || !gameStarted || enemies.length === 0) return;
     
-    // Rate limiting to prevent too rapid shooting
     if (Date.now() - lastShotTime < 300) return;
     setLastShotTime(Date.now());
     
-    const points = game.difficulty === 'easy' ? 5 : game.difficulty === 'medium' ? 10 : 15;
-    
-    // Find closest enemy to shoot
     let closestEnemy = null;
     let closestDistance = Infinity;
     
@@ -110,24 +86,11 @@ export const useGameLogic = (game: Game, characterName: string) => {
       const defeatedCount = updatedEnemies.length - remainingEnemies.length;
       
       if (defeatedCount > 0) {
-        const earnedPoints = points * defeatedCount;
-        setScore(prevScore => prevScore + earnedPoints);
+        updateScore(defeatedCount);
         
-        const enemyName = getEnemyNameForGame(game.genre);
-        const message = defeatedCount === 1
-          ? `${characterName} shot down a ${enemyName}! +${earnedPoints} points`
-          : `${characterName} defeated ${defeatedCount} ${enemyName}s! +${earnedPoints} points`;
-        
-        // Play sound effect for successful hit
         const audio = new Audio('/laser.mp3');
         audio.volume = 0.3;
-        audio.play().catch(() => {}); // Ignore autoplay errors
-        
-        toast({
-          title: 'Target Eliminated',
-          description: message,
-          variant: 'success',
-        });
+        audio.play().catch(() => {});
       }
       
       setEnemies(remainingEnemies);
@@ -135,7 +98,7 @@ export const useGameLogic = (game: Game, characterName: string) => {
       if (remainingEnemies.length === 0) {
         toast({
           title: 'Wave Cleared',
-          description: `All enemies eliminated! Next wave incoming...`,
+          description: 'All enemies eliminated! Next wave incoming...',
           variant: 'success',
         });
         
@@ -172,25 +135,21 @@ export const useGameLogic = (game: Game, characterName: string) => {
       });
       
       if (enemyDamage) {
-        setHealth(prevHealth => {
-          const newHealth = prevHealth - 5;
-          if (newHealth <= 0) {
-            setGameOver(true);
-            clearInterval(enemyMovement);
-            toast({
-              title: 'Game Over',
-              description: `${characterName} was defeated! Final score: ${score}`,
-              variant: 'destructive',
-            });
-            return 0;
-          }
-          return newHealth;
-        });
+        const isDead = handleDamage(5);
+        if (isDead) {
+          setGameOver(true);
+          clearInterval(enemyMovement);
+          toast({
+            title: 'Game Over',
+            description: `${characterName} was defeated! Final score: ${score}`,
+            variant: 'destructive',
+          });
+        }
       }
     }, 500);
     
     return () => clearInterval(enemyMovement);
-  }, [gameStarted, enemies, playerPosition, gameOver, characterName, score, toast]);
+  }, [gameStarted, enemies, playerPosition, gameOver, characterName, score]);
 
   return {
     score,
@@ -202,6 +161,6 @@ export const useGameLogic = (game: Game, characterName: string) => {
     startGame,
     handleAction,
     setPlayerPosition,
-    shootAtClosestEnemy  // Export the new shooting function
+    shootAtClosestEnemy
   };
 };
