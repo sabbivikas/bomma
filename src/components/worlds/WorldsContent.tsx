@@ -12,6 +12,7 @@ import NoCharacters from './NoCharacters';
 import { Loader2 } from 'lucide-react';
 import { Character } from '@/services/characterService';
 import { useToast } from '@/hooks/use-toast';
+import { initializeSessionId } from '@/utils/sessionService';
 
 const WorldsContent = () => {
   const [mode, setMode] = useState<'select' | 'create' | 'games' | 'playing'>('select');
@@ -20,7 +21,13 @@ const WorldsContent = () => {
   const { toast } = useToast();
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   
-  // Additional refresh on component mount and visibility change
+  // Initialize session on component mount
+  useEffect(() => {
+    // Ensure session ID is initialized before loading characters
+    initializeSessionId();
+  }, []);
+  
+  // Load characters on mount and visibility change
   useEffect(() => {
     const loadCharacters = async () => {
       try {

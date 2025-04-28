@@ -44,7 +44,8 @@ export async function fetchCharacters(): Promise<Character[]> {
     const { data, error } = await supabase
       .from('characters')
       .select('*')
-      .eq('session_id', sessionId); // Explicitly filter by session_id
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false }); // Order by creation date, newest first
 
     if (error) {
       console.error('Error fetching characters:', error);

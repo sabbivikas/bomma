@@ -1,11 +1,17 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CharacterProvider } from '@/contexts/CharacterContext';
 import ThemedBackground from '@/components/ThemedBackground';
 import Navbar from '@/components/Navbar';
 import WorldsContent from '@/components/worlds/WorldsContent';
+import { initializeSessionId } from '@/utils/sessionService';
 
 const Worlds = () => {
+  // Initialize session ID when the worlds page loads
+  useEffect(() => {
+    initializeSessionId();
+  }, []);
+  
   return (
     <CharacterProvider>
       <ThemedBackground>
