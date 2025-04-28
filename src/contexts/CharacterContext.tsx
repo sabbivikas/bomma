@@ -2,13 +2,17 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Character, fetchCharacters, createCharacter as createCharacterService, deleteCharacter as deleteCharacterService } from '@/services/characterService';
 import { useToast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
+import { getSessionId } from '@/utils/sessionService';
 
 type CharacterContextType = {
   character: Character | null;
   setCharacter: (character: Character | null) => void;
   savedCharacters: Character[];
-  addCharacter: (character: Character) => void;
+  addCharacter: (character: Character) => Promise<Character | null>;
   removeCharacter: (id: string) => void;
+  isLoading: boolean;
+  refetchCharacters: () => Promise<void>;
 };
 
 const CharacterContext = createContext<CharacterContextType | undefined>(undefined);
@@ -30,30 +34,48 @@ type CharacterProviderProps = {
 export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }) => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [savedCharacters, setSavedCharacters] = useState<Character[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const loadCharacters = async () => {
-      try {
-        const characters = await fetchCharacters();
-        setSavedCharacters(characters);
-      } catch (error) {
-        console.error('Failed to load characters:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load characters. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    loadCharacters();
-  }, [toast]);
-
-  const addCharacter = async (newCharacter: Character) => {
+  const refetchCharacters = async () => {
+    setIsLoading(true);
     try {
+      console.log("Fetching characters...");
+      const characters = await fetchCharacters();
+      console.log("Characters fetched:", characters);
+      setSavedCharacters(characters);
+    } catch (error) {
+      console.error('Failed to load characters:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load characters. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refetchCharacters();
+  }, []);
+
+  const addCharacter = async (newCharacter: Character): Promise<Character | null> => {
+    try {
+      console.log("Adding character:", newCharacter);
       const character = await createCharacterService(newCharacter.name, newCharacter.imageUrl);
+      console.log("Character added:", character);
+      
+      // Add to local state
       setSavedCharacters(prev => [...prev, character]);
+      
+      toast({
+        title: "Character created",
+        description: `${character.name} is ready for adventure!`,
+        variant: "success",
+      });
+      
+      return character;
     } catch (error) {
       console.error('Failed to save character:', error);
       toast({
@@ -61,6 +83,7 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
         description: "Failed to save character. Please try again.",
         variant: "destructive",
       });
+      return null;
     }
   };
 
@@ -71,6 +94,11 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
       if (character?.id === id) {
         setCharacter(null);
       }
+      toast({
+        title: "Character deleted",
+        description: "Your character has been removed.",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Failed to delete character:', error);
       toast({
@@ -87,7 +115,9 @@ export const CharacterProvider: React.FC<CharacterProviderProps> = ({ children }
       setCharacter, 
       savedCharacters, 
       addCharacter,
-      removeCharacter
+      removeCharacter,
+      isLoading,
+      refetchCharacters
     }}>
       {children}
     </CharacterContext.Provider>

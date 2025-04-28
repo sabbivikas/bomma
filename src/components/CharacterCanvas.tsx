@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
-import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 
 type CharacterCanvasProps = {
@@ -20,9 +19,8 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const [characterName, setCharacterName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
-  const { addCharacter, setCharacter, savedCharacters } = useCharacter();
+  const { addCharacter, setCharacter, refetchCharacters } = useCharacter();
 
-  // Track when the DrawingCanvas saves to our ref
   useEffect(() => {
     console.log("Canvas ready state:", isCanvasReady);
     console.log("Canvas ref exists:", canvasRef.current !== null);
@@ -30,9 +28,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
   const handleSaveCharacter = async () => {
     console.log("Save character clicked");
-    console.log("Canvas ready:", isCanvasReady);
-    console.log("Canvas ref:", canvasRef.current);
-
+    
     if (!canvasRef.current || !isCanvasReady) {
       toast({
         title: "Error",
@@ -57,42 +53,33 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       const imageUrl = canvasRef.current.toDataURL('image/png');
       console.log("Image URL generated successfully");
 
-      // Create new character
+      // Create character object
       const newCharacter = {
-        id: uuidv4(),
+        id: 'temp-id', // This will be replaced by the database
         name: characterName,
         imageUrl,
         createdAt: new Date(),
       };
 
-      console.log("Created new character:", newCharacter);
-
-      // Add to saved characters and persist immediately
-      addCharacter(newCharacter);
+      // Save character using the service
+      const savedCharacter = await addCharacter(newCharacter);
       
-      // Force update the localStorage
-      const updatedCharacters = [...savedCharacters, newCharacter];
-      localStorage.setItem('savedCharacters', JSON.stringify(updatedCharacters));
+      if (!savedCharacter) {
+        throw new Error("Failed to save character");
+      }
       
-      // Set as current character and persist immediately
-      setCharacter(newCharacter);
-      localStorage.setItem('currentCharacterId', newCharacter.id);
+      // Set as current character
+      setCharacter(savedCharacter);
       
-      console.log("Set current character:", newCharacter);
-      console.log("Updated localStorage with new character");
-
-      toast({
-        title: "Character created!",
-        description: `${characterName} is ready for adventure!`,
-        variant: "success",
-      });
+      // Refresh characters list to ensure we have the latest data
+      await refetchCharacters();
 
       // Call callback if provided
       if (onCharacterCreated) {
-        onCharacterCreated(newCharacter.id);
+        onCharacterCreated(savedCharacter.id);
       }
       
-      // Redirect to worlds page immediately
+      // Navigate to worlds page
       navigate('/worlds');
       
     } catch (error) {
