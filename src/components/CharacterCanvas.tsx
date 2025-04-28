@@ -79,7 +79,8 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         onCharacterCreated(newCharacter.id);
       }
       
-      // Always navigate to worlds page
+      // Make sure we navigate to games page regardless of callback
+      console.log("Navigating to /worlds page");
       navigate('/worlds');
       
     } catch (error) {
