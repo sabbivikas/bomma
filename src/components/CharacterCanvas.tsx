@@ -20,7 +20,7 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const [characterName, setCharacterName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
-  const { addCharacter, setCharacter } = useCharacter();
+  const { addCharacter, setCharacter, savedCharacters } = useCharacter();
 
   // Track when the DrawingCanvas saves to our ref
   useEffect(() => {
@@ -67,12 +67,19 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
       console.log("Created new character:", newCharacter);
 
-      // Add to saved characters
+      // Add to saved characters and persist immediately
       addCharacter(newCharacter);
       
-      // Set as current character
+      // Force update the localStorage
+      const updatedCharacters = [...savedCharacters, newCharacter];
+      localStorage.setItem('savedCharacters', JSON.stringify(updatedCharacters));
+      
+      // Set as current character and persist immediately
       setCharacter(newCharacter);
+      localStorage.setItem('currentCharacterId', newCharacter.id);
+      
       console.log("Set current character:", newCharacter);
+      console.log("Updated localStorage with new character");
 
       toast({
         title: "Character created!",
@@ -85,12 +92,8 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         onCharacterCreated(newCharacter.id);
       }
       
-      // Wait for a second to ensure all state updates are processed
-      console.log("Waiting before navigating to /worlds page");
-      setTimeout(() => {
-        console.log("Now navigating to /worlds page");
-        navigate('/worlds');
-      }, 1000);
+      // Redirect to worlds page immediately
+      navigate('/worlds');
       
     } catch (error) {
       console.error('Error saving character:', error);
@@ -137,7 +140,6 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       </div>
 
       <div className="mb-6 border-2 border-purple-200 rounded-lg overflow-hidden">
-        {/* Force a key to ensure proper re-rendering */}
         <DrawingCanvas 
           key="character-drawing-canvas"
           onSave={handleCanvasSave}

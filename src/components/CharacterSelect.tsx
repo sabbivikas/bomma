@@ -2,8 +2,7 @@
 import React from 'react';
 import { useCharacter, Character } from '@/contexts/CharacterContext';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Trash2, Plus, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -60,41 +59,39 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ onCreateNew, onSelect
         </Button>
       </div>
       
-      <ScrollArea className="h-[220px] rounded-md border p-4">
-        <div className="flex gap-4 pb-4">
-          {savedCharacters.map((character) => (
-            <Card 
-              key={character.id}
-              className="min-w-[160px] cursor-pointer hover:border-purple-400 transition-all relative"
-              onClick={() => onSelectCharacter(character)}
-            >
-              <CardContent className="p-3">
-                <div className="w-full h-[120px] mb-3 rounded overflow-hidden">
-                  <img 
-                    src={character.imageUrl} 
-                    alt={character.name}
-                    className="w-full h-full object-contain bg-gray-100" 
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium truncate">{character.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(character.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-100 hover:bg-red-200"
-                  onClick={(e) => handleDeleteCharacter(e, character.id)}
-                >
-                  <Trash2 className="h-3 w-3 text-red-500" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {savedCharacters.map((character) => (
+          <Card 
+            key={character.id}
+            className="cursor-pointer hover:border-purple-400 transition-all relative bg-white/80"
+            onClick={() => onSelectCharacter(character)}
+          >
+            <div className="p-3">
+              <div className="w-full h-[120px] mb-3 rounded overflow-hidden bg-gray-100">
+                <img 
+                  src={character.imageUrl} 
+                  alt={character.name}
+                  className="w-full h-full object-contain" 
+                />
+              </div>
+              <div className="text-center">
+                <p className="font-medium truncate">{character.name}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(character.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-100 hover:bg-red-200"
+                onClick={(e) => handleDeleteCharacter(e, character.id)}
+              >
+                <Trash2 className="h-3 w-3 text-red-500" />
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

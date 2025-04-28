@@ -6,7 +6,8 @@ import CharacterCanvas from '@/components/CharacterCanvas';
 import CharacterSelect from '@/components/CharacterSelect';
 import GameCard from '@/components/GameCard';
 import GameInterface from '@/components/GameInterface';
-import { Globe, Gamepad2 } from 'lucide-react';
+import { Plus, Globe, Gamepad2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { games } from '@/data/games';
 import ThemedBackground from '@/components/ThemedBackground';
 import { Game } from '@/components/GameCard';
@@ -20,16 +21,14 @@ const WorldsContent = () => {
   
   // When component loads, check if we have a character
   useEffect(() => {
+    console.log("WorldsContent rendering, character:", character);
+    console.log("Saved characters count:", savedCharacters.length);
+    
     if (character) {
       console.log("Character found, switching to games mode:", character);
       setMode('games');
     } else {
       console.log("No character found, staying in select mode");
-      if (savedCharacters.length > 0) {
-        console.log("But we have saved characters, so showing select screen");
-      } else {
-        console.log("No saved characters either");
-      }
       setMode('select');
     }
   }, [character, savedCharacters]);
@@ -39,6 +38,7 @@ const WorldsContent = () => {
   };
   
   const handleCharacterCreated = (characterId: string) => {
+    console.log("Character created callback with id:", characterId);
     const newCharacter = savedCharacters.find(c => c.id === characterId);
     if (newCharacter) {
       console.log("Character created, setting current character:", newCharacter);
@@ -73,10 +73,6 @@ const WorldsContent = () => {
     setMode('games');
   };
 
-  console.log("Current mode:", mode);
-  console.log("Current character:", character);
-  console.log("Saved characters count:", savedCharacters.length);
-  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 text-center">
@@ -90,10 +86,53 @@ const WorldsContent = () => {
       </div>
       
       {mode === 'select' && (
-        <CharacterSelect 
-          onCreateNew={handleCreateNew} 
-          onSelectCharacter={handleSelectCharacter}
-        />
+        <>
+          {savedCharacters.length > 0 && (
+            <div className="w-full max-w-4xl mx-auto mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Your Characters</h2>
+                <Button
+                  onClick={handleCreateNew} 
+                  className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Create New
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {savedCharacters.map((character) => (
+                  <div 
+                    key={character.id}
+                    className="cursor-pointer hover:scale-105 transition-all relative bg-white/80 border rounded-md overflow-hidden"
+                    onClick={() => handleSelectCharacter(character)}
+                  >
+                    <div className="p-3">
+                      <div className="w-full h-[120px] mb-3 rounded overflow-hidden bg-gray-100">
+                        <img 
+                          src={character.imageUrl} 
+                          alt={character.name}
+                          className="w-full h-full object-contain" 
+                        />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium truncate">{character.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(character.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <CharacterSelect 
+            onCreateNew={handleCreateNew} 
+            onSelectCharacter={handleSelectCharacter}
+          />
+        </>
       )}
       
       {mode === 'create' && (
