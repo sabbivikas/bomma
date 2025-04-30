@@ -15,21 +15,50 @@ const Worlds = () => {
         const sessionId = getSessionId();
         console.log("Initializing session ID on Worlds page:", sessionId);
         
-        const { error } = await supabase.rpc('set_session_id', { 
-          session_id: sessionId 
-        });
+        // Make multiple attempts if needed
+        let retries = 0;
+        let success = false;
         
-        if (error) {
-          console.error('Failed to initialize session ID:', error);
-        } else {
-          console.log("Session ID initialized successfully");
+        while (retries < 3 && !success) {
+          const { error } = await supabase.rpc('set_session_id', { 
+            session_id: sessionId 
+          });
+          
+          if (error) {
+            console.error(`Failed to initialize session ID (attempt ${retries + 1}):`, error);
+            retries++;
+            // Small delay before retry
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } else {
+            console.log("Session ID initialized successfully on Worlds page");
+            success = true;
+          }
+        }
+        
+        if (!success) {
+          console.error('All attempts to initialize session ID failed');
         }
       } catch (err) {
-        console.error('Error initializing session:', err);
+        console.error('Error initializing session on Worlds page:', err);
       }
     };
     
+    // Initialize immediately
     initSession();
+    
+    // Also initialize on visibility change (when tab becomes active again)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Page became visible, refreshing session ID");
+        initSession();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (

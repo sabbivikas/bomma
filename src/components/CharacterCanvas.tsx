@@ -36,6 +36,8 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
         
         if (error) {
           console.error('Failed to initialize session ID in CharacterCanvas:', error);
+        } else {
+          console.log("Session ID initialized successfully in CharacterCanvas");
         }
       } catch (err) {
         console.error('Error initializing session in CharacterCanvas:', err);
@@ -72,7 +74,12 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
     try {
       // Initialize session ID right before saving
       const sessionId = getSessionId();
-      await supabase.rpc('set_session_id', { session_id: sessionId });
+      const { error: sessionError } = await supabase.rpc('set_session_id', { session_id: sessionId });
+      
+      if (sessionError) {
+        console.error('Error setting session ID before character save:', sessionError);
+        throw new Error(`Session initialization failed: ${sessionError.message}`);
+      }
       
       // Get image data from canvas
       const imageUrl = canvasRef.current.toDataURL('image/png');
