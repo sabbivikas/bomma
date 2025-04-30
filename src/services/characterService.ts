@@ -9,49 +9,31 @@ export interface Character {
   createdAt: Date;
 }
 
-/**
- * Sets the session ID in the database connection for Row Level Security
- */
-async function setSessionIdForRLS(): Promise<void> {
-  try {
-    const sessionId = getSessionId();
-    console.log("Setting session ID for RLS:", sessionId);
-    
-    const { error } = await supabase.rpc('set_session_id', { 
-      session_id: sessionId 
-    });
-    
-    if (error) {
-      console.error('Error setting session ID:', error);
-      throw error;
-    }
-    
-    console.log("Session ID set successfully");
-  } catch (error) {
-    console.error('Failed to set session ID for RLS:', error);
-    throw error;
-  }
-}
-
 export async function fetchCharacters(): Promise<Character[]> {
   try {
-    // Set the session ID for RLS before fetching
-    await setSessionIdForRLS();
-    
     const sessionId = getSessionId();
     console.log("Fetching characters for session:", sessionId);
 
+    // First, set the session ID for RLS
+    const { error: rpcError } = await supabase.rpc('set_session_id', { 
+      session_id: sessionId 
+    });
+    
+    if (rpcError) {
+      console.error('Error setting session ID:', rpcError);
+    }
+
+    // Then fetch characters
     const { data, error } = await supabase
       .from('characters')
       .select('*')
-      .eq('session_id', sessionId); // Explicitly filter by session_id
+      .eq('session_id', sessionId);
 
     if (error) {
       console.error('Error fetching characters:', error);
       throw error;
     }
 
-    console.log("Characters fetched:", data);
     return data.map(char => ({
       id: char.id,
       name: char.name,
@@ -66,19 +48,31 @@ export async function fetchCharacters(): Promise<Character[]> {
 
 export async function createCharacter(name: string, imageUrl: string): Promise<Character> {
   try {
-    // Set the session ID for RLS before creating
-    await setSessionIdForRLS();
-    
     const sessionId = getSessionId();
     console.log("Creating character with session ID:", sessionId);
     
-    // Insert the character with explicit session_id
+    // Validate inputs
+    if (!name || !imageUrl) {
+      throw new Error("Name and image URL are required");
+    }
+    
+    // Set session ID for RLS first
+    const { error: rpcError } = await supabase.rpc('set_session_id', { 
+      session_id: sessionId 
+    });
+    
+    if (rpcError) {
+      console.error('Error setting session ID:', rpcError);
+      throw rpcError;
+    }
+    
+    // Create the character with explicit session_id
     const { data, error } = await supabase
       .from('characters')
       .insert([{
         name,
         image_url: imageUrl,
-        session_id: sessionId // Explicitly set the session_id
+        session_id: sessionId
       }])
       .select()
       .single();
@@ -103,17 +97,24 @@ export async function createCharacter(name: string, imageUrl: string): Promise<C
 
 export async function deleteCharacter(id: string): Promise<void> {
   try {
-    // Set the session ID for RLS before deleting
-    await setSessionIdForRLS();
-    
     const sessionId = getSessionId();
     console.log("Deleting character with ID:", id, "for session:", sessionId);
+    
+    // Set session ID for RLS first
+    const { error: rpcError } = await supabase.rpc('set_session_id', { 
+      session_id: sessionId 
+    });
+    
+    if (rpcError) {
+      console.error('Error setting session ID:', rpcError);
+      throw rpcError;
+    }
     
     const { error } = await supabase
       .from('characters')
       .delete()
       .eq('id', id)
-      .eq('session_id', sessionId); // Explicitly filter by session_id
+      .eq('session_id', sessionId);
 
     if (error) {
       console.error('Error deleting character:', error);

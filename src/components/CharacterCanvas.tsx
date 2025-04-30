@@ -7,6 +7,8 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useNavigate } from 'react-router-dom';
+import { getSessionId } from '@/utils/sessionService';
+import { supabase } from '@/integrations/supabase/client';
 
 type CharacterCanvasProps = {
   onCharacterCreated?: (characterId: string) => void;
@@ -21,7 +23,26 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const { addCharacter, setCharacter, refetchCharacters } = useCharacter();
 
+  // Initialize session ID when component mounts
   useEffect(() => {
+    const initSession = async () => {
+      try {
+        const sessionId = getSessionId();
+        console.log("Initializing session ID in CharacterCanvas:", sessionId);
+        
+        const { error } = await supabase.rpc('set_session_id', { 
+          session_id: sessionId 
+        });
+        
+        if (error) {
+          console.error('Failed to initialize session ID in CharacterCanvas:', error);
+        }
+      } catch (err) {
+        console.error('Error initializing session in CharacterCanvas:', err);
+      }
+    };
+    
+    initSession();
     console.log("Canvas ready state:", isCanvasReady);
     console.log("Canvas ref exists:", canvasRef.current !== null);
   }, [isCanvasReady]);
@@ -49,9 +70,13 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
 
     setIsCreating(true);
     try {
+      // Initialize session ID right before saving
+      const sessionId = getSessionId();
+      await supabase.rpc('set_session_id', { session_id: sessionId });
+      
       // Get image data from canvas
       const imageUrl = canvasRef.current.toDataURL('image/png');
-      console.log("Image URL generated successfully");
+      console.log("Image URL generated, length:", imageUrl.length);
 
       // Create character object
       const newCharacter = {
@@ -78,6 +103,12 @@ const CharacterCanvas: React.FC<CharacterCanvasProps> = ({ onCharacterCreated })
       if (onCharacterCreated) {
         onCharacterCreated(savedCharacter.id);
       }
+      
+      toast({
+        title: "Success!",
+        description: "Your character has been saved.",
+        variant: "success",
+      });
       
       // Navigate to worlds page
       navigate('/worlds');
