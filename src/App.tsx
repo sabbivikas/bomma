@@ -14,7 +14,6 @@ import CreateAnimation from "./pages/CreateAnimation";
 import ViewStory from "./pages/ViewStory";
 import AdminModeration from "./pages/AdminModeration";
 import AdminRoute from "./components/AdminRoute";
-import Worlds from "./pages/Worlds"; // Add import for the new Worlds page
 
 const queryClient = new QueryClient();
 
@@ -32,7 +31,6 @@ const App = () => (
             <Route path="/create-story" element={<CreateStory />} />
             <Route path="/create-animation" element={<CreateAnimation />} />
             <Route path="/stories/:id" element={<ViewStory />} />
-            <Route path="/worlds" element={<Worlds />} /> {/* Add route for Worlds page */}
             {/* Protected admin route */}
             <Route path="/admin/moderation" element={
               <AdminRoute>

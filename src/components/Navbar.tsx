@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import FunkyText from './FunkyText';
-import { GalleryHorizontalEnd, Palette, BookOpenCheck, ShieldAlert, Globe } from 'lucide-react';
+import { GalleryHorizontalEnd, Palette, BookOpenCheck, ShieldAlert } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 
@@ -45,15 +45,6 @@ const Navbar = () => {
             }`}
           >
             {isMobile ? <Palette className="h-5 w-5" /> : 'Create'}
-          </Link>
-
-          <Link
-            to="/worlds"
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              pathname === '/worlds' ? 'bg-purple-100 text-purple-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            {isMobile ? <Globe className="h-5 w-5" /> : 'Worlds'}
           </Link>
 
           {/* Only show Moderation Link to admins */}
