@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { CheckCircle, Lightbulb } from 'lucide-react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import FrameCounter from '@/components/story/FrameCounter';
@@ -69,23 +69,23 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         throw error;
       }
       
-      if (data && data.enhancedImage) {
-        // Handle the enhanced image data
-        // For now, we'll just show a success message
+      // Process Gemini API response
+      if (data && data.result && data.result.candidates && data.result.candidates.length > 0) {
+        const responseText = data.result.candidates[0].content.parts[0].text;
+        
         toast({
-          title: "Drawing enhanced",
-          description: "AI has enhanced your drawing based on your prompt",
-          variant: "success",
+          title: "AI Enhancement Suggestion",
+          description: responseText.substring(0, 200) + (responseText.length > 200 ? '...' : ''),
+          variant: "default",
         });
         
-        // In a real implementation, you might update the canvas with the enhanced image
-        // const img = new Image();
-        // img.onload = () => {
-        //   const ctx = canvasRef.getContext('2d');
-        //   ctx?.clearRect(0, 0, canvasRef.width, canvasRef.height);
-        //   ctx?.drawImage(img, 0, 0);
-        // };
-        // img.src = data.enhancedImage;
+        console.log("Full AI response:", responseText);
+      } else {
+        toast({
+          title: "AI Enhancement",
+          description: "Received response from AI",
+          variant: "default",
+        });
       }
     } catch (error) {
       console.error('Error enhancing drawing:', error);
@@ -131,7 +131,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         <DrawingCanvas onSave={handleSaveFrame} prompt={prompt} />
       </div>
       
-      {/* Add the new PromptInput component here */}
+      {/* Add the PromptInput component here */}
       <PromptInput 
         onSendPrompt={handleSendPrompt}
         isLoading={isEnhancing}

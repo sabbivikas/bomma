@@ -36,13 +36,11 @@ serve(async (req) => {
 
     console.log("Calling Gemini API to enhance drawing with prompt:", prompt);
 
-    // Make request to Gemini API
-    // This is a placeholder - you'll need to implement the actual Gemini API call
-    // based on their documentation for image enhancement
-    const geminiUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent";
-    
     // Extract base64 image data from data URL
     const base64Image = image.split(',')[1];
+    
+    // Make request to Gemini API
+    const geminiUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent";
     
     const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
@@ -53,7 +51,10 @@ serve(async (req) => {
         contents: [
           {
             parts: [
-              { text: prompt },
+              { text: `The user has drawn an image and wants your help enhancing it with the following prompt: "${prompt}". 
+                Analyze the image and provide detailed suggestions on how to improve or add to the drawing.
+                Focus on specific details, colors, composition, and elements that could be added.
+                Be specific, clear, and helpful. Do not be too general.` },
               {
                 inline_data: {
                   mime_type: "image/png",
@@ -71,21 +72,13 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log("Received response from Gemini API:", JSON.stringify(data).substring(0, 200) + "...");
+    console.log("Received response from Gemini API");
 
-    // Process the response from Gemini
-    // This is a placeholder - you'll need to extract the actual enhanced image
-    // or generated content based on how Gemini responds
-    
-    // For now, we'll just return the text response from Gemini
-    // In a complete implementation, this might return a new image or instructions
-    // for modifying the canvas
     return new Response(
       JSON.stringify({ 
         success: true,
         message: "Drawing enhancement processed",
-        result: data,
-        // enhancedImage: data.candidates[0].content.parts[0].text // This would depend on Gemini's response format
+        result: data
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

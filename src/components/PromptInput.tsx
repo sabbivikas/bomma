@@ -16,6 +16,7 @@ const PromptInput: React.FC<PromptInputProps> = ({ onSendPrompt, isLoading = fal
     e.preventDefault();
     if (prompt.trim()) {
       onSendPrompt(prompt.trim());
+      setPrompt(''); // Clear input after sending
     }
   };
   
@@ -40,7 +41,7 @@ const PromptInput: React.FC<PromptInputProps> = ({ onSendPrompt, isLoading = fal
           className="flex gap-2 items-center"
         >
           <Send className="h-4 w-4" />
-          <span>{isLoading ? 'Sending...' : 'Send'}</span>
+          <span>{isLoading ? 'Enhancing...' : 'Send'}</span>
         </Button>
       </form>
       <p className="text-xs text-gray-500 mt-1">
