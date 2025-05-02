@@ -69,8 +69,36 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         throw error;
       }
       
-      // Process Gemini API response
-      if (data && data.result && data.result.candidates && data.result.candidates.length > 0) {
+      // Check if the response contains an image
+      if (data && data.imageData) {
+        // Apply the generated image to the canvas
+        const context = canvasRef.current.getContext('2d');
+        if (context) {
+          // Create a new image element with the received data
+          const img = new Image();
+          img.onload = () => {
+            // Draw the image onto the canvas
+            context.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
+            
+            toast({
+              title: "AI Enhancement Applied",
+              description: "Your drawing has been enhanced with AI-generated content",
+              variant: "default",
+            });
+          };
+          img.onerror = () => {
+            toast({
+              title: "Error applying enhancement",
+              description: "Could not apply the AI-generated image",
+              variant: "destructive",
+            });
+          };
+          // Set the source to the base64 image data
+          img.src = data.imageData;
+        }
+      } 
+      // Process Gemini API text response if there's no image
+      else if (data && data.result && data.result.candidates && data.result.candidates.length > 0) {
         const responseText = data.result.candidates[0].content.parts[0].text;
         
         toast({

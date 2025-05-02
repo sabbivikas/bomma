@@ -52,9 +52,8 @@ serve(async (req) => {
           {
             parts: [
               { text: `The user has drawn an image and wants your help enhancing it with the following prompt: "${prompt}". 
-                Analyze the image and provide detailed suggestions on how to improve or add to the drawing.
-                Focus on specific details, colors, composition, and elements that could be added.
-                Be specific, clear, and helpful. Do not be too general.` },
+                Generate an improved version of this image based on the prompt.
+                If you can generate an image response, please do so. Otherwise, provide detailed suggestions on how to improve the drawing.` },
               {
                 inline_data: {
                   mime_type: "image/png",
@@ -74,11 +73,28 @@ serve(async (req) => {
     const data = await response.json();
     console.log("Received response from Gemini API");
 
+    // Check if the response contains an image part
+    let imageData = null;
+    if (data.candidates && 
+        data.candidates[0] && 
+        data.candidates[0].content && 
+        data.candidates[0].content.parts) {
+      
+      const parts = data.candidates[0].content.parts;
+      for (const part of parts) {
+        if (part.inline_data && part.inline_data.mime_type.startsWith('image/')) {
+          imageData = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+          break;
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
         message: "Drawing enhancement processed",
-        result: data
+        result: data,
+        imageData: imageData
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
