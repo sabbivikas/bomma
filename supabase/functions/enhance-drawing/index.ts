@@ -13,6 +13,8 @@ serve(async (req) => {
 
   try {
     const { image, prompt } = await req.json();
+    console.log("⚠️ DEBUG: Raw Gemini response:");
+console.log(JSON.stringify(data, null, 2));
 
     if (!image || !prompt) {
       return new Response(
