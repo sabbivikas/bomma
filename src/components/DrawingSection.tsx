@@ -96,22 +96,18 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           // Set the source to the base64 image data
           img.src = data.imageData;
         }
-      } 
-      // Process Gemini API text response if there's no image
-      else if (data && data.result && data.result.candidates && data.result.candidates.length > 0) {
-        const responseText = data.result.candidates[0].content.parts[0].text;
+      } else {
+        // Handle text response
+        let responseMessage = "AI considered your prompt but couldn't generate an image";
+        
+        // Check if there's a text response in the debug data
+        if (data?.debug?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          responseMessage = data.debug.candidates[0].content.parts[0].text;
+        }
         
         toast({
           title: "AI Enhancement Suggestion",
-          description: responseText.substring(0, 200) + (responseText.length > 200 ? '...' : ''),
-          variant: "default",
-        });
-        
-        console.log("Full AI response:", responseText);
-      } else {
-        toast({
-          title: "AI Enhancement",
-          description: "Received response from AI",
+          description: responseMessage.substring(0, 200) + (responseMessage.length > 200 ? '...' : ''),
           variant: "default",
         });
       }

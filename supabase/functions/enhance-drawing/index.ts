@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -29,7 +30,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Enhancing image with prompt:", prompt);
+    console.log("Calling Gemini API to enhance drawing with prompt:", prompt);
 
     const base64Image = image.split(',')[1];
 
@@ -60,7 +61,7 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log("Full Gemini API response:", JSON.stringify(data, null, 2));
+    console.log("Received response from Gemini API");
 
     // Try to extract the enhanced image
     let imageData = null;
@@ -68,7 +69,7 @@ serve(async (req) => {
 
     for (const part of parts) {
       if (part.inlineData && part.inlineData.mimeType?.startsWith("image/")) {
-        imageData = `data:${part.inlineData.mimeType};base64,${http://part.inlineData.data}`;
+        imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
         break;
       }
     }
