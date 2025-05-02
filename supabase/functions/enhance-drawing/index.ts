@@ -12,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    const data = await response.json();
     const { image, prompt } = await req.json();
     console.log("⚠️ DEBUG: Raw Gemini response:");
 console.log(JSON.stringify(data, null, 2));
