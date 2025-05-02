@@ -128,7 +128,11 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           </div>
         )}
         
-        <DrawingCanvas onSave={handleSaveFrame} prompt={prompt} />
+        <DrawingCanvas 
+          onSave={handleSaveFrame} 
+          prompt={prompt} 
+          canvasRef={canvasRef}
+        />
       </div>
       
       {/* Add the PromptInput component here */}

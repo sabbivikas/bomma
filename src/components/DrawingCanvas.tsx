@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 interface DrawingCanvasProps {
   onSave: (canvas: HTMLCanvasElement) => void;
   prompt?: string | null;
+  canvasRef?: React.RefObject<HTMLCanvasElement>;
 }
 
 interface TextElement {
@@ -52,8 +53,8 @@ interface Frame {
   timestamp: number;
 }
 
-const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt, canvasRef: externalCanvasRef }) => {
+  const internalCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<'pen' | 'eraser' | 'text' | 'rectangle' | 'circle'>('pen');
   const [color, setColor] = useState('#000000');
@@ -112,11 +113,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     currentStrokeStyleRef.current = color;
   }, [color]);
 
-  
+  // Use the canvas ref that's actually being rendered
+  const activeCanvasRef = externalCanvasRef || internalCanvasRef;
   
   // Initialize canvas
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = activeCanvasRef.current;
     if (!canvas) return;
     
     // Set canvas size
@@ -141,10 +143,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
 
   // Apply theme to canvas when theme changes
   useEffect(() => {
-    if (!canvasRef.current || !contextRef.current) return;
+    if (!activeCanvasRef.current || !contextRef.current) return;
     
     // Need to preserve the current drawing when changing theme
-    const canvas = canvasRef.current;
+    const canvas = activeCanvasRef.current;
     const context = contextRef.current;
     
     // Create a temporary canvas to store the current drawing
@@ -476,7 +478,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   // Start drawing, text placement, or shape creation
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     setIsTouching(true);
-    const canvas = canvasRef.current;
+    const canvas = activeCanvasRef.current;
     if (!canvas || !contextRef.current) return;
     
     // Prevent scrolling on touch devices
@@ -588,7 +590,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       event.preventDefault();
     }
     
-    const canvas = canvasRef.current;
+    const canvas = activeCanvasRef.current;
     if (!canvas) return;
     
     const coords = getCoordinates(event, canvas);
@@ -709,10 +711,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   
   // Clear canvas
   const clearCanvas = () => {
-    if (!canvasRef.current || !contextRef.current) return;
+    if (!activeCanvasRef.current || !contextRef.current) return;
     
     contextRef.current.fillStyle = 'white';
-    contextRef.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    contextRef.current.fillRect(0, 0, activeCanvasRef.current.width, activeCanvasRef.current.height);
     
     // Clear text and shape elements
     setTextElements([]);
@@ -721,12 +723,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
     isDraggingTextRef.current = false;
     
     // Reapply theme background
-    applyThemeBackground(contextRef.current, canvasRef.current.width, canvasRef.current.height);
+    applyThemeBackground(contextRef.current, activeCanvasRef.current.width, activeCanvasRef.current.height);
   };
   
   // Handle publish
   const handlePublish = () => {
-    if (!canvasRef.current || !contextRef.current) return;
+    if (!activeCanvasRef.current || !contextRef.current) return;
     setIsPublishing(true);
     
     try {
@@ -770,7 +772,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
         }
       });
       
-      onSave(canvasRef.current);
+      onSave(activeCanvasRef.current);
     } catch (error) {
       console.error("Error publishing doodle:", error);
     } finally {
@@ -813,7 +815,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
   // Update canvas sizing
   useEffect(() => {
     const handleResize = () => {
-      const canvas = canvasRef.current;
+      const canvas = activeCanvasRef.current;
       if (!canvas || !contextRef.current) return;
       
       // Get the container width (parent element)
@@ -824,400 +826,3 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onSave, prompt }) => {
       const containerHeight = Math.min(window.innerHeight * 0.6, 500); // Reduced height
       
       // Check if we're on a mobile screen
-      const isMobileScreen = window.innerWidth < 768;
-      
-      // Calculate new dimensions while maintaining aspect ratio
-      let newWidth, newHeight;
-      
-      if (isMobileScreen) {
-        // For mobile, maximize width and use a taller ratio
-        newWidth = containerWidth;
-        newHeight = containerWidth * 0.75; // 4:3 aspect ratio for mobile
-      } else {
-        // For desktop, maintain the original 16:10 aspect ratio
-        newWidth = containerWidth;
-        newHeight = containerWidth * 0.625; // 16:10 aspect ratio
-      }
-      
-      // Set the new dimensions for the container
-      canvas.style.width = `${newWidth}px`;
-      canvas.style.height = `${newHeight}px`;
-      
-      // Calculate and store the scale for coordinate mapping
-      setCanvasScale(canvas.width / newWidth);
-      setCanvasOffset({
-        x: canvas.getBoundingClientRect().left,
-        y: canvas.getBoundingClientRect().top
-      });
-    };
-    
-    // Initial sizing
-    handleResize();
-    
-    // Re-size on window resize
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [canvasSize.width, canvasSize.height]);
-  
-  // Render any active shape while drawing
-  useEffect(() => {
-    if (!currentShape || !contextRef.current || !canvasRef.current) return;
-    
-    // Create a temporary canvas to preserve the background and existing drawing
-    const canvas = canvasRef.current;
-    const context = contextRef.current;
-    
-    // Create a temporary canvas to store the current drawing
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempContext = tempCanvas.getContext('2d');
-    
-    if (!tempContext) return;
-    
-    // Copy current canvas content to temp canvas
-    tempContext.drawImage(canvas, 0, 0);
-    
-    // Clear canvas and restore background
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    applyThemeBackground(context, canvas.width, canvas.height);
-    
-    // Restore the drawing
-    context.drawImage(tempCanvas, 0, 0);
-    
-    // Draw the current shape
-    context.strokeStyle = currentShape.color;
-    context.fillStyle = currentShape.color;
-    context.lineWidth = width[0];
-    
-    if (currentShape.type === 'rectangle') {
-      context.beginPath();
-      context.rect(
-        currentShape.x, 
-        currentShape.y, 
-        currentShape.width, 
-        currentShape.height
-      );
-      if (fill) {
-        context.fill();
-      } else {
-        context.stroke();
-      }
-    } else if (currentShape.type === 'circle') {
-      const radius = Math.min(
-        Math.abs(currentShape.width), 
-        Math.abs(currentShape.height)
-      ) / 2;
-      
-      const centerX = currentShape.x + currentShape.width / 2;
-      const centerY = currentShape.y + currentShape.height / 2;
-      
-      context.beginPath();
-      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      if (fill) {
-        context.fill();
-      } else {
-        context.stroke();
-      }
-    }
-    
-  }, [currentShape, fill, width]);
-  
-  // Render text elements
-  useEffect(() => {
-    if (!contextRef.current || !canvasRef.current) return;
-    
-    // Create a temporary canvas to preserve the background and existing drawing
-    const canvas = canvasRef.current;
-    const context = contextRef.current;
-    
-    // Create a temporary canvas to store the current drawing
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempContext = tempCanvas.getContext('2d');
-    
-    if (!tempContext) return;
-    
-    // Copy current canvas content to temp canvas (without text)
-    tempContext.drawImage(canvas, 0, 0);
-    
-    // Clear canvas and restore background
-    context.fillStyle = 'white';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    applyThemeBackground(context, canvas.width, canvas.height);
-    
-    // Restore the drawing
-    context.drawImage(tempCanvas, 0, 0);
-    
-    // Draw existing shapes
-    shapeElements.forEach(shape => {
-      context.strokeStyle = shape.color;
-      context.fillStyle = shape.color;
-      
-      if (shape.type === 'rectangle') {
-        context.beginPath();
-        context.rect(shape.x, shape.y, shape.width, shape.height);
-        if (shape.fill) {
-          context.fill();
-        } else {
-          context.stroke();
-        }
-      } else if (shape.type === 'circle') {
-        const radius = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 2;
-        const centerX = shape.x + shape.width / 2;
-        const centerY = shape.y + shape.height / 2;
-        
-        context.beginPath();
-        context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        if (shape.fill) {
-          context.fill();
-        } else {
-          context.stroke();
-        }
-      }
-    });
-    
-    // Draw text elements
-    textElements.forEach(element => {
-      context.font = `${element.size}px ${element.fontFamily}`;
-      context.fillStyle = element.color;
-      context.fillText(element.text, element.x, element.y);
-      
-      // Highlight selected text with a subtle outline
-      if (element.isDragging && selectedTextIndex !== null) {
-        const metrics = context.measureText(element.text);
-        context.strokeStyle = 'rgba(0, 0, 255, 0.5)';
-        context.lineWidth = 1;
-        context.strokeRect(
-          element.x - 5,
-          element.y - element.size - 5,
-          metrics.width + 10,
-          element.size + 10
-        );
-      }
-    });
-    
-  }, [textElements, shapeElements, selectedTextIndex]);
-  
-  return (
-    <div className="flex flex-col w-full h-full">
-      {/* Drawing Tools */}
-      <div className="flex flex-wrap justify-between items-center gap-2 p-2 bg-white/80 backdrop-blur-sm rounded-t-lg border-b border-gray-200">
-        {/* Tool Selection */}
-        <div className="flex flex-wrap items-center gap-2">
-          <ToggleGroup type="single" value={tool} onValueChange={(value) => value && setTool(value as any)}>
-            <ToggleGroupItem value="pen" aria-label="Pen tool" className="h-8 w-8 p-0" disabled={isTouching}>
-              <Pen className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="eraser" aria-label="Eraser tool" className="h-8 w-8 p-0" disabled={isTouching}>
-              <Eraser className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="text" aria-label="Text tool" className="h-8 w-8 p-0" disabled={isTouching}>
-              <Type className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="rectangle" aria-label="Rectangle tool" className="h-8 w-8 p-0" disabled={isTouching}>
-              <Square className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="circle" aria-label="Circle tool" className="h-8 w-8 p-0" disabled={isTouching}>
-              <CircleIcon className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          
-          {/* Color Picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="h-8 w-8 p-0 border-2" 
-                style={{ backgroundColor: color }}
-              >
-                <span className="sr-only">Pick a color</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64">
-              <div className="grid gap-2">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Color</h4>
-                  <Input 
-                    type="color" 
-                    value={color} 
-                    onChange={(e) => setColor(e.target.value)} 
-                  />
-                </div>
-                <div className="grid grid-cols-6 gap-1">
-                  {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', 
-                    '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#008000', 
-                    '#A52A2A', '#808080'].map((presetColor) => (
-                    <Button
-                      key={presetColor}
-                      variant="outline"
-                      className="h-6 w-6 p-0 border"
-                      style={{ backgroundColor: presetColor }}
-                      onClick={() => setColor(presetColor)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          
-          {/* Line Width */}
-          <div className="flex items-center gap-2 min-w-[80px]">
-            <Slider
-              value={width}
-              onValueChange={setWidth}
-              max={30}
-              min={1}
-              step={1}
-              className="w-20"
-            />
-            <span className="text-xs">{width}</span>
-          </div>
-          
-          {/* Fill option for shapes */}
-          {(tool === 'rectangle' || tool === 'circle') && (
-            <div className="flex items-center gap-1">
-              <Checkbox 
-                id="fill-shape" 
-                checked={fill} 
-                onCheckedChange={(checked) => setFill(checked as boolean)} 
-              />
-              <Label htmlFor="fill-shape" className="text-xs cursor-pointer">Fill</Label>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Clear Canvas Button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8" 
-            onClick={clearCanvas}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Clear</span>
-          </Button>
-          
-          {/* Save/Publish Button */}
-          <Button 
-            size="sm"
-            className="h-8" 
-            onClick={handlePublish}
-            disabled={isPublishing}
-          >
-            <Paintbrush className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Save Frame</span>
-          </Button>
-        </div>
-      </div>
-      
-      {/* Canvas Container */}
-      <div className="flex-1 relative bg-white border border-gray-200 overflow-hidden">
-        <canvas
-          ref={canvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={isDrawing ? draw : undefined}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={isDrawing ? draw : undefined}
-          onTouchEnd={stopDrawing}
-          className="touch-none w-full h-auto cursor-crosshair"
-        />
-      </div>
-      
-      {/* Text Entry Dialog */}
-      <Dialog open={textDialogOpen} onOpenChange={handleTextDialogOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Text</DialogTitle>
-            <DialogDescription>
-              Enter the text you want to add to your drawing
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="text">Text Content</Label>
-              <Input
-                id="text"
-                autoFocus
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Enter text..."
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label>Text Size</Label>
-              <div className="flex items-center gap-4">
-                <Slider
-                  value={textSize}
-                  onValueChange={setTextSize}
-                  min={8}
-                  max={72}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="w-12 text-right">{textSize[0]}px</span>
-              </div>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="font">Font</Label>
-              <Select value={textFont} onValueChange={setTextFont}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select font" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Arial">Arial</SelectItem>
-                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                  <SelectItem value="Courier New">Courier New</SelectItem>
-                  <SelectItem value="Georgia">Georgia</SelectItem>
-                  <SelectItem value="Verdana">Verdana</SelectItem>
-                  <SelectItem value="Impact">Impact</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="color">Text Color</Label>
-              <Input
-                id="color"
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTextDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddText}>
-              Add Text
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Text Edit Options - appears when text is selected */}
-      {selectedTextIndex !== null && !isDraggingTextRef.current && (
-        <div className="absolute top-16 right-4 bg-white border border-gray-200 rounded-md shadow-md p-2 flex flex-col gap-2">
-          <Button size="sm" onClick={handleEditText}>
-            Edit Text
-          </Button>
-          <Button size="sm" variant="destructive" onClick={handleRemoveText}>
-            Remove Text
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default DrawingCanvas;
