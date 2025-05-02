@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -7,7 +6,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,26 +22,22 @@ serve(async (req) => {
 
     const apiKey = Deno.env.get('GEMINI_CO_DRAWING');
     if (!apiKey) {
-      console.error('GEMINI_CO_DRAWING API key not found in environment variables');
+      console.error('GEMINI_CO_DRAWING API key not found');
       return new Response(
         JSON.stringify({ error: 'API key not configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    console.log("Calling Gemini API to enhance drawing with prompt:", prompt);
+    console.log("Enhancing image with prompt:", prompt);
 
-    // Extract base64 from data URL
     const base64Image = image.split(',')[1];
 
-    // ✅ Correct Gemini co-drawing endpoint
     const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent";
 
     const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [
           {
@@ -66,31 +60,32 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log("Received response from Gemini API");
+    console.log("Full Gemini API response:", JSON.stringify(data, null, 2));
 
-    // ✅ Extract enhanced image
+    // Try to extract the enhanced image
     let imageData = null;
     const parts = data?.candidates?.[0]?.content?.parts || [];
 
     for (const part of parts) {
-      if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
+      if (part.inlineData && part.inlineData.mimeType?.startsWith("image/")) {
         imageData = `data:${part.inlineData.mimeType};base64,${http://part.inlineData.data}`;
         break;
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Drawing enhancement processed",
-        imageData: imageData,
-        result: data
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    const resultPayload = {
+      success: true,
+      message: imageData ? "Image enhanced successfully" : "No image returned by Gemini",
+      imageData: imageData,
+      debug: data
+    };
+
+    return new Response(JSON.stringify(resultPayload), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('Error processing request:', error);
+    console.error("Error processing request:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
