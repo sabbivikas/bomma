@@ -24,7 +24,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
 }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
-  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { theme } = useTheme();
   
   // Get theme configuration for styling
@@ -32,7 +32,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   
   const handleSaveFrame = (canvas: HTMLCanvasElement) => {
     // Store canvas reference for potential AI enhancement
-    setCanvasRef(canvas);
+    canvasRef.current = canvas;
     
     onSaveFrame(canvas);
     
@@ -42,7 +42,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   };
   
   const handleSendPrompt = async (promptText: string) => {
-    if (!canvasRef) {
+    if (!canvasRef.current) {
       toast({
         title: "No drawing found",
         description: "Please create a drawing first before enhancing",
@@ -55,7 +55,7 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
     
     try {
       // Convert canvas to data URL
-      const imageUrl = canvasRef.toDataURL('image/png');
+      const imageUrl = canvasRef.current.toDataURL('image/png');
       
       // Call the Supabase Edge Function with the drawing and prompt
       const { data, error } = await supabase.functions.invoke('enhance-drawing', {
