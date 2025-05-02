@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -12,10 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const data = await response.json();
+    // Step 1: Parse incoming request
     const { image, prompt } = await req.json();
-    console.log("⚠️ DEBUG: Raw Gemini response:");
-console.log(JSON.stringify(data, null, 2));
 
     if (!image || !prompt) {
       return new Response(
@@ -35,11 +32,13 @@ console.log(JSON.stringify(data, null, 2));
 
     console.log("Calling Gemini API to enhance drawing with prompt:", prompt);
 
+    // Step 2: Prepare image data
     const base64Image = image.split(',')[1];
 
+    // Step 3: Make Gemini API request
     const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent";
 
-    const response = await fetch(`${geminiUrl}?key=${apiKey}`, {
+    const geminiResponse = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,16 +62,19 @@ console.log(JSON.stringify(data, null, 2));
       })
     });
 
-    const data = await response.json();
-    console.log("Received response from Gemini API");
+    const data = await geminiResponse.json();
 
-    // Try to extract the enhanced image
+    // Step 4: Debug the raw Gemini response
+    console.log("⚠️ DEBUG: Raw Gemini response:");
+    console.log(JSON.stringify(data, null, 2));
+
+    // Step 5: Extract the enhanced image if available
     let imageData = null;
     const parts = data?.candidates?.[0]?.content?.parts || [];
 
     for (const part of parts) {
       if (part.inlineData && part.inlineData.mimeType?.startsWith("image/")) {
-        imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        imageData = `data:${part.inlineData.mimeType};base64,${http://part.inlineData.data}`;
         break;
       }
     }
