@@ -14,6 +14,7 @@ import CreateAnimation from "./pages/CreateAnimation";
 import ViewStory from "./pages/ViewStory";
 import AdminModeration from "./pages/AdminModeration";
 import AdminRoute from "./components/AdminRoute";
+import ShortUrlRedirect from "./components/ShortUrlRedirect";
 
 const queryClient = new QueryClient();
 
@@ -47,19 +48,5 @@ const App = () => (
     </ThemeProvider>
   </QueryClientProvider>
 );
-
-// Component to handle short URL redirects
-function ShortUrlRedirect({ type }: { type: 'story' | 'doodle' }) {
-  const shortId = window.location.pathname.split('/')[2]; // Extract shortId from URL
-  
-  // In a real implementation, we would look up the full ID from a database
-  // For this demo, we'll simply redirect to the appropriate page
-  // assuming the shortId is just the first part of the full ID
-  const redirectPath = type === 'story' 
-    ? `/stories/${shortId}` 
-    : `/doodles/${shortId}`;
-    
-  return <Navigate to={redirectPath} replace />;
-}
 
 export default App;
