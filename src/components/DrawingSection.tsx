@@ -5,6 +5,9 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import FrameCounter from '@/components/story/FrameCounter';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getThemeConfig } from '@/utils/themeConfig';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import PromptInput from './PromptInput';
 
 interface DrawingSectionProps {
   framesCount: number;
@@ -20,17 +23,80 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
   prompt
 }) => {
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
   const { theme } = useTheme();
   
   // Get theme configuration for styling
   const visualThemeConfig = getThemeConfig(theme.visualTheme);
   
   const handleSaveFrame = (canvas: HTMLCanvasElement) => {
+    // Store canvas reference for potential AI enhancement
+    setCanvasRef(canvas);
+    
     onSaveFrame(canvas);
     
     // Show success message briefly
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
+  };
+  
+  const handleSendPrompt = async (promptText: string) => {
+    if (!canvasRef) {
+      toast({
+        title: "No drawing found",
+        description: "Please create a drawing first before enhancing",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsEnhancing(true);
+    
+    try {
+      // Convert canvas to data URL
+      const imageUrl = canvasRef.toDataURL('image/png');
+      
+      // Call the Supabase Edge Function with the drawing and prompt
+      const { data, error } = await supabase.functions.invoke('enhance-drawing', {
+        body: { 
+          image: imageUrl, 
+          prompt: promptText 
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.enhancedImage) {
+        // Handle the enhanced image data
+        // For now, we'll just show a success message
+        toast({
+          title: "Drawing enhanced",
+          description: "AI has enhanced your drawing based on your prompt",
+          variant: "success",
+        });
+        
+        // In a real implementation, you might update the canvas with the enhanced image
+        // const img = new Image();
+        // img.onload = () => {
+        //   const ctx = canvasRef.getContext('2d');
+        //   ctx?.clearRect(0, 0, canvasRef.width, canvasRef.height);
+        //   ctx?.drawImage(img, 0, 0);
+        // };
+        // img.src = data.enhancedImage;
+      }
+    } catch (error) {
+      console.error('Error enhancing drawing:', error);
+      toast({
+        title: "Error enhancing drawing",
+        description: "Could not enhance the drawing. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   return (
@@ -64,6 +130,12 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         
         <DrawingCanvas onSave={handleSaveFrame} prompt={prompt} />
       </div>
+      
+      {/* Add the new PromptInput component here */}
+      <PromptInput 
+        onSendPrompt={handleSendPrompt}
+        isLoading={isEnhancing}
+      />
     </div>
   );
 };
