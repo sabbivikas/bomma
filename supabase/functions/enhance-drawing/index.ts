@@ -39,12 +39,13 @@ serve(async (req) => {
     // Step 3: Make Gemini API request
     const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
     
+    // Modify the prompt to specifically request an image if possible
     const requestBody = {
       contents: [
         {
           role: "user",
           parts: [
-            { text: `Enhance this drawing according to this description: "${prompt}"` },
+            { text: `Enhance this drawing according to this description: "${prompt}". If possible, return the enhanced image.` },
             {
               inline_data: {
                 mime_type: "image/png",
@@ -76,6 +77,7 @@ serve(async (req) => {
     // Step 5: Extract the enhanced image if available
     let imageData = null;
     let textResponse = null;
+    let parsedInstructions = null;
 
     // Check for any parts in the response
     const parts = responseData?.candidates?.[0]?.content?.parts || [];
@@ -89,6 +91,20 @@ serve(async (req) => {
       // Check for text response
       else if (part.text) {
         textResponse = part.text;
+        
+        // Try to parse instructions from text response for drawing eyes
+        try {
+          // Look for ASCII art in response (like the eyes example with dots)
+          const asciiArtMatch = textResponse.match(/```([\s\S]*?)```/);
+          if (asciiArtMatch && asciiArtMatch[1]) {
+            parsedInstructions = {
+              type: "ascii_art",
+              content: asciiArtMatch[1].trim()
+            };
+          }
+        } catch (parseError) {
+          console.log("Error parsing instructions:", parseError);
+        }
       }
     }
 
@@ -97,6 +113,7 @@ serve(async (req) => {
       message: imageData ? "Image enhanced successfully" : "AI provided a text response",
       imageData: imageData,
       textResponse: textResponse,
+      parsedInstructions: parsedInstructions,
       debug: responseData
     };
 

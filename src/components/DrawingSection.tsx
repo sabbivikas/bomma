@@ -41,6 +41,50 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
     setTimeout(() => setShowSuccess(false), 3000);
   };
   
+  // Function to draw simple eyes based on ASCII art
+  const drawSimpleEyes = (context: CanvasRenderingContext2D, asciiArt: string) => {
+    if (!canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Get center of canvas (which should be the circle center)
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Estimate circle radius (assuming the circle takes up most of the canvas)
+    const radius = Math.min(width, height) * 0.4;
+    
+    // Set drawing styles
+    context.fillStyle = 'black';
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+    
+    // Draw two simple dots for eyes
+    // Position eyes above the horizontal center line
+    const eyeY = centerY - radius * 0.2;
+    const eyeDistance = radius * 0.5;
+    
+    // Left eye
+    context.beginPath();
+    context.arc(centerX - eyeDistance, eyeY, radius * 0.1, 0, Math.PI * 2);
+    context.fill();
+    
+    // Right eye
+    context.beginPath();
+    context.arc(centerX + eyeDistance, eyeY, radius * 0.1, 0, Math.PI * 2);
+    context.fill();
+    
+    // If the ASCII art contains mouth indicators (like dashes or parentheses),
+    // draw a simple curved mouth
+    if (asciiArt.includes('-') || asciiArt.includes('(')) {
+      context.beginPath();
+      context.arc(centerX, centerY + radius * 0.2, radius * 0.3, 0.2 * Math.PI, 0.8 * Math.PI);
+      context.stroke();
+    }
+  };
+  
   const handleSendPrompt = async (promptText: string) => {
     if (!canvasRef.current) {
       toast({
@@ -101,6 +145,18 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           // Set the source to the base64 image data
           img.src = data.imageData;
         }
+      } else if (data && data.parsedInstructions && data.parsedInstructions.type === "ascii_art") {
+        // If we have ASCII art instructions, try to draw eyes based on them
+        const context = canvasRef.current.getContext('2d');
+        if (context) {
+          drawSimpleEyes(context, data.parsedInstructions.content);
+          
+          toast({
+            title: "Eyes Added",
+            description: "Simple eyes have been drawn based on AI description",
+            variant: "default",
+          });
+        }
       } else if (data && data.textResponse) {
         // Handle text response
         toast({
@@ -108,6 +164,19 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           description: data.textResponse.substring(0, 200) + (data.textResponse.length > 200 ? '...' : ''),
           variant: "default",
         });
+        
+        // Try to parse simple features from text description
+        const context = canvasRef.current.getContext('2d');
+        if (context && data.textResponse.toLowerCase().includes("eye")) {
+          // If text mentions eyes, try to draw simple eyes
+          drawSimpleEyes(context, "basic eyes");
+          
+          toast({
+            title: "Simple Eyes Added",
+            description: "Added basic eyes based on AI description",
+            variant: "default",
+          });
+        }
       } else {
         toast({
           title: "No enhancement generated",
