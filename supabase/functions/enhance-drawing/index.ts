@@ -39,13 +39,23 @@ serve(async (req) => {
     // Step 3: Make Gemini API request
     const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
     
+    // Check if the prompt is asking for direct drawing
+    const isDrawingRequest = prompt.toLowerCase().match(/(add|draw|put|place|create|make|include)/);
+    
     // Modify the prompt to specifically request an image if possible
+    let promptText = prompt;
+    if (isDrawingRequest) {
+      promptText = `Enhance this drawing by ${prompt}. Return the modified image if possible, or detailed instructions on how to modify it.`;
+    } else {
+      promptText = `Enhance this drawing according to this description: "${prompt}". Return the enhanced image if possible.`;
+    }
+    
     const requestBody = {
       contents: [
         {
           role: "user",
           parts: [
-            { text: `Enhance this drawing according to this description: "${prompt}". If possible, return the enhanced image.` },
+            { text: promptText },
             {
               inline_data: {
                 mime_type: "image/png",
@@ -92,15 +102,32 @@ serve(async (req) => {
       else if (part.text) {
         textResponse = part.text;
         
-        // Try to parse instructions from text response for drawing eyes
+        // Try to parse instructions from text response for drawing
         try {
-          // Look for ASCII art in response (like the eyes example with dots)
+          // Look for ASCII art in response
           const asciiArtMatch = textResponse.match(/```([\s\S]*?)```/);
           if (asciiArtMatch && asciiArtMatch[1]) {
             parsedInstructions = {
               type: "ascii_art",
               content: asciiArtMatch[1].trim()
             };
+          }
+          
+          // If no ASCII art but text contains drawing instructions
+          else if (textResponse.toLowerCase().includes("add") || 
+                   textResponse.toLowerCase().includes("draw") ||
+                   textResponse.toLowerCase().includes("create")) {
+            // Identify what to draw
+            parsedInstructions = {
+              type: "text_instructions",
+              content: textResponse
+            };
+            
+            // Try to extract specific elements to draw
+            const elementMatches = textResponse.match(/add (.*?)(?:to|on|above|below|\.|\,)/i);
+            if (elementMatches && elementMatches[1]) {
+              parsedInstructions.element = elementMatches[1].trim();
+            }
           }
         } catch (parseError) {
           console.log("Error parsing instructions:", parseError);
