@@ -8,7 +8,8 @@ export const ThemeToggle = () => {
   const { theme, setVisualTheme } = useTheme();
   
   const toggleTheme = () => {
-    const newTheme = theme.visualTheme === 'default' ? 'dark' : 'default';
+    // Ensure we're setting a value that matches the VisualTheme type
+    const newTheme = theme.visualTheme === 'default' ? 'dark' as const : 'default' as const;
     setVisualTheme(newTheme);
     
     // Update the document class for immediate visual feedback
@@ -26,7 +27,7 @@ export const ThemeToggle = () => {
       onClick={toggleTheme}
       aria-label="Toggle theme"
     >
-      {theme.visualTheme === 'dark' ? (
+      {theme.visualTheme === 'dark' as const ? (
         <Sun className="h-[1.2rem] w-[1.2rem]" />
       ) : (
         <Moon className="h-[1.2rem] w-[1.2rem]" />
