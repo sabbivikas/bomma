@@ -186,32 +186,6 @@ export const interpretAndDrawShape = (
     return true;
   }
   
-  // Add ice cream to a cone
-  if (promptLower.includes('ice cream') || promptLower.includes('icecream')) {
-    // Draw ice cream scoop
-    context.beginPath();
-    context.arc(centerX, centerY - radius * 0.6, radius * 0.8, 0, Math.PI * 2);
-    context.stroke();
-    
-    // Add some texture/drips
-    for (let i = 0; i < 5; i++) {
-      const angle = (0.7 + 0.6 * Math.random()) * Math.PI;
-      const driplength = radius * 0.3 * Math.random();
-      
-      context.beginPath();
-      context.moveTo(centerX + Math.cos(angle) * radius * 0.8, 
-                    centerY - radius * 0.6 + Math.sin(angle) * radius * 0.8);
-      context.quadraticCurveTo(
-        centerX + Math.cos(angle) * radius * 0.8, 
-        centerY - radius * 0.6 + Math.sin(angle) * radius * 0.8 + driplength * 0.7,
-        centerX + Math.cos(angle) * radius * 0.8 - 5 + Math.random() * 10, 
-        centerY - radius * 0.6 + Math.sin(angle) * radius * 0.8 + driplength
-      );
-      context.stroke();
-    }
-    return true;
-  }
-  
   return false; // No matching pattern found
 };
 
