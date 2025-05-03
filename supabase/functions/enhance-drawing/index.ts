@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    // Step 1: Parse incoming request
+    // Parse incoming request
     const { image, prompt } = await req.json();
 
     if (!image || !prompt) {
@@ -33,10 +33,10 @@ serve(async (req) => {
 
     console.log("Calling Gemini API to enhance drawing with prompt:", prompt);
 
-    // Step 2: Prepare image data
+    // Prepare image data
     const base64Image = image.split(',')[1];
 
-    // Step 3: Make Gemini API request
+    // Make Gemini API request
     const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
     
     // Check common prompt types to provide better instructions to the AI
@@ -107,11 +107,7 @@ serve(async (req) => {
 
     const responseData = await geminiResponse.json();
 
-    // Step 4: Debug the raw Gemini response
-    console.log("⚠️ DEBUG: Raw Gemini response:");
-    console.log(JSON.stringify(responseData, null, 2));
-
-    // Step 5: Extract the enhanced image if available
+    // Extract the enhanced image if available
     let imageData = null;
     let textResponse = null;
     let parsedInstructions = null;
@@ -183,8 +179,7 @@ serve(async (req) => {
       message: imageData ? "Image enhanced successfully" : "AI provided a text response",
       imageData: imageData,
       textResponse: textResponse,
-      parsedInstructions: parsedInstructions,
-      debug: responseData
+      parsedInstructions: parsedInstructions
     };
 
     return new Response(JSON.stringify(resultPayload), {
