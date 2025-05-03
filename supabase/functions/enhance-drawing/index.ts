@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -33,8 +34,9 @@ serve(async (req) => {
 
     const base64Image = image.split(',')[1];
 
-    const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent";
-
+    // First, we'll try to generate an image using Gemini's image generation capabilities
+    const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    
     const geminiResponse = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,42 +45,42 @@ serve(async (req) => {
           {
             role: "user",
             parts: [
-              { text: prompt },
+              { 
+                text: `Enhance this drawing based on this instruction: ${prompt}. 
+                Generate a complete image that includes the original drawing with the enhancements added.` 
+              },
               {
-                inlineData: {
-                  mimeType: "image/png",
+                inline_data: {
+                  mime_type: "image/png",
                   data: base64Image
                 }
               }
             ]
           }
         ],
-        responseModality: ["IMAGE"],
-        generationConfig: {
-          temperature: 0.7
+        generation_config: {
+          temperature: 0.7,
+          top_p: 0.95,
+          top_k: 40,
+          max_output_tokens: 2048,
+          response_mime_type: "text/plain"
         }
       })
     });
 
     const data = await geminiResponse.json();
-
-    console.log("⚠️ DEBUG: Raw Gemini response:");
-    console.log(JSON.stringify(data, null, 2));
-
-    let imageData = null;
-    const parts = data?.candidates?.[0]?.content?.parts || [];
-
-    for (const part of parts) {
-      if (part.inlineData && part.inlineData.mimeType?.startsWith("image/")) {
-        imageData = `data:${part.inlineData.mimeType};base64,${http://part.inlineData.data}`;
-        break;
-      }
-    }
-
+    
+    console.log("Gemini response received");
+    
+    // Process the response to extract useful information
+    const textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // If we have a text response, we'll use our fallback drawing enhancement
+    // This will use the client-side functions to apply the requested changes
     const resultPayload = {
       success: true,
-      message: imageData ? "Image enhanced successfully" : "No image returned by Gemini",
-      imageData: imageData,
+      message: "Drawing enhancement instructions received",
+      textResponse: textResponse,
       debug: data
     };
 

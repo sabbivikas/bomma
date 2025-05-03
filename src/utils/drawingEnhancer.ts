@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -85,6 +84,8 @@ const extractColorFromPrompt = (promptText: string): string | null => {
   return null;
 };
 
+// Drawing functions
+
 /**
  * Draws eyes on the canvas based on context
  */
@@ -101,35 +102,40 @@ export const drawEyes = (
   
   // Store original fillStyle
   const originalFillStyle = context.fillStyle;
+  const originalLineWidth = context.lineWidth;
   
-  // Set fillStyle to the specified color
+  // Set styles
   context.fillStyle = color;
+  context.lineWidth = 3;
   
-  // Left eye
+  // Left eye - made more visible and larger
   context.beginPath();
-  context.arc(centerX - eyeDistance, eyeY, radius * 0.1, 0, Math.PI * 2);
+  context.arc(centerX - eyeDistance, eyeY, radius * 0.15, 0, Math.PI * 2);
   context.fill();
+  context.stroke();
   
-  // Right eye
+  // Right eye - made more visible and larger
   context.beginPath();
-  context.arc(centerX + eyeDistance, eyeY, radius * 0.1, 0, Math.PI * 2);
+  context.arc(centerX + eyeDistance, eyeY, radius * 0.15, 0, Math.PI * 2);
   context.fill();
+  context.stroke();
   
   // Add pupils for more detail
   context.fillStyle = 'white';
   
   // Left pupil highlight
   context.beginPath();
-  context.arc(centerX - eyeDistance + radius * 0.03, eyeY - radius * 0.03, radius * 0.03, 0, Math.PI * 2);
+  context.arc(centerX - eyeDistance + radius * 0.05, eyeY - radius * 0.05, radius * 0.05, 0, Math.PI * 2);
   context.fill();
   
   // Right pupil highlight
   context.beginPath();
-  context.arc(centerX + eyeDistance + radius * 0.03, eyeY - radius * 0.03, radius * 0.03, 0, Math.PI * 2);
+  context.arc(centerX + eyeDistance + radius * 0.05, eyeY - radius * 0.05, radius * 0.05, 0, Math.PI * 2);
   context.fill();
   
-  // Restore original fillStyle
+  // Restore original styles
   context.fillStyle = originalFillStyle;
+  context.lineWidth = originalLineWidth;
 };
 
 /**
@@ -143,27 +149,30 @@ export const drawMouth = (
   color: string = '#000000',
   isSmile: boolean = true
 ) => {
-  // Store original strokeStyle
+  // Store original styles
   const originalStrokeStyle = context.strokeStyle;
+  const originalLineWidth = context.lineWidth;
   
-  // Set strokeStyle to the specified color
+  // Set styles for more visibility
   context.strokeStyle = color;
+  context.lineWidth = 3;
   
   // Determine the type of mouth (smile or frown)
   if (isSmile) {
     // Draw a smile
     context.beginPath();
-    context.arc(centerX, centerY + radius * 0.3, radius * 0.25, 0.1 * Math.PI, 0.9 * Math.PI);
+    context.arc(centerX, centerY + radius * 0.3, radius * 0.3, 0.1 * Math.PI, 0.9 * Math.PI);
     context.stroke();
   } else {
     // Draw a frown
     context.beginPath();
-    context.arc(centerX, centerY + radius * 0.5, radius * 0.25, 1.1 * Math.PI, 1.9 * Math.PI);
+    context.arc(centerX, centerY + radius * 0.5, radius * 0.3, 1.1 * Math.PI, 1.9 * Math.PI);
     context.stroke();
   }
   
-  // Restore original strokeStyle
+  // Restore original styles
   context.strokeStyle = originalStrokeStyle;
+  context.lineWidth = originalLineWidth;
 };
 
 /**
@@ -177,22 +186,23 @@ export const drawHair = (
   color: string = '#000000',
   style: 'short' | 'long' | 'spiky' = 'short'
 ) => {
-  // Store original strokeStyle
+  // Store original styles
   const originalStrokeStyle = context.strokeStyle;
+  const originalLineWidth = context.lineWidth;
   
-  // Set strokeStyle to the specified color
+  // Set styles for more visibility
   context.strokeStyle = color;
-  context.lineWidth = 2;
+  context.lineWidth = 3;
   
   // Draw hair based on style
   if (style === 'spiky') {
-    // Spiky hair
+    // Spiky hair - made more pronounced
     for (let angle = -0.9 * Math.PI; angle <= 0.9 * Math.PI; angle += 0.1) {
-      const length = radius * 0.5 * (0.7 + Math.random() * 0.6);
+      const length = radius * 0.7 * (0.7 + Math.random() * 0.6);
       context.beginPath();
       context.moveTo(
-        centerX + Math.cos(angle) * radius,
-        centerY + Math.sin(angle) * radius
+        centerX + Math.cos(angle) * radius * 0.8,
+        centerY + Math.sin(angle) * radius * 0.8
       );
       context.lineTo(
         centerX + Math.cos(angle) * (radius + length),
@@ -217,7 +227,7 @@ export const drawHair = (
     // Draw the bottom of the long hair
     const leftSideX = centerX - radius;
     const rightSideX = centerX + radius;
-    const bottomY = centerY + radius * 1.5;
+    const bottomY = centerY + radius * 1.8; // Made longer
     
     context.lineTo(rightSideX, bottomY);
     context.lineTo(leftSideX, bottomY);
@@ -228,7 +238,7 @@ export const drawHair = (
     for (let i = 0; i < 8; i++) {
       const startX = centerX - radius + (2 * radius * Math.random());
       const startY = centerY + radius * (0.5 + Math.random() * 0.5);
-      const endY = startY + radius * (0.5 + Math.random() * 0.5);
+      const endY = startY + radius * (0.7 + Math.random() * 0.5);
       
       context.beginPath();
       context.moveTo(startX, startY);
@@ -240,19 +250,20 @@ export const drawHair = (
       context.stroke();
     }
   } else {
-    // Default short hair
+    // Default short hair - made more visible
     context.beginPath();
     for (let angle = -0.9 * Math.PI; angle <= 0.9 * Math.PI; angle += 0.05) {
-      const lineLength = radius * (0.2 + Math.random() * 0.3);
-      context.moveTo(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius);
+      const lineLength = radius * (0.3 + Math.random() * 0.3);
+      context.moveTo(centerX + Math.cos(angle) * radius * 0.9, centerY + Math.sin(angle) * radius * 0.9);
       context.lineTo(centerX + Math.cos(angle) * (radius + lineLength), 
                     centerY + Math.sin(angle) * (radius + lineLength));
     }
     context.stroke();
   }
   
-  // Restore original strokeStyle
+  // Restore original styles
   context.strokeStyle = originalStrokeStyle;
+  context.lineWidth = originalLineWidth;
 };
 
 /**
@@ -266,96 +277,99 @@ export const drawHat = (
   color: string = '#000000',
   style: 'cap' | 'top' | 'cowboy' = 'cap'
 ) => {
-  // Store original strokeStyle and fillStyle
+  // Store original styles
   const originalStrokeStyle = context.strokeStyle;
   const originalFillStyle = context.fillStyle;
+  const originalLineWidth = context.lineWidth;
   
-  // Set styles to the specified color
+  // Set styles for more visibility
   context.strokeStyle = color;
   context.fillStyle = color;
+  context.lineWidth = 3;
   
   if (style === 'top') {
     // Top hat
-    // Hat body
+    // Hat body - made more visible
     context.beginPath();
-    context.rect(
+    context.fillRect(
       centerX - radius * 0.6,
       centerY - radius * 1.8,
       radius * 1.2,
       radius * 0.8
     );
-    context.stroke();
     
-    // Hat brim
+    // Hat brim - more pronounced
     context.beginPath();
     context.ellipse(
       centerX,
       centerY - radius - 3,
-      radius * 0.8,
+      radius * 0.9,
       radius * 0.2,
       0,
       0,
       Math.PI * 2
     );
-    context.stroke();
+    context.fill();
   } else if (style === 'cowboy') {
-    // Cowboy hat
+    // Cowboy hat - made more visible
     // Hat top (curved)
     context.beginPath();
     context.ellipse(
       centerX,
-      centerY - radius - 10,
-      radius * 0.5,
-      radius * 0.25,
+      centerY - radius - 15,
+      radius * 0.6,
+      radius * 0.3,
       0,
       0,
       Math.PI * 2
     );
-    context.stroke();
+    context.fill();
     
     // Hat brim (wider)
     context.beginPath();
     context.ellipse(
       centerX,
       centerY - radius + 5,
-      radius * 1.1,
-      radius * 0.2,
+      radius * 1.3,
+      radius * 0.25,
       0,
       0,
       Math.PI * 2
     );
-    context.stroke();
+    context.fill();
   } else {
-    // Default cap
+    // Default cap - made more visible
     // Cap body
     context.beginPath();
     context.arc(
       centerX,
       centerY,
-      radius * 0.8,
-      -0.9 * Math.PI,
-      0.9 * Math.PI,
+      radius,
+      -0.95 * Math.PI,
+      0.95 * Math.PI,
       true
     );
     context.stroke();
     
-    // Cap brim
+    // Cap brim - more pronounced
+    context.fillStyle = color;
     context.beginPath();
     context.ellipse(
       centerX,
       centerY - radius * 0.5,
-      radius * 0.6,
-      radius * 0.2,
+      radius * 0.7,
+      radius * 0.25,
       0,
       Math.PI,
       Math.PI * 2
     );
-    context.stroke();
+    context.fill();
   }
   
   // Restore original styles
   context.strokeStyle = originalStrokeStyle;
   context.fillStyle = originalFillStyle;
+  context.lineWidth = originalLineWidth;
 };
 
 /**
@@ -406,140 +420,6 @@ export const colorDrawing = (
 };
 
 /**
- * Interprets AI drawing instructions and applies them to canvas
- */
-export const applyAIDrawingInstructions = (
-  context: CanvasRenderingContext2D, 
-  instructions: AiDrawingInstructions, 
-  canvas: HTMLCanvasElement
-) => {
-  if (!canvas) return false;
-  
-  const width = canvas.width;
-  const height = canvas.height;
-  
-  // Get center of canvas (which should be the circle center)
-  const centerX = width / 2;
-  const centerY = height / 2;
-  
-  // Estimate circle radius (assuming the circle takes up most of the canvas)
-  const radius = Math.min(width, height) * 0.4;
-  
-  // Extract possible color from instructions
-  let color = '#000000';
-  if (instructions.colors && instructions.colors.length > 0) {
-    color = instructions.colors[0];
-  }
-  
-  // If we have ASCII art instructions, interpret and draw them
-  if (instructions && instructions.type === "ascii_art") {
-    const asciiContent = instructions.content;
-    
-    // Set drawing styles
-    context.fillStyle = color;
-    context.strokeStyle = color;
-    context.lineWidth = 2;
-    
-    // Check for common patterns in ASCII art
-    if (asciiContent.includes('.   .') || asciiContent.includes('o   o') || 
-        asciiContent.includes('•   •') || asciiContent.includes('*   *')) {
-      // Draw eyes
-      drawEyes(context, centerX, centerY, radius, color);
-      return true;
-    }
-    
-    // Check for mouth patterns
-    if (asciiContent.includes('-----') || asciiContent.includes('_____') || 
-        asciiContent.includes('\\___/') || asciiContent.includes('(     )')) {
-      // Draw mouth
-      const isSmile = asciiContent.includes('\\___/') || asciiContent.includes('(     )');
-      drawMouth(context, centerX, centerY, radius, color, isSmile);
-      return true;
-    }
-    
-    return false;
-  }
-  
-  // If we have text instructions, interpret them
-  if (instructions && instructions.type === "text_instructions") {
-    const element = instructions.element || '';
-    const content = instructions.content || '';
-    const contentLower = content.toLowerCase();
-    
-    // Extract possible color from the content
-    const extractedColor = extractColorFromPrompt(content);
-    if (extractedColor) {
-      color = extractedColor;
-    }
-    
-    // Check if the instruction is to color/fill something
-    if (contentLower.includes('color') || contentLower.includes('fill') || contentLower.includes('paint')) {
-      if (contentLower.includes('background')) {
-        colorDrawing(context, canvas, color, 'background');
-        return true;
-      } else if (contentLower.includes('circle') || 
-                contentLower.includes('face') || 
-                contentLower.includes('head')) {
-        colorDrawing(context, canvas, color, 'circle');
-        return true;
-      } else {
-        colorDrawing(context, canvas, color, 'all');
-        return true;
-      }
-    }
-    
-    // Check for eye-related instructions
-    if (element.includes('eye') || contentLower.includes('eye')) {
-      drawEyes(context, centerX, centerY, radius, color);
-      return true;
-    }
-    
-    // Check for mouth-related instructions
-    if (element.includes('mouth') || contentLower.includes('mouth') || 
-        element.includes('smile') || contentLower.includes('smile') ||
-        element.includes('frown') || contentLower.includes('frown')) {
-      
-      // Determine if it should be a smile or frown
-      const isSmile = !contentLower.includes('frown') && !contentLower.includes('sad');
-      drawMouth(context, centerX, centerY, radius, color, isSmile);
-      return true;
-    }
-    
-    // Check for hair-related instructions
-    if (element.includes('hair') || contentLower.includes('hair')) {
-      let hairStyle: 'short' | 'long' | 'spiky' = 'short';
-      
-      if (contentLower.includes('long')) {
-        hairStyle = 'long';
-      } else if (contentLower.includes('spiky') || contentLower.includes('spike')) {
-        hairStyle = 'spiky';
-      }
-      
-      drawHair(context, centerX, centerY, radius, color, hairStyle);
-      return true;
-    }
-    
-    // Check for hat-related instructions
-    if (element.includes('hat') || contentLower.includes('hat') || 
-        contentLower.includes('cap') || contentLower.includes('cowboy')) {
-      
-      let hatStyle: 'cap' | 'top' | 'cowboy' = 'cap';
-      
-      if (contentLower.includes('top')) {
-        hatStyle = 'top';
-      } else if (contentLower.includes('cowboy')) {
-        hatStyle = 'cowboy';
-      }
-      
-      drawHat(context, centerX, centerY, radius, color, hatStyle);
-      return true;
-    }
-  }
-  
-  return false;
-};
-
-/**
  * Interprets text description and draws shapes
  */
 export const interpretAndDrawShape = (
@@ -564,7 +444,7 @@ export const interpretAndDrawShape = (
   // Set default drawing styles
   context.fillStyle = color;
   context.strokeStyle = color;
-  context.lineWidth = 2;
+  context.lineWidth = 3;
   
   // Simple pattern matching for common drawing requests
   const promptLower = prompt.toLowerCase();
@@ -586,14 +466,14 @@ export const interpretAndDrawShape = (
   }
   
   // Add eyes
-  if (promptLower.includes('eye') || promptLower.includes('face')) {
+  if (promptLower.includes('eye') || promptLower.match(/add\s+eyes/i)) {
     drawEyes(context, centerX, centerY, radius, color);
     return true;
   }
   
   // Add mouth
   if (promptLower.includes('mouth') || promptLower.includes('smile') || 
-      promptLower.includes('frown') || promptLower.includes('face')) {
+      promptLower.includes('frown')) {
     // Determine if it should be a smile or frown
     const isSmile = !promptLower.includes('frown') && !promptLower.includes('sad');
     drawMouth(context, centerX, centerY, radius, color, isSmile);
@@ -751,3 +631,50 @@ export const processEnhancement = async (
     setIsEnhancing(false);
   }
 };
+
+// Additional utility to find a face in the drawing
+export const findDrawingCenter = (canvas: HTMLCanvasElement): {centerX: number, centerY: number, radius: number} => {
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return {centerX: canvas.width/2, centerY: canvas.height/2, radius: Math.min(canvas.width, canvas.height) * 0.3};
+  }
+  
+  // Default to center if we can't find anything
+  let centerX = canvas.width / 2;
+  let centerY = canvas.height / 2;
+  let radius = Math.min(canvas.width, canvas.height) * 0.3;
+  
+  // Get image data to analyze
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  
+  // Find non-white pixels to determine the drawing
+  let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+  let pixelCount = 0;
+  
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      const idx = (y * canvas.width + x) * 4;
+      // Check if pixel isn't white (allowing some tolerance)
+      if (data[idx] < 240 || data[idx + 1] < 240 || data[idx + 2] < 240) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+        pixelCount++;
+      }
+    }
+  }
+  
+  // If we found non-white pixels, calculate center and radius
+  if (pixelCount > 0) {
+    centerX = (minX + maxX) / 2;
+    centerY = (minY + maxY) / 2;
+    radius = Math.max(maxX - minX, maxY - minY) / 2;
+  }
+  
+  return {centerX, centerY, radius};
+};
+
+// Export the main functions
+export { enhanceDrawing };
