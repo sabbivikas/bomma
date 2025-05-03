@@ -1,51 +1,66 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { User2 } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
-import { ThemeToggle } from './ThemeToggle';
+import FunkyText from './FunkyText';
+import { GalleryHorizontalEnd, Palette, BookOpenCheck, ShieldAlert } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 const Navbar = () => {
-  const { isLoggedIn, logout } = useAuth();
-  const { user } = useUser();
-  const location = useLocation();
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const { pathname } = useLocation();
+  const isMobile = useIsMobile();
+  const { isAdmin } = useAdminAuth();
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow">
-      <div className="container mx-auto px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="text-xl font-bold text-gray-800 dark:text-white hover:text-gray-700 dark:hover:text-gray-300">
-          Bomma
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b shadow-sm">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <Palette className="h-6 w-6 text-[#6C2DC7]" />
+          <FunkyText text="Bomma" className="font-bold text-lg" />
         </Link>
-        
-        <div className="flex items-center gap-5">
-          <Link to="/" className={`nav-link ${isActive("/") ? 'active' : ''}`}>Browse</Link>
-          <Link to="/create" className={`nav-link ${isActive("/create") ? 'active' : ''}`}>Create</Link>
-          <Link to="/stories" className={`nav-link ${isActive("/stories") ? 'active' : ''}`}>Stories</Link>
-          <Link to="/create-story" className={`nav-link ${isActive("/create-story") ? 'active' : ''}`}>Create Story</Link>
-          
-          <ThemeToggle />
 
-          {isLoggedIn ? (
-            <div className="flex items-center gap-3">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.avatar_url || ""} />
-                <AvatarFallback><User2 /></AvatarFallback>
-              </Avatar>
-              <Button variant="outline" size="sm" onClick={logout}>Logout</Button>
-            </div>
-          ) : (
-            <Link to="/login" className="text-blue-500 hover:text-blue-700">Login</Link>
+        <nav className="flex items-center gap-3">
+          <Link
+            to="/"
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              pathname === '/' ? 'bg-purple-100 text-purple-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            {isMobile ? <GalleryHorizontalEnd className="h-5 w-5" /> : 'Gallery'}
+          </Link>
+
+          <Link
+            to="/stories"
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              pathname === '/stories' ? 'bg-purple-100 text-purple-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            {isMobile ? <BookOpenCheck className="h-5 w-5" /> : 'Stories'}
+          </Link>
+          
+          <Link
+            to="/create"
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              pathname === '/create' ? 'bg-purple-100 text-purple-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            {isMobile ? <Palette className="h-5 w-5" /> : 'Create'}
+          </Link>
+
+          {/* Only show Moderation Link to admins */}
+          {isAdmin && (
+            <Link
+              to="/admin/moderation"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/admin/moderation' ? 'bg-red-100 text-red-900' : 'text-red-600 hover:text-red-900 hover:bg-red-50'
+              }`}
+            >
+              {isMobile ? <ShieldAlert className="h-5 w-5" /> : 'Moderation'}
+            </Link>
           )}
-        </div>
+        </nav>
       </div>
-    </nav>
+    </header>
   );
 };
 
