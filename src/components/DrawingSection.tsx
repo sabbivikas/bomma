@@ -69,6 +69,8 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
         throw error;
       }
       
+      console.log("Edge function response:", data);
+      
       // Check if the response contains an image
       if (data && data.imageData) {
         // Apply the generated image to the canvas
@@ -86,7 +88,8 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
               variant: "default",
             });
           };
-          img.onerror = () => {
+          img.onerror = (e) => {
+            console.error("Error loading enhanced image:", e);
             toast({
               title: "Error applying enhancement",
               description: "Could not apply the AI-generated image",

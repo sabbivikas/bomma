@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -62,19 +63,19 @@ serve(async (req) => {
       })
     });
 
-    const data = await geminiResponse.json();
+    const responseData = await geminiResponse.json();
 
     // Step 4: Debug the raw Gemini response
     console.log("⚠️ DEBUG: Raw Gemini response:");
-    console.log(JSON.stringify(data, null, 2));
+    console.log(JSON.stringify(responseData, null, 2));
 
     // Step 5: Extract the enhanced image if available
     let imageData = null;
-    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const parts = responseData?.candidates?.[0]?.content?.parts || [];
 
     for (const part of parts) {
       if (part.inlineData && part.inlineData.mimeType?.startsWith("image/")) {
-        imageData = `data:${part.inlineData.mimeType};base64,${http://part.inlineData.data}`;
+        imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
         break;
       }
     }
@@ -83,7 +84,7 @@ serve(async (req) => {
       success: true,
       message: imageData ? "Image enhanced successfully" : "No image returned by Gemini",
       imageData: imageData,
-      debug: data
+      debug: responseData
     };
 
     return new Response(JSON.stringify(resultPayload), {
