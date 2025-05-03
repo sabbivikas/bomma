@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -512,6 +513,57 @@ export const interpretAndDrawShape = (
 };
 
 /**
+ * Apply AI drawing instructions to a canvas
+ */
+export const applyAIDrawingInstructions = (
+  context: CanvasRenderingContext2D,
+  instructions: AiDrawingInstructions,
+  canvas: HTMLCanvasElement
+): boolean => {
+  if (!instructions || !context || !canvas) {
+    return false;
+  }
+
+  const width = canvas.width;
+  const height = canvas.height;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) * 0.3;
+  
+  try {
+    // Process instructions based on type
+    switch (instructions.type) {
+      case 'color_instructions':
+        if (instructions.colors && instructions.colors.length > 0) {
+          const color = instructions.colors[0];
+          const area = instructions.element === 'background' ? 'background' : 
+                      instructions.element === 'face' || instructions.element === 'circle' ? 'circle' : 'all';
+          colorDrawing(context, canvas, color, area);
+          return true;
+        }
+        break;
+        
+      case 'text_instructions':
+        // For text instructions, we'll try to interpret them using our existing function
+        return interpretAndDrawShape(context, instructions.content, canvas);
+        
+      case 'ascii_art':
+        // For ASCII art, we don't have a direct implementation, so we'll default to 
+        // trying to interpret the content as a text instruction
+        return interpretAndDrawShape(context, instructions.content, canvas);
+        
+      default:
+        return false;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error applying AI drawing instructions:", error);
+    return false;
+  }
+};
+
+/**
  * Processes a drawing enhancement request
  */
 export const processEnhancement = async (
@@ -675,6 +727,3 @@ export const findDrawingCenter = (canvas: HTMLCanvasElement): {centerX: number, 
   
   return {centerX, centerY, radius};
 };
-
-// Export the main functions
-export { enhanceDrawing };
