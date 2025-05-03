@@ -7,7 +7,6 @@ import Stories from '@/pages/Stories';
 import ViewStory from '@/pages/ViewStory';
 import CreateStory from '@/pages/CreateStory';
 import CreateAnimation from '@/pages/CreateAnimation';
-import Worlds from '@/pages/Worlds';
 import AdminModeration from '@/pages/AdminModeration';
 import NotFound from '@/pages/NotFound';
 import ShortUrlRedirect from '@/components/ShortUrlRedirect';
@@ -33,7 +32,6 @@ function App() {
                 <Route path="/story/:id" element={<ViewStory />} />
                 <Route path="/create-story" element={<CreateStory />} />
                 <Route path="/create-animation" element={<CreateAnimation />} />
-                <Route path="/worlds" element={<Worlds />} />
                 <Route path="/co-draw" element={<CoDraw />} />
                 <Route path="/admin/*" element={<AdminRoute><AdminModeration /></AdminRoute>} />
                 <Route path="/s/:shortId" element={<ShortUrlRedirect type="story" />} />

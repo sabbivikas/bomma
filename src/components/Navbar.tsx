@@ -29,7 +29,6 @@ const Navbar = () => {
           <Link to="/create" className={`nav-link ${isActive("/create") ? 'active' : ''}`}>Create</Link>
           <Link to="/stories" className={`nav-link ${isActive("/stories") ? 'active' : ''}`}>Stories</Link>
           <Link to="/create-story" className={`nav-link ${isActive("/create-story") ? 'active' : ''}`}>Create Story</Link>
-          <Link to="/worlds" className={`nav-link ${isActive("/worlds") ? 'active' : ''}`}>Worlds</Link>
           
           <ThemeToggle />
 
