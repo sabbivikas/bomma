@@ -57,9 +57,8 @@ serve(async (req) => {
             ]
           }
         ],
-          responseModality: ["IMAGE"],
         generationConfig: {
-        temperature : 0.7
+          responseModality: ["IMAGE"]
         }
       })
     });
@@ -68,6 +67,7 @@ serve(async (req) => {
 
     // Step 4: Debug the raw Gemini response
     console.log("⚠️ DEBUG: Raw Gemini response:");
+    console.log(JSON.stringify(data, null, 2));
     console.log(JSON.stringify(responseData, null, 2));
 
     // Step 5: Extract the enhanced image if available
