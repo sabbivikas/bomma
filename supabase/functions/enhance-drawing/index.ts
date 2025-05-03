@@ -57,8 +57,9 @@ serve(async (req) => {
             ]
           }
         ],
+          responseModality: ["IMAGE"],
         generationConfig: {
-          responseModality: ["IMAGE"]
+        temperature : 0.7
         }
       })
     });
