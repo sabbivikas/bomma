@@ -15,7 +15,6 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import ThemedBackground from '@/components/ThemedBackground';
 import { Toaster } from '@/components/ui/toaster';
 import AdminRoute from '@/components/AdminRoute';
-import CoDraw from '@/pages/CoDraw';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
 
@@ -34,7 +33,6 @@ function App() {
                 <Route path="/create-story" element={<CreateStory />} />
                 <Route path="/create-animation" element={<CreateAnimation />} />
                 <Route path="/worlds" element={<Worlds />} />
-                <Route path="/co-draw" element={<CoDraw />} />
                 <Route path="/admin/*" element={<AdminRoute><AdminModeration /></AdminRoute>} />
                 <Route path="/s/:shortId" element={<ShortUrlRedirect />} />
                 <Route path="*" element={<NotFound />} />
