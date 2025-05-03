@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from '@/pages/Index';
@@ -9,7 +10,7 @@ import CreateAnimation from '@/pages/CreateAnimation';
 import Worlds from '@/pages/Worlds';
 import AdminModeration from '@/pages/AdminModeration';
 import NotFound from '@/pages/NotFound';
-import ShortUrlRedirect from '@/pages/ShortUrlRedirect';
+import ShortUrlRedirect from '@/components/ShortUrlRedirect';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ThemedBackground from '@/components/ThemedBackground';
 import { Toaster } from '@/components/ui/toaster';
@@ -31,7 +32,7 @@ function App() {
             <Route path="/worlds" element={<Worlds />} />
             <Route path="/co-draw" element={<CoDraw />} />
             <Route path="/admin/*" element={<AdminRoute><AdminModeration /></AdminRoute>} />
-            <Route path="/s/:shortId" element={<ShortUrlRedirect />} />
+            <Route path="/s/:shortId" element={<ShortUrlRedirect type="story" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />

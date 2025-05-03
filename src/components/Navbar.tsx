@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +29,6 @@ const Navbar = () => {
           <Link to="/create" className={`nav-link ${isActive("/create") ? 'active' : ''}`}>Create</Link>
           <Link to="/stories" className={`nav-link ${isActive("/stories") ? 'active' : ''}`}>Stories</Link>
           <Link to="/create-story" className={`nav-link ${isActive("/create-story") ? 'active' : ''}`}>Create Story</Link>
-          <Link to="/co-draw" className={`nav-link ${isActive("/co-draw") ? 'active' : ''}`}>Co-Draw</Link>
           <Link to="/worlds" className={`nav-link ${isActive("/worlds") ? 'active' : ''}`}>Worlds</Link>
           
           <ThemeToggle />
