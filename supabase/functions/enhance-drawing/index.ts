@@ -37,54 +37,66 @@ serve(async (req) => {
     const base64Image = image.split(',')[1];
 
     // Step 3: Make Gemini API request
-    const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent";
+    const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
+    
+    const requestBody = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: `Enhance this drawing according to this description: "${prompt}"` },
+            {
+              inline_data: {
+                mime_type: "image/png",
+                data: base64Image
+              }
+            }
+          ]
+        }
+      ],
+      generation_config: {
+        temperature: 0.9,
+        top_p: 1,
+        top_k: 32
+      }
+    };
 
     const geminiResponse = await fetch(`${geminiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: "image/png",
-                  data: base64Image
-                }
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseModality: ["IMAGE"]
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const responseData = await geminiResponse.json();
 
     // Step 4: Debug the raw Gemini response
     console.log("⚠️ DEBUG: Raw Gemini response:");
-    console.log(JSON.stringify(data, null, 2));
     console.log(JSON.stringify(responseData, null, 2));
 
     // Step 5: Extract the enhanced image if available
     let imageData = null;
+    let textResponse = null;
+
+    // Check for any parts in the response
     const parts = responseData?.candidates?.[0]?.content?.parts || [];
 
     for (const part of parts) {
-      if (part.inlineData && part.inlineData.mimeType?.startsWith("image/")) {
-        imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      // Check for inline data (image)
+      if (part.inline_data && part.inline_data.mime_type?.startsWith("image/")) {
+        imageData = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
         break;
+      } 
+      // Check for text response
+      else if (part.text) {
+        textResponse = part.text;
       }
     }
 
     const resultPayload = {
       success: true,
-      message: imageData ? "Image enhanced successfully" : "No image returned by Gemini",
+      message: imageData ? "Image enhanced successfully" : "AI provided a text response",
       imageData: imageData,
+      textResponse: textResponse,
       debug: responseData
     };
 

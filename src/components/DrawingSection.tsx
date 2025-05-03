@@ -79,6 +79,8 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           // Create a new image element with the received data
           const img = new Image();
           img.onload = () => {
+            // Clear the canvas first
+            context.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
             // Draw the image onto the canvas
             context.drawImage(img, 0, 0, canvasRef.current!.width, canvasRef.current!.height);
             
@@ -99,19 +101,18 @@ const DrawingSection: React.FC<DrawingSectionProps> = ({
           // Set the source to the base64 image data
           img.src = data.imageData;
         }
-      } else {
+      } else if (data && data.textResponse) {
         // Handle text response
-        let responseMessage = "AI considered your prompt but couldn't generate an image";
-        
-        // Check if there's a text response in the debug data
-        if (data?.debug?.candidates?.[0]?.content?.parts?.[0]?.text) {
-          responseMessage = data.debug.candidates[0].content.parts[0].text;
-        }
-        
         toast({
           title: "AI Enhancement Suggestion",
-          description: responseMessage.substring(0, 200) + (responseMessage.length > 200 ? '...' : ''),
+          description: data.textResponse.substring(0, 200) + (data.textResponse.length > 200 ? '...' : ''),
           variant: "default",
+        });
+      } else {
+        toast({
+          title: "No enhancement generated",
+          description: "The AI couldn't generate an enhancement for your drawing",
+          variant: "destructive",
         });
       }
     } catch (error) {
