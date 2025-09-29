@@ -15,6 +15,7 @@ import ViewStory from "./pages/ViewStory";
 import AdminModeration from "./pages/AdminModeration";
 import AdminRoute from "./components/AdminRoute";
 import ShortUrlRedirect from "./components/ShortUrlRedirect";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/create" element={<Create />} />
             <Route path="/stories" element={<Stories />} />
             <Route path="/create-story" element={<CreateStory />} />
