@@ -21,7 +21,9 @@ const DoodleModel = ({ imageUrl }: { imageUrl: string }) => {
   return (
     <mesh ref={meshRef} position={[0, 0, 0]}>
       <boxGeometry args={[3, 3, 0.1]} />
-      <meshStandardMaterial map={texture} />
+      <meshStandardMaterial>
+        <primitive attach="map" object={texture} />
+      </meshStandardMaterial>
     </mesh>
   );
 };
