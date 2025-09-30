@@ -298,7 +298,7 @@ export async function getStoryById(id: string): Promise<Story | null> {
 export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
   const { data, error } = await supabase
     .from('comments')
-    .select('*')
+    .select('id, story_id, text, created_at, session_id')
     .eq('story_id', storyId)
     .order('created_at', { ascending: false });
   
@@ -307,13 +307,14 @@ export async function getCommentsForStory(storyId: string): Promise<Comment[]> {
     return [];
   }
   
-  // Convert the data to match our Comment type
+  // Convert the data to match our Comment type with safe session handling
   return data.map(item => ({
     id: item.id,
     storyId: item.story_id,
     text: item.text,
     createdAt: item.created_at,
-    sessionId: item.session_id
+    // Generate a safe hash for display purposes instead of exposing raw session_id
+    sessionId: btoa(item.session_id).substring(0, 8)
   }));
 }
 

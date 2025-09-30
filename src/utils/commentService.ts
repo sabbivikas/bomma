@@ -41,7 +41,7 @@ export async function getCommentsForDoodle(doodleId: string): Promise<Comment[]>
   try {
     const { data, error } = await supabase
       .from('comments')
-      .select('*')
+      .select('id, doodle_id, text, created_at, session_id')
       .eq('doodle_id', doodleId)
       .order('created_at', { ascending: false });
     
@@ -54,7 +54,8 @@ export async function getCommentsForDoodle(doodleId: string): Promise<Comment[]>
       id: comment.id,
       doodleId: comment.doodle_id,
       text: comment.text,
-      sessionId: comment.session_id,
+      // Generate a safe hash for display purposes instead of exposing raw session_id
+      sessionId: btoa(comment.session_id).substring(0, 8),
       createdAt: comment.created_at
     }));
   } catch (error) {
